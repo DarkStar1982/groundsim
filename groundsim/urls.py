@@ -15,7 +15,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from groundsim import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('get_data/', views.GetData.as_view()),
+    path('run_command/', views.RunCommand.as_view())
 ]
