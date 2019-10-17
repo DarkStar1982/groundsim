@@ -16,9 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from groundsim import views
+from django.views.decorators.csrf import csrf_exempt
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('get_data/', views.GetData.as_view()),
-    path('run_command/', views.RunCommand.as_view())
+    path('api/', views.ApiHandler.as_view()),
 ]
