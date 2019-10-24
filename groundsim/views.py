@@ -19,6 +19,18 @@ def compute_orbit():
     print(position)
     print(velocity)
 
+def update_satellite_tle(split_data):
+    sat = Satellite()
+    sat.satellite_name = split_data[0]
+    sat.satellite_tle1 = split_data[1]
+    sat.satellite_tle2 = split_data[2]
+    sat.save()
+
+def parse_tle_data(p_data):
+    split_data = p_data.splitlines()
+    update_satellite_tle(split_data)
+    return split_data
+
 def process_get(request):
     req_type = request.GET.get("type", None)
     if req_type == None:
@@ -34,9 +46,10 @@ def process_post(request):
     if cmd_type == None:
         return {"id":3, "status":"failed", "description":"no command specified"}
     else:
-        if cmd_type == "get_sim_status":
-            return {"id":4, "status":"ok", "description":"I am fine!"}
-        return {"id":5, "status":"failed", "description":"unknown command specified"}
+        if cmd_type == "command_set_tle":
+            data = request.POST.get("tle_data", None)
+            return parse_tle_data(data)
+    return {"id":5, "status":"failed", "description":"unknown command specified"}
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ApiHandler(View):
