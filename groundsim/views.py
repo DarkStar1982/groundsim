@@ -1,5 +1,6 @@
 import json
-from sgp4.earth_gravity import wgs72
+from math import floor, fmod, pi, atan, sqrt, sin, fabs, cos
+from sgp4.earth_gravity import wgs72, wgs84
 from sgp4.io import twoline2rv
 from django.views.generic import View
 from django.http import HttpResponse
@@ -10,35 +11,123 @@ from groundsim.models import Satellite
 line1 = ('1 00005U 58002B   00179.78495062  .00000023  00000-0  28098-4 0  4753')
 line2 = ('2 00005  34.2682 348.7242 1859667 331.7664  19.3264 10.82419157413667')
 
+def convert_to_float(element):
+    if element[0] == '-':
+        sign = '-'
+        mantissa = element[1:5]
+        exponent = element[-1]
+    else:
+        sign = ''
+        mantissa = element[0:4]
+        exponent = element[-1]
+    value = sign + '0.'+ mantissa +'E-' + exponent
+    return float(value)
 
-def compute_orbit():
-    satellite = twoline2rv(line1, line2, wgs72)
-    position, velocity = satellite.propagate(2000, 6, 29, 12, 50, 19)
-    print(satellite.error)    # nonzero on error
-    print(satellite.error_message)
-    print(position)
-    print(velocity)
+def parse_tle_lines(tle_line_1, tle_line_2):
+    tle_data = {}
+    line_1 = [x for x in tle_line_1.split(' ') if len(x)>0]
+    line_2 = [x for x in tle_line_2.split(' ') if len(x)>0]
+    tle_data["catalog_number"] = int(line_1[1][:-1])
+    tle_data["classification"] = line_1[1][-1]
+    tle_data["launch_label"] = line_1[2]
+    tle_data["epoch_date"] = line_1[3]
+    tle_data["first_derivative"] = float(line_1[4])
+    tle_data["second_derivative"] = convert_to_float(line_1[5])
+    tle_data["drag_term"] = convert_to_float(line_1[6])
+    tle_data["ephemeris_type"] = int(line_1[7])
+    tle_data["element_set_type"] = int(line_1[8])
+    tle_data["inclination"] = float(line_2[2])
+    tle_data["ra_ascending_node"] = float(line_2[3])
+    tle_data["eccentricity"] = float('0.'+line_2[4])
+    tle_data["argument_perigee"] = float(line_2[5])
+    tle_data["mean_anomaly"] = float(line_2[6])
+    tle_data["mean_motion"] = float(line_2[7])
+    tle_data["revolution_number"] = int(line_2[8][:-1])
+    return tle_data
 
-def update_satellite_tle(split_data):
+def convert_to_geodetic(tle_data, position):
+    geo_data = {}
+    launch_year = int(tle_data["epoch_date"][0:2])
+    dy = float(tle_data["epoch_date"][2:])
+    if launch_year<57:
+        launch_year = launch_year + 2000
+    elif launch_year>56:
+        launch_year = launch_year + 1900
+    geo_data["jd_year"]= 2415020.5 + (launch_year-1900)*365 + floor((launch_year-1900-1)/4)
+    jd = geo_data["jd_year"] + dy - 1.0;
+
+    # calculation of neccessary prerequsites
+    ut = fmod(jd + 0.5, 1.0)
+    t = (jd - ut - 2451545.0) / 36525.0
+    omega = 1.0 + 8640184.812866 / 3155760000.0;
+    gmst0 = 24110.548412 + t * (8640184.812866 + t * (0.093104 - t * 6.2E-6))
+    theta_GMST = fmod(gmst0 + 86400.0 * omega * ut, 86400.0) * 2 * pi / 86400.0
+    x = position[0]
+    y = position[1]
+    z = position[2]
+    # longitude calculation
+    lon = fmod((atan(y/x) - theta_GMST),2*pi)
+    geo_data["lon"] = (lon*180)/(2*pi)
+
+    # latitude constellation
+    lat = atan(z/sqrt(x*x + y*y))
+    a = 6378137
+    e = 0.081819190842622
+    delta = 1.0
+    while (delta>0.001):
+        lat0 = lat
+        c = (a * e * e * sin(lat0))/sqrt(1.0 - e * e * sin(lat0) * sin(lat0))
+        lat = atan((z + c)/sqrt(x*x + y*y))
+        delta = fabs(lat - lat0)
+    geo_data["lat"] = 180*lat/(2*pi)
+
+    #altitude calculation
+    alt = sqrt(x*x + y*y)/ cos(lat) - a/sqrt(1.0 - e * e * sin(lat) * sin(lat))
+    geo_data["alt"] = fabs(alt)
+    return geo_data
+
+def compute_orbit(sat_name, date):
+    satellite = Satellite.objects.get(satellite_name="ISS (ZARYA)")
+    formatted = [int(x) for x in date.split(',')]
+    satellite_tle = twoline2rv(satellite.satellite_tle1, satellite.satellite_tle2, wgs84)
+    tle_data_details = parse_tle_lines(satellite.satellite_tle1, satellite.satellite_tle2)
+
+    position, velocity = satellite_tle.propagate(formatted[0], formatted[1], formatted[2], formatted[3], formatted[4], formatted[5])
+    geo_data = convert_to_geodetic(tle_data_details, position)
+
+    return_data = {
+        "error_code":satellite_tle.error,    # nonzero on error
+        "error_message":satellite_tle.error_message,
+        "position":position,
+        "velocity":velocity,
+        "elements":tle_data_details,
+        "geodetic": geo_data
+    }
+
+    return return_data
+
+def update_satellite_tle(tle_strings):
     sat = Satellite()
-    sat.satellite_name = split_data[0]
-    sat.satellite_tle1 = split_data[1]
-    sat.satellite_tle2 = split_data[2]
+    # update
+    sat.satellite_name = tle_strings[0]
+    sat.satellite_tle1 = tle_strings[1]
+    sat.satellite_tle2 = tle_strings[2]
     sat.save()
 
 def parse_tle_data(p_data):
-    split_data = p_data.splitlines()
-    update_satellite_tle(split_data)
+    tle_lines = p_data.splitlines()
+    update_satellite_tle(tle_lines)
     return split_data
 
 def process_get(request):
-    req_type = request.GET.get("type", None)
+    req_type = request.GET.get("command", None)
     if req_type == None:
         return {"id":0, "status":"failed", "description":"no data parameter specified"}
     else:
-        if req_type == "test":
-            compute_orbit()
-            return {"id":1, "value":0.0, "units":"sec","status":"ok", "description":"unknown data parameter specified"}
+        if req_type == "compute_orbit":
+            name = request.GET.get("sat_name", None)
+            date = request.GET.get("date", None)
+            return compute_orbit(name, date)
         return {"id":2, "status":"failed", "description":"unknown data parameter specified"}
 
 def process_post(request):
