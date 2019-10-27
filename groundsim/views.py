@@ -1,5 +1,6 @@
 import json
-from math import floor, fmod, pi, atan, sqrt, sin, fabs, cos
+from math import floor, fmod, pi, atan, sqrt, sin, fabs, cos, atan2
+from datetime import datetime
 from sgp4.earth_gravity import wgs72, wgs84
 from sgp4.io import twoline2rv
 from django.views.generic import View
@@ -7,9 +8,6 @@ from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from groundsim.models import Satellite
-
-line1 = ('1 00005U 58002B   00179.78495062  .00000023  00000-0  28098-4 0  4753')
-line2 = ('2 00005  34.2682 348.7242 1859667 331.7664  19.3264 10.82419157413667')
 
 def convert_to_float(element):
     if element[0] == '-':
@@ -53,7 +51,7 @@ def convert_to_geodetic(tle_data, position):
         launch_year = launch_year + 2000
     elif launch_year>56:
         launch_year = launch_year + 1900
-    geo_data["jd_year"]= 2415020.5 + (launch_year-1900)*365 + floor((launch_year-1900-1)/4)
+    geo_data["jd_year"]= 2415020.5 + (launch_year-1900)*365.0 + floor((launch_year-1900-1)/4)
     jd = geo_data["jd_year"] + dy - 1.0;
 
     # calculation of neccessary prerequsites
@@ -61,25 +59,24 @@ def convert_to_geodetic(tle_data, position):
     t = (jd - ut - 2451545.0) / 36525.0
     omega = 1.0 + 8640184.812866 / 3155760000.0;
     gmst0 = 24110.548412 + t * (8640184.812866 + t * (0.093104 - t * 6.2E-6))
-    theta_GMST = fmod(gmst0 + 86400.0 * omega * ut, 86400.0) * 2 * pi / 86400.0
+    theta_GMST = fmod(gmst0 + 86400 * omega * ut, 86400) * 2 * pi / 86400
     x = position[0]
     y = position[1]
     z = position[2]
     # longitude calculation
     lon = fmod((atan(y/x) - theta_GMST),2*pi)
-    geo_data["lon"] = (lon*180)/(2*pi)
-
+    geo_data["lon"] =  lon*180.0/pi
     # latitude constellation
     lat = atan(z/sqrt(x*x + y*y))
-    a = 6378137
+    a = 6378.137
     e = 0.081819190842622
     delta = 1.0
-    while (delta>0.001):
+    while (delta>0.0001):
         lat0 = lat
         c = (a * e * e * sin(lat0))/sqrt(1.0 - e * e * sin(lat0) * sin(lat0))
         lat = atan((z + c)/sqrt(x*x + y*y))
         delta = fabs(lat - lat0)
-    geo_data["lat"] = 180*lat/(2*pi)
+    geo_data["lat"] = 180*lat/pi
 
     #altitude calculation
     alt = sqrt(x*x + y*y)/ cos(lat) - a/sqrt(1.0 - e * e * sin(lat) * sin(lat))
@@ -87,9 +84,14 @@ def convert_to_geodetic(tle_data, position):
     return geo_data
 
 def compute_orbit(sat_name, date):
+    if date == None:
+        dat1 = datetime.now()
+        formatted = [dat1.year, dat1.month, dat1.day, dat1.hour, dat1.minute, dat1.second]
+    else:
+        formatted = [int(x) for x in date.split(',')]
     satellite = Satellite.objects.get(satellite_name="ISS (ZARYA)")
-    formatted = [int(x) for x in date.split(',')]
-    satellite_tle = twoline2rv(satellite.satellite_tle1, satellite.satellite_tle2, wgs84)
+    print (formatted)
+    satellite_tle = twoline2rv(satellite.satellite_tle1, satellite.satellite_tle2, wgs72)
     tle_data_details = parse_tle_lines(satellite.satellite_tle1, satellite.satellite_tle2)
 
     position, velocity = satellite_tle.propagate(formatted[0], formatted[1], formatted[2], formatted[3], formatted[4], formatted[5])
