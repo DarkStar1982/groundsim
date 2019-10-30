@@ -41,7 +41,7 @@ def parse_tle_lines(tle_line_1, tle_line_2):
     tle_data["argument_perigee"] = float(line_2[5])
     tle_data["mean_anomaly"] = float(line_2[6])
     tle_data["mean_motion"] = float(line_2[7])
-    tle_data["revolution_number"] = int(line_2[8][:-1])
+    tle_data["revolution_number"] = int(line_2[8][:-1]) #<--bug here
     return tle_data
 
 def convert_to_geodetic(tle_data, position, date):
