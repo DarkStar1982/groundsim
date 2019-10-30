@@ -58,10 +58,13 @@ def convert_to_geodetic(tle_data, position, date):
     omega = 1.0 + 8640184.812866 / 3155760000.0;
     gmst0 = 24110.54841 + t * (8640184.812866 + t * (0.093104 - t * 6.2E-6))
     theta_GMST = fmod(gmst0 + 86400* omega * ut, 86400) * 2 * pi / 86400
-    lon = fmod((atan(y/x)-theta_GMST),2*pi)
+    lon = atan2(y,x)-theta_GMST
     lon = lon*180/pi
-    geo_data["raw_l"] = lon
-    geo_data["lon"] = 180 + fmod(lon, 180)
+    geo_data["lon"] = lon
+    if lon<-180:
+        geo_data["lon"] = 360 + lon
+    if lon>-180:
+        geo_data["lon"] = lon
 
     # latitude calculation
     lat = atan(z/sqrt(x*x + y*y))
@@ -92,17 +95,9 @@ def compute_orbit(sat_name, date):
 
     position, velocity = satellite_tle.propagate(formatted[0], formatted[1], formatted[2], formatted[3], formatted[4], formatted[5])
     geo_data = convert_to_geodetic(tle_data_details, position, date)
-
-    return_data = {
-        "error_code":satellite_tle.error,    # nonzero on error
-        "error_message":satellite_tle.error_message,
-        "position":position,
-        "velocity":velocity,
-        "elements":tle_data_details,
-        "geodetic": geo_data
-    }
-
-    return return_data
+    geo_data["units"] = "km"
+    geo_data["id"] = str(tle_data_details["catalog_number"]) + tle_data_details["classification"]
+    return geo_data
 
 def update_satellite_tle(tle_strings):
     sat = Satellite()
