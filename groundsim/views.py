@@ -22,10 +22,25 @@ def convert_to_float(element):
     value = sign + '0.'+ mantissa +'E-' + exponent
     return float(value)
 
+# floating pointcomparison
+def f_equals(a,b,c):
+    if fabs(fabs(a)-fabs(c))<c:
+        return True
+    else:
+        return False
+
+def none_is_zero(obj):
+    if obj is None:
+        return 0
+    else:
+        return obj
+
 def parse_tle_lines(tle_line_1, tle_line_2):
     tle_data = {}
     line_1 = [x for x in tle_line_1.split(' ') if len(x)>0]
-    line_2 = [x for x in tle_line_2.split(' ') if len(x)>0]
+    # insert space separator to correctly process last two elements
+    line3 = tle_line_2[0:-4] + ' '+ tle_line_2[-4:]
+    line_2 = [x for x in line3.split(' ') if len(x)>0]
     tle_data["catalog_number"] = int(line_1[1][:-1])
     tle_data["classification"] = line_1[1][-1]
     tle_data["launch_label"] = line_1[2]
@@ -41,7 +56,7 @@ def parse_tle_lines(tle_line_1, tle_line_2):
     tle_data["argument_perigee"] = float(line_2[5])
     tle_data["mean_anomaly"] = float(line_2[6])
     tle_data["mean_motion"] = float(line_2[7])
-    tle_data["revolution_number"] = int(line_2[8][:-1]) #<--bug here
+    tle_data["revolution_number"] = int(line_2[8][:-1])
     return tle_data
 
 def convert_to_geodetic(tle_data, position, date):
@@ -79,17 +94,21 @@ def convert_to_geodetic(tle_data, position, date):
     geo_data["lat"] = 180*lat/pi
 
     #altitude calculation
-    alt = sqrt(x*x + y*y)/ cos(lat) - a/sqrt(1.0 - e * e * sin(lat) * sin(lat))
+    if f_equals(lat,pi/2,0.01):
+        alt = z/sin(lat) - a*sqrt(1-e*e)
+    else:
+        alt = sqrt(x*x + y*y)/ cos(lat) - a/sqrt(1.0 - e * e * sin(lat) * sin(lat))
     geo_data["alt"] = fabs(alt)
     return geo_data
 
-def compute_orbit(sat_name, date):
+def compute_orbit(norad_id, date):
     if date == None:
         date = datetime.now()
         formatted = [date.year, date.month, date.day, date.hour, date.minute, date.second]
     else:
         formatted = [int(x) for x in date.split(',')]
-    satellite = Satellite.objects.get(satellite_name="ISS (ZARYA)")
+    satellite = Satellite.objects.get(norad_id=norad_id)
+
     satellite_tle = twoline2rv(satellite.satellite_tle1, satellite.satellite_tle2, wgs72)
     tle_data_details = parse_tle_lines(satellite.satellite_tle1, satellite.satellite_tle2)
 
@@ -99,18 +118,21 @@ def compute_orbit(sat_name, date):
     geo_data["id"] = str(tle_data_details["catalog_number"]) + tle_data_details["classification"]
     return geo_data
 
-def update_satellite_tle(tle_strings):
-    sat = Satellite()
-    # update
-    sat.satellite_name = tle_strings[0]
-    sat.satellite_tle1 = tle_strings[1]
-    sat.satellite_tle2 = tle_strings[2]
-    sat.save()
-
-def parse_tle_data(p_data):
+#update or insert
+def update_satellite(p_data):
     tle_lines = p_data.splitlines()
-    update_satellite_tle(tle_lines)
-    return split_data
+    object_data = parse_tle_lines(tle_lines[1], tle_lines[2])
+    sat = None
+    norad_id = object_data["catalog_number"]
+    try:
+        sat = Satellite.objects.get(norad_id=norad_id)
+    except Satellite.DoesNotExist:
+        sat = Satellite()
+    sat.satellite_name = tle_lines[0]
+    sat.satellite_tle1 = tle_lines[1]
+    sat.satellite_tle2 = tle_lines[2]
+    sat.norad_id = norad_id
+    sat.save()
 
 def process_get(request):
     req_type = request.GET.get("command", None)
@@ -118,9 +140,9 @@ def process_get(request):
         return {"id":0, "status":"failed", "description":"no data parameter specified"}
     else:
         if req_type == "compute_orbit":
-            name = request.GET.get("sat_name", None)
+            norad_id = int(request.GET.get("norad_id", none_is_zero(None)))
             date = request.GET.get("date", None)
-            return compute_orbit(name, date)
+            return compute_orbit(norad_id, date)
         return {"id":2, "status":"failed", "description":"unknown data parameter specified"}
 
 def process_post(request):
@@ -130,7 +152,8 @@ def process_post(request):
     else:
         if cmd_type == "command_set_tle":
             data = request.POST.get("tle_data", None)
-            return parse_tle_data(data)
+            update_satellite(data)
+            return {"id":3, "status":"ok", "description":"satellite update succeeded"}
     return {"id":5, "status":"failed", "description":"unknown command specified"}
 
 @method_decorator(csrf_exempt, name='dispatch')
