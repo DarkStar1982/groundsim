@@ -1,7 +1,7 @@
 import json
 import julian
 from math import floor, fmod, pi, atan, sqrt, sin, fabs, cos, atan2, trunc
-from datetime import datetime
+from datetime import datetime, timezone
 from sgp4.earth_gravity import wgs72, wgs84
 from sgp4.io import twoline2rv
 from django.views.generic import View
@@ -99,6 +99,7 @@ def convert_to_geodetic(tle_data, position, date):
     else:
         alt = sqrt(x*x + y*y)/ cos(lat) - a/sqrt(1.0 - e * e * sin(lat) * sin(lat))
     geo_data["alt"] = fabs(alt)
+    geo_data["a"] = a + geo_data["alt"]
     return geo_data
 
 def compute_orbit(norad_id, date):
@@ -114,8 +115,18 @@ def compute_orbit(norad_id, date):
 
     position, velocity = satellite_tle.propagate(formatted[0], formatted[1], formatted[2], formatted[3], formatted[4], formatted[5])
     geo_data = convert_to_geodetic(tle_data_details, position, date)
-    geo_data["units"] = "km"
-    geo_data["id"] = str(tle_data_details["catalog_number"]) + tle_data_details["classification"]
+    #geo_data["units"] = "km"
+    geo_data["id"] = tle_data_details["catalog_number"]
+    geo_data["e"] = tle_data_details["eccentricity"]
+    geo_data["i"] = tle_data_details["inclination"]
+    geo_data["ra"] = tle_data_details["ra_ascending_node"]
+    geo_data["w"]= tle_data_details["argument_perigee"]
+    geo_data["status"] = "ok"
+    geo_data["time"] = datetime.now(timezone.utc).strftime("%H:%M:%SGMT %Y-%m-%d")
+    # time since periapsis
+    # calculate last known periapsis time
+    # add time difference since then and now
+    # modulo orbital period
     return geo_data
 
 #update or insert
