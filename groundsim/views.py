@@ -119,6 +119,7 @@ def compute_orbit(norad_id, date):
         formatted = [date.year, date.month, date.day, date.hour, date.minute, date.second]
     else:
         formatted = [int(x) for x in date.split(',')]
+        date = datetime(formatted[0], formatted[1], formatted[2], formatted[3],formatted[4],formatted[5])
     satellite = Satellite.objects.get(norad_id=norad_id)
     satellite_tle = twoline2rv(satellite.satellite_tle1, satellite.satellite_tle2, wgs72)
     tle_data_details = parse_tle_lines(satellite.satellite_tle1, satellite.satellite_tle2)
@@ -164,7 +165,6 @@ def get_satellite_list():
     for item in satellites:
         sat_list.append({"sat_name":item.satellite_name, "norad_id":item.norad_id})
     return sat_list
-
 
 class LocationHandler(View):
     def get(self, request):
