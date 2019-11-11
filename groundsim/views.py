@@ -76,11 +76,11 @@ def convert_to_geodetic(tle_data, position, date):
     theta_GMST = fmod(gmst0 + 86400* omega * ut, 86400) * 2 * pi / 86400
     lon = atan2(y,x)-theta_GMST
     lon = lon*180/pi
-    geo_data["lon"] = lon
+    geo_data["lng"] = lon
     if lon<-180:
-        geo_data["lon"] = 360 + lon
+        geo_data["lng"] = 360 + lon
     if lon>-180:
-        geo_data["lon"] = lon
+        geo_data["lng"] = lon
 
     # latitude calculation
     lat = atan(z/sqrt(x*x + y*y))
@@ -160,11 +160,14 @@ def update_satellite(p_data):
     sat.save()
 
 def get_satellite_list():
+    resp_sats = {}
     sat_list = []
     satellites= Satellite.objects.all()
     for item in satellites:
         sat_list.append({"sat_name":item.satellite_name, "norad_id":item.norad_id})
-    return sat_list
+    resp_sats["status"] = "ok"
+    resp_sats["satelites"] = sat_list
+    return resp_sats
 
 class LocationHandler(View):
     def get(self, request):
