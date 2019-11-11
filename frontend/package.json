@@ -1,0 +1,26 @@
+{
+    "name": "Satelite Dashboard",
+    "version": "1.0.0",
+    "private": true,
+    "keywords": [
+        "util",
+        "functional",
+        "server",
+        "client",
+        "browser"
+    ],
+    "author": "Bojan Seirovski",
+    "contributors": [],
+    "dependencies": {
+        "axios": "^0.19.0",
+        "bootstrap": "^4.3.1",
+        "d3-geo-projection": "^2.7.0",
+        "jquery": "^3.4.1",
+        "popper.js": "^1.16.0",
+        "raphael": "^2.3.0",
+        "require": "^2.4.20",
+        "satellite.js": "^3.0.1",
+        "topojson": "^3.0.2",
+        "vue": "^2.6.10"
+    }
+}

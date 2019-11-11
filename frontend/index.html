@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <title>Satellite Dashboard</title>
+        <!-- Bootstrap core CSS -->
+        <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="groundsim/css/dashboard.css" rel="stylesheet">
+    </head>
+    <body>
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+            <div class="container">
+                <a class="navbar-brand" href="#">Satellite Dashboard</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarResponsive">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="#">Dashboard
+                                <span class="sr-only">(current)</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Settings</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Log-in</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container mt-5 mb-4" id="dash_app">
+            <div class="row">
+                <div class="col-lg-6 text-center">
+
+                    <div class="card visuals">
+                        <div class="card-header">
+                            Visualization
+                        </div>
+                        <div class="card-body map-box-class" id="map_box">
+                            <div id="earth_map_top_bar">
+                                <span id="lat">LAT: {{ datalocation.lat }}</span>
+                                <span id="lng">LNG: {{ datalocation.lng }}</span>
+                                <span id="alt">ALT: {{ datalocation.alt }}</span>
+                                <span id="time">TIME: {{ datalocation.time }}</span>
+                            </div>
+                            <canvas id="earth_map_img" ref="earth_map_img"></canvas>
+                            <div id="earth_map_bottom_bar">
+                                <span id="a_bar">a: {{ datalocation.a }}</span>
+                                <span id="e_bar">e: {{ datalocation.e }}</span>
+                                <span id="i_bar">i: {{ datalocation.i }}</span>
+                                <span id="ra_bar">RA: {{ datalocation.ra }}</span>
+                                <span id="w_bar">w: {{ datalocation.w }}</span>
+                                <span id="tp_bar">Tp: {{ datalocation.tp }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-lg-6 text-center">
+
+                    <div class="card telemetry">
+                        <div class="card-header">
+                            Live Telemetry
+                        </div>
+                        <div class="card-body" id="telemetry_box">
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-lg-6 text-center">
+
+                    <div class="card actions">
+                        <div class="card-header">
+                            Actions
+                        </div>
+                        <div class="card-body text-left" id="actions_box">
+                            <div class="row mt-3">
+                                <div class="col-6 col-sm-6"><a href="javascript:void(0);" class="btn btn-warning">Reboot</a></div>
+                                <div class="col-6 col-sm-6"><a href="javascript:void(0);" class="btn btn-success">Shoot</a></div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-6 col-sm-6"><a href="javascript:void(0);" class="btn btn-danger">Shutdown</a></div>
+                                <div class="col-6 col-sm-6"><a href="javascript:void(0);" class="btn btn-success">SDR ON</a></div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-6 col-sm-6"><a href="javascript:void(0);" class="btn btn-secondary">Get Data</a></div>
+                                <div class="col-6 col-sm-6"><a href="javascript:void(0);" class="btn btn-success">SDR OFF</a></div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-6 col-sm-6"><a href="javascript:void(0);" class="btn btn-secondary">Upload</a></div>
+                                <div class="col-6 col-sm-6"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-lg-6 text-center">
+
+                    <div class="card eventlog">
+                        <div class="card-header">
+                            Event Log
+                        </div>
+                        <div class="card-body" id="log_box">
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <footer class="border-top">
+            <div class="row text-center">
+                <div class="col-lg-12 col-md-12">
+                    <img class="mb-1" src="/img/logo.svg" alt="" width="130" height="15">
+                    <small class="mb-3" id="year"></small>
+                </div>
+            </div>
+        </footer>
+        <img id="satelite_icon" ref="satelite_icon" alt="satelite icon" src="/img/satellite-icon.png" style="display: none;">
+        <!-- Bootstrap core JavaScript -->
+        <script type="text/javascript" src="node_modules/jquery/dist/jquery.slim.min.js"></script>
+        <script type="text/javascript" src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script type="text/javascript" src="node_modules/vue/dist/vue.min.js"></script>
+        <script type="text/javascript" src="node_modules/axios/dist/axios.min.js"></script>
+        <script type="text/javascript" src="groundsim/js/main.js"></script>
+    </body>
+</html>
