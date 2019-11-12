@@ -1,0 +1,53 @@
+{
+    "status": "ok/error",
+    "error": "{error message}",
+    "page":1,
+    "instruments": [
+        {
+            "type": "camera",
+            "property": {
+                "mode":"RGB",
+                "exp":"0.1",
+                "status":"on/off"
+            }            
+        },
+        {
+            "type": "sdr",
+            "property": {
+                "band":"RGB",
+                "signal":"0.1",
+                "status":"on/off"
+            }            
+        },
+        {
+            "type": "task manager",
+            "tasks":[
+                {
+                    "name":"task1",
+                    "status":"running/stopped",
+                    "cpu":"0.5%"
+                },
+                {
+                    "name":"task2",
+                    "status":"running/stopped",
+                    "cpu":"0.5%"
+                },
+                {
+                    "name":"task3",
+                    "status":"running/stopped",
+                    "cpu":"0.5%"
+                }
+            ]     
+        },
+        {
+            "type": "adcs",
+            "property": {
+                "mode":"nadir",
+                "dx_dt":"0.1",
+                "dy_dt":"0.1",
+                "dz_dt":"0.1",
+                "state":"stable/whatever"
+            }            
+        }
+    ]
+}

@@ -1,0 +1,32 @@
+{
+    "status": "ok/error",
+    "error": "{error message}",
+    "page":1,
+    "log": [
+        {
+            "date": "20:00:00GMT 11 June 2019",
+            "severity": "Informtaion/Action OK/Action Error/Warning/Critical Error/Fault Mode",
+            "description":"Blah blah blah"
+        },
+        {
+            "date": "20:00:00GMT 11 June 2019",
+            "severity": "Informtaion/Action OK/Action Error/Warning/Critical Error/Fault Mode",
+            "description":"Blah blah blah"
+        },
+        {
+            "date": "20:00:00GMT 11 June 2019",
+            "severity": "Informtaion/Action OK/Action Error/Warning/Critical Error/Fault Mode",
+            "description":"Blah blah blah"
+        },
+        {
+            "date": "20:00:00GMT 11 June 2019",
+            "severity": "Informtaion/Action OK/Action Error/Warning/Critical Error/Fault Mode",
+            "description":"Blah blah blah"
+        },
+        {
+            "date": "20:00:00GMT 11 June 2019",
+            "severity": "Informtaion/Action OK/Action Error/Warning/Critical Error/Fault Mode",
+            "description":"Blah blah blah"
+        }
+    ]
+}

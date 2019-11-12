@@ -39,9 +39,9 @@ var app = new Vue({
 	api: {
 	    list: baseUrl + "/list/",
 	    location: baseUrl + "/location/"+norad_url,
-	    telemetry: baseUrl + "/telemetry",
-	    log: baseUrl + "/log/",
-	    instruments: baseUrl + "/instruments/"
+	    telemetry: baseUrl + "/telemetry"+norad_url,
+	    log: baseUrl + "/log/"+norad_url,
+	    instruments: baseUrl + "/instruments/"+norad_url
 	}
     },
     mounted: function () {

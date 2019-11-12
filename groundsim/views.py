@@ -168,6 +168,14 @@ def get_satellite_list():
     resp_sats["status"] = "ok"
     resp_sats["satelites"] = sat_list
     return resp_sats
+def get_telematry(norad_id):
+    return {"status":"ok", "power":[], "thermal":[], "obdh":[], "adcs":[]}
+
+def get_log(norad_id, page):
+    return {"status":"ok", "page":0, "log":[]}
+
+def get_instruments(norad_id, page):
+    return {"status":"ok", "page":0, "instruments":[]}
 
 class LocationHandler(View):
     def get(self, request):
@@ -179,6 +187,21 @@ class LocationHandler(View):
 class SatelliteListHandler(View):
     def get(self, request):
         response = get_satellite_list()
+        return HttpResponse(json.dumps(response))
+
+class TelemetryListHandler(View):
+    def get(self, request):
+        response = get_telematry(norad_id)
+        return HttpResponse(json.dumps(response))
+
+class LogListHandler(View):
+    def get(self, request):
+        response = get_log(norad_id, page)
+        return HttpResponse(json.dumps(response))
+
+class InstrumentsListHandler(View):
+    def get(self, request):
+        response = get_instruments(norad_id, page)
         return HttpResponse(json.dumps(response))
 
 @method_decorator(csrf_exempt, name='dispatch')
