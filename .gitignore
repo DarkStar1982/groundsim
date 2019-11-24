@@ -2,5 +2,7 @@
 *.pyc
 __pycache__/
 .DS_Store
+*lock*
+/nbproject/
 /nbproject/private/
 /frontend/nbproject/private/

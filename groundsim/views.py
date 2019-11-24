@@ -169,9 +169,9 @@ def get_satellite_list():
     resp_sats["satelites"] = sat_list
     return resp_sats
 def get_telematry(norad_id):
-    return {"status":"ok", "power":[], "thermal":[], "obdh":[], "adcs":[]}
+    return {"status":"ok", "power":[{"param":"param","value":"value"},{"param":"param2","value":"value2"},{"param":"param3","value":"value3"},{"param":"param4","value":"value4"}], "thermal":[{"param":"param","value":"value"},{"param":"param2","value":"value2"},{"param":"param3","value":"value3"},{"param":"param4","value":"value4"}], "obdh":[{"param":"param","value":"value"},{"param":"param2","value":"value2"},{"param":"param3","value":"value3"},{"param":"param4","value":"value4"}], "adcs":[{"param":"param","value":"value"},{"param":"param2","value":"value2"},{"param":"param3","value":"value3"},{"param":"param4","value":"value4"}]}
 
-def get_log(norad_id, page):
+def get_log(norad_id):
     return {"status":"ok", "page":0, "log":[]}
 
 def get_instruments(norad_id, page):
@@ -191,16 +191,19 @@ class SatelliteListHandler(View):
 
 class TelemetryListHandler(View):
     def get(self, request):
+        norad_id = int(request.GET.get("norad_id", none_is_zero(None)))
         response = get_telematry(norad_id)
         return HttpResponse(json.dumps(response))
 
 class LogListHandler(View):
     def get(self, request):
-        response = get_log(norad_id, page)
+        norad_id = int(request.GET.get("norad_id", none_is_zero(None)))
+        response = get_log(norad_id)
         return HttpResponse(json.dumps(response))
 
 class InstrumentsListHandler(View):
     def get(self, request):
+        norad_id = int(request.GET.get("norad_id", none_is_zero(None)))
         response = get_instruments(norad_id, page)
         return HttpResponse(json.dumps(response))
 

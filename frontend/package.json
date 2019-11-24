@@ -19,7 +19,6 @@
         "raphael": "^2.3.0",
         "require": "^2.4.20",
         "satellite.js": "^3.0.1",
-        "topojson": "^3.0.2",
         "vue": "^2.6.10"
     }
 }

@@ -73,12 +73,28 @@
                         </div>
                         <div class="card-body" id="telemetry_box">
                             <div class="row">
-                                <div class="col-6"></div>
-                                <div class="col-6"></div>
+                                <div class="col-6">
+                                    <h3>POWER</h3>
+                                    <div class="row" id="power_sect">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <h3>THERMAL</h3>
+                                    <div class="row" id="thermal_sect">
+                                    </div>
+                                </div>
                             </div>
                             <div class="row">
-                                <div class="col-6"></div>
-                                <div class="col-6"></div>
+                                <div class="col-6">
+                                    <h3>OBDH</h3>
+                                    <div class="row" id="obdh_sect">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <h3>ADCS</h3>
+                                    <div class="row" id="adcs_sect">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -91,24 +107,32 @@
 
                     <div class="card actions">
                         <div class="card-header">
-                            Actions
+                            Instrument Actions
                         </div>
                         <div class="card-body text-left" id="actions_box">
-                            <div class="row mt-3">
-                                <div class="col-6 col-sm-6"><a href="javascript:void(0);" class="btn btn-warning">Reboot</a></div>
-                                <div class="col-6 col-sm-6"><a href="javascript:void(0);" class="btn btn-success">Shoot</a></div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <h3>Camera</h3>
+                                    <div class="row" id="camera_sect">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <h3>SDR</h3>
+                                    <div class="row" id="sdr_sect">
+                                    </div>
+                                </div>
                             </div>
-                            <div class="row mt-3">
-                                <div class="col-6 col-sm-6"><a href="javascript:void(0);" class="btn btn-danger">Shutdown</a></div>
-                                <div class="col-6 col-sm-6"><a href="javascript:void(0);" class="btn btn-success">SDR ON</a></div>
-                            </div>
-                            <div class="row mt-3">
-                                <div class="col-6 col-sm-6"><a href="javascript:void(0);" class="btn btn-secondary">Get Data</a></div>
-                                <div class="col-6 col-sm-6"><a href="javascript:void(0);" class="btn btn-success">SDR OFF</a></div>
-                            </div>
-                            <div class="row mt-3">
-                                <div class="col-6 col-sm-6"><a href="javascript:void(0);" class="btn btn-secondary">Upload</a></div>
-                                <div class="col-6 col-sm-6"></div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <h3>Task manager</h3>
+                                    <div class="row" id="taskman_sect">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <h3>ADCS</h3>
+                                    <div class="row" id="adcsact_sect">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -121,7 +145,19 @@
                             Event Log
                         </div>
                         <div class="card-body" id="log_box">
-
+                            <div class="row">
+                                <div class="col-4">
+                                    Timestamp
+                                </div>
+                                <div class="col-4">
+                                    Severity
+                                </div>
+                                <div class="col-4">
+                                    Description
+                                </div>
+                            </div>
+                            <div class="row row_log">
+                            </div>
                         </div>
                     </div>
 

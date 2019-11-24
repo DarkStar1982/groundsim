@@ -12,7 +12,7 @@ var mapHeight = 150;
 /**
  * Pause between AJAX calls
  */
-var loopBreak = 3000;
+var loopBreak = 3500;
 var baseUrl = "http://127.0.0.1:8000"
 
 var norad_url = "";
@@ -39,19 +39,19 @@ var app = new Vue({
 	api: {
 	    list: baseUrl + "/list/",
 	    location: baseUrl + "/location/"+norad_url,
-	    telemetry: baseUrl + "/telemetry"+norad_url,
+	    telemetry: baseUrl + "/telemetry/"+norad_url,
 	    log: baseUrl + "/log/"+norad_url,
 	    instruments: baseUrl + "/instruments/"+norad_url
 	}
     },
     mounted: function () {
+	var theApp = this;
 	this.getNoradId();
 	this.interval = setInterval(function () {
-	    this.showLocation();
+	    theApp.showLocation();
+	    theApp.getTelemetry();
+	    theApp.getLog();
 	}.bind(this), loopBreak);
-    },
-    created: function () {
-
     },
     methods: {
 	getNoradId(){
@@ -63,9 +63,74 @@ var app = new Vue({
 		norad_url = "?norad_id=" + data.satelites[0].norad_id;
 	    });
 	},
-	showLocation() {
+	getLog() {
+	    this.loadApi(this.api.log+norad_url, function (data) {
+		var log = $("#log_box .row_log");
+
+		log.html('');
+
+		data.log.forEach((val)=>{
+			log.append('<div class="col-4">'+val.time+'</div><div class="col-4">'+val.severity+'</div><div class="col-4">'+val.description+'</div>');
+		});
+	    });
+	},
+	getTelemetry() {
+	    /**
+	     * TODO: MAKE IT WORK, HTML NEEDS A LOT OF STYLING !!!
+	     */
+	    this.loadApi(this.api.telemetry+norad_url, function (data) {
+		var power = $("#power_sect");
+		var thermal = $("#thermal_sect");
+		var obdh = $("#obdh_sect");
+		var adcs = $("#adcs_sect");
+
+		power.html('');
+		thermal.html('');
+		obdh.html('');
+		adcs.html('');
+
+		data.power.forEach((val)=>{
+		    power.append('<div class="col-6">'+val.param+'</div><div class="col-6">'+val.value+'</div>');
+		});
+		data.adcs.forEach((val)=>{
+		    adcs.append('<div class="col-6">'+val.param+'</div><div class="col-6">'+val.value+'</div>');
+		});
+		data.obdh.forEach((val)=>{
+		    obdh.append('<div class="col-6">'+val.param+'</div><div class="col-6">'+val.value+'</div>');
+		});
+		data.thermal.forEach((val)=>{
+		    thermal.append('<div class="col-6">'+val.param+'</div><div class="col-6">'+val.value+'</div>');
+		});
+	    });
+	},
+	getActions() {
+	    this.loadApi(this.api.telemetry+norad_url, function (data) {
+		var power = $("#power_sect");
+		var thermal = $("#thermal_sect");
+		var obdh = $("#obdh_sect");
+		var adcs = $("#adcs_sect");
+
+		power.html('');
+		thermal.html('');
+		obdh.html('');
+		adcs.html('');
+
+		data.power.forEach((val)=>{
+		    power.append('<div class="col-6">'+val.param+'</div><div class="col-6">'+val.value+'</div>');
+		});
+		data.adcs.forEach((val)=>{
+		    adcs.append('<div class="col-6">'+val.param+'</div><div class="col-6">'+val.value+'</div>');
+		});
+		data.obdh.forEach((val)=>{
+		    obdh.append('<div class="col-6">'+val.param+'</div><div class="col-6">'+val.value+'</div>');
+		});
+		data.thermal.forEach((val)=>{
+		    thermal.append('<div class="col-6">'+val.param+'</div><div class="col-6">'+val.value+'</div>');
+		});
+	    });
+	},
+	showLocation(callback) {
 	    var theApp = this;
-	    console.log(norad_url);
 	    this.loadApi(this.api.location+norad_url, function (data) {
 		var ctx = document.getElementById("earth_map_img").getContext("2d");
 
@@ -78,6 +143,13 @@ var app = new Vue({
 		theApp.path.push({x, y});
 
 		theApp.drawSatellite(ctx, x, y);
+		try{
+		    if(callback){
+			callback();
+		    }
+		}catch(e){
+		    console.log(e);
+		};
 	    });
 	},
 	drawSatellite(ctx, x, y) {
