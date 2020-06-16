@@ -3,6 +3,8 @@
 __pycache__/
 .DS_Store
 *lock*
-/nbproject/
+/nbproject/*
 /nbproject/private/
 /frontend/nbproject/private/
+frontend/node_modules/*
+
