@@ -8,3 +8,7 @@ __pycache__/
 /frontend/nbproject/private/
 frontend/node_modules/*
 
+/frontnew1/nbproject/*
+/frontnew1/node_modules/*
+/frontnew1/examples/*
+/frontnew1/docs/*
