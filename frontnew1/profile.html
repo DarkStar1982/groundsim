@@ -33,25 +33,31 @@
                     </div>
                     <ul class="nav">
                         <li>
-                            <a href="./dashboard.html">
+                            <a href="dashboard.html">
                                 <i class="tim-icons icon-chart-pie-36"></i>
-                                <p>Dashboard</p>
+                                <p>Mission Dashboard</p>
                             </a>
                         </li>
                         <li>
-                            <a href="./mission.html">
+                            <a href="missionsum.html">
+                                <i class="tim-icons icon-single-copy-04"></i>
+                                <p>Mission Summary</p>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="mission.html">
                                 <i class="tim-icons icon-planet"></i>
-                                <p>Mission</p>
+                                <p>Mission Settings</p>
                             </a>
                         </li>
                         <li>
-                            <a href="./board.html">
+                            <a href="board.html">
                                 <i class="tim-icons icon-paper"></i>
                                 <p>Leader Board</p>
                             </a>
                         </li>
                         <li>
-                            <a href="./notifications.html">
+                            <a href="notifications.html">
                                 <i class="tim-icons icon-bell-55"></i>
                                 <p>Notifications</p>
                             </a>
@@ -71,7 +77,7 @@
                                     <span class="navbar-toggler-bar bar3"></span>
                                 </button>
                             </div>
-                            <a class="navbar-brand" href="javascript:void(0)">Notifications</a>
+                            <a class="navbar-brand" href="javascript:void(0)">Profile</a>
                         </div>
                         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-expanded="false" aria-label="Toggle navigation">
                             <span class="navbar-toggler-bar navbar-kebab"></span>
@@ -82,7 +88,6 @@
                             <ul class="navbar-nav ml-auto">
                                 <li class="dropdown nav-item">
                                     <a href="notifications.html" class="dropdown-toggle nav-link">
-                                        <div class="notification d-none d-lg-block d-xl-block"></div>
                                         <i class="tim-icons icon-sound-wave"></i>
                                         <p class="d-lg-none">
                                             Notifications
@@ -101,7 +106,6 @@
                                     </a>
                                     <ul class="dropdown-menu dropdown-navbar">
                                         <li class="nav-link"><a href="profile.html" class="nav-item dropdown-item">Profile</a></li>
-                                        <li class="nav-link"><a href="settings.html" class="nav-item dropdown-item">Settings</a></li>
                                         <li class="dropdown-divider"></li>
                                         <li class="nav-link"><a href="login.html" class="nav-item dropdown-item">Log out</a></li>
                                     </ul>
@@ -125,13 +129,13 @@
                                             <div class="col-md-6 px-md-1">
                                                 <div class="form-group">
                                                     <label>Username</label>
-                                                    <input type="text" class="form-control" placeholder="Username" value="michael23">
+                                                    <input type="text" class="form-control" placeholder="Username">
                                                 </div>
                                             </div>
                                             <div class="col-md-6 pl-md-1">
                                                 <div class="form-group">
                                                     <label for="exampleInputEmail1">Email address</label>
-                                                    <input type="email" class="form-control" placeholder="mike@email.com">
+                                                    <input type="email" class="form-control" placeholder="email">
                                                 </div>
                                             </div>
                                         </div>
@@ -139,13 +143,13 @@
                                             <div class="col-md-6 pr-md-1">
                                                 <div class="form-group">
                                                     <label>First Name</label>
-                                                    <input type="text" class="form-control" placeholder="Company" value="Mike">
+                                                    <input type="text" class="form-control" placeholder="Company">
                                                 </div>
                                             </div>
                                             <div class="col-md-6 pl-md-1">
                                                 <div class="form-group">
                                                     <label>Last Name</label>
-                                                    <input type="text" class="form-control" placeholder="Last Name" value="Andrew">
+                                                    <input type="text" class="form-control" placeholder="Last Name">
                                                 </div>
                                             </div>
                                         </div>
@@ -153,7 +157,7 @@
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label>Address</label>
-                                                    <input type="text" class="form-control" placeholder="Home Address" value="Bld Mihail Kogalniceanu, nr. 8 Bl 1, Sc 1, Ap 09">
+                                                    <input type="text" class="form-control" placeholder="Address">
                                                 </div>
                                             </div>
                                         </div>
@@ -161,28 +165,54 @@
                                             <div class="col-md-4 pr-md-1">
                                                 <div class="form-group">
                                                     <label>City</label>
-                                                    <input type="text" class="form-control" placeholder="City" value="Mike">
+                                                    <input type="text" class="form-control" placeholder="City">
                                                 </div>
                                             </div>
                                             <div class="col-md-4 px-md-1">
                                                 <div class="form-group">
                                                     <label>Country</label>
-                                                    <input type="text" class="form-control" placeholder="Country" value="Andrew">
+                                                    <input type="text" class="form-control" placeholder="Country">
                                                 </div>
                                             </div>
                                             <div class="col-md-4 pl-md-1">
                                                 <div class="form-group">
                                                     <label>Postal Code</label>
-                                                    <input type="number" class="form-control" placeholder="ZIP Code">
+                                                    <input type="number" class="form-control" placeholder="Postal/ZIP Code">
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label>About Me</label>
-                                                    <textarea rows="4" cols="80" class="form-control" placeholder="Here can be your description">Lamborghini Mercy, Your chick she so thirsty, I'm in that two seat Lambo.</textarea>
+                                                    <textarea rows="4" cols="80" class="form-control" placeholder="Here can be your description"></textarea>
                                                 </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12 pr-md-1">
+                                                <br/>
+                                                <br/>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6 pr-md-1">
+                                                <div class="form-group">
+                                                    <label>New Password</label>
+                                                    <input type="password" class="form-control" placeholder="New Password">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 pl-md-1">
+                                                <div class="form-group">
+                                                    <label>Confirm New Password</label>
+                                                    <input type="password" class="form-control" placeholder="Confirm New Password">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12 pr-md-1">
+                                                <br/>
+                                                <br/>
                                             </div>
                                         </div>
                                     </form>
