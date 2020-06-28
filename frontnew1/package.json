@@ -1,49 +1,58 @@
 {
-  "name": "black-dashboard",
-  "version": "1.0.0",
-  "description": "Black Dasboard, a Black Desgin. Coded by Creative Tim",
-  "main": "index.html",
-  "directories": {
-    "example": "root"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/creativetimofficial/black-dashboard.git"
-  },
-  "keywords": [
-    "black dashboard",
-    "bootstrap admin",
-    "bootstrap dashboard",
-    "black design admin",
-    "black design",
-    "creative tim",
-    "html dashboard",
-    "html css dashboard",
-    "web dashboard",
-    "freebie",
-    "free bootstrap dashboard",
-    "css3 dashboard",
-    "bootstrap admin",
-    "bootstrap dashboard",
-    "frontend",
-    "responsive bootstrap dashboard"
-  ],
-  "author": "Creative Tim <hello@creative-tim.com> (https://www.creative-tim.com/)",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/creativetimofficial/black-dashboard/issues"
-  },
-  "devDependencies": {
-    "gulp": "^3.9.1",
-    "gulp-autoprefixer": "^5.0.0",
-    "gulp-clean": "^0.4.0",
-    "gulp-install": "^1.1.0",
-    "gulp-sass": "^4.0.1",
-    "gulp-sourcemaps": "^2.6.4",
-    "gulp-open": "^3.0.1"
-  },
-  "homepage": "http://demos.creative-tim.com/black-dashboard/examples/dashboard.html?_ga=2.143239282.69692347.1519629130-329288944.1519374311"
+    "name": "black-dashboard",
+    "version": "1.0.0",
+    "description": "Black Dasboard, a Black Desgin. Coded by Creative Tim",
+    "main": "index.html",
+    "directories": {
+        "example": "root"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/creativetimofficial/black-dashboard.git"
+    },
+    "keywords": [
+        "black dashboard",
+        "bootstrap admin",
+        "bootstrap dashboard",
+        "black design admin",
+        "black design",
+        "creative tim",
+        "html dashboard",
+        "html css dashboard",
+        "web dashboard",
+        "freebie",
+        "free bootstrap dashboard",
+        "css3 dashboard",
+        "bootstrap admin",
+        "bootstrap dashboard",
+        "frontend",
+        "responsive bootstrap dashboard"
+    ],
+    "author": "Creative Tim <hello@creative-tim.com> (https://www.creative-tim.com/)",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/creativetimofficial/black-dashboard/issues"
+    },
+    "devDependencies": {
+        "gulp": "^3.9.1",
+        "gulp-autoprefixer": "^5.0.0",
+        "gulp-clean": "^0.4.0",
+        "gulp-install": "^1.1.0",
+        "gulp-sass": "^4.0.1",
+        "gulp-sourcemaps": "^2.6.4",
+        "gulp-open": "^3.0.1"
+    },
+    "dependencies": {
+        "axios": "^0.19.0",
+        "bootstrap": "^4.3.1",
+        "jquery": "^3.4.1",
+        "popper.js": "^1.16.0",
+        "raphael": "^2.3.0",
+        "require": "^2.4.20",
+        "vue": "^2.6.10"
+    },
+    "homepage": "http://demos.creative-tim.com/black-dashboard/examples/dashboard.html?_ga=2.143239282.69692347.1519629130-329288944.1519374311"
 }
