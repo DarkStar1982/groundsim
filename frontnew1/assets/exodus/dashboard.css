@@ -27,23 +27,92 @@ canvas#earth_map_img {
     width: 30%!important;
     margin-right: 5px;
     margin-left: 5px;
-    font-size: 8pt;
+    font-size: 9pt;
+    color: #ffffff;
 }
+#earth_map_top_bar span:hover{
+    color: #ffc107;
+}
+
 #earth_map_bottom_bar{
     position: absolute;
     bottom: 0;
     left: 5px;
     width: 100%;
+    margin-bottom: 42px;
 }
 
 #earth_map_bottom_bar span{
     width: 20%!important;
     margin-right: 5px;
     margin-left: 5px;
-    font-size: 8pt;
+    font-size: 12pt;
+    color: #ffffff;
 }
-
+#earth_map_bottom_bar span:hover{
+    color: #ffc107;
+}
 
 .card{
     width: 480px!important;
+}
+
+#power_sect, #thermal_sect, #obdh_sect, #adcs_sect{
+    font-size: 10pt;
+    color: #ffc107;
+}
+
+.row_log .col-4{
+    color: #ffc107;
+    font-size: 8pt;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+#log_box .row{
+    color: #ffffff;
+}
+
+#camera_sect, #sdr_sect{
+    background-image: url(/assets/img/BANNER.png) ;
+    background-repeat-x: no-repeat;
+    background-repeat-y: no-repeat;
+    background-size: 300px auto;
+    width: 200px;
+    height: 140px;
+    margin-left: 3px;
+}
+#sdr_sect{
+    background-image: url(/assets/img/sdr.jpg) ;
+}
+
+#taskman_sect{
+    color: #ffc107;
+    font-size: 8pt;
+}
+
+#power_sect .row:hover, 
+#thermal_sect .row:hover,
+#obdh_sect .row:hover,
+#log_box #row_logs .col-12:hover,
+#adcs_sect .row:hover
+{
+    color: #ffffff;
+}
+
+#adcsact_sect{
+    width: 200px;
+    height: 140px;    
+}
+
+.card.action .card-body .row{
+    margin-top: 5px;
+}
+
+.card-body h3:hover{
+    -webkit-transform: scale(1.2); 
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    -ms-transition: all 0.3s ease;
 }
