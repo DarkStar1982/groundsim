@@ -116,7 +116,7 @@
                     </div>
                 </nav>
                 <!-- End Navbar -->
-                <div class="content">
+                <div class="content" id="app">
                     <div class="row">
                         <div class="col-md-8">
                             <div class="card">
@@ -124,7 +124,55 @@
                                     <h5 class="title">Mission</h5>
                                 </div>
                                 <div class="card-body">
-
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <select id="sel_mission_type" class="form-control">
+                                                <option value="0">Mission Type</option>
+                                                <option value="1">Earth Observation</option>
+                                                <option value="2">Software Defined Radio</option>
+                                                <option value="3">Forest Fire Detection</option>
+                                                <option value="4">Custom</option>
+                                            </select>
+                                            <div id="earth_mission" class="mission_type">
+                                                <div class="row"></div>
+                                                <div class="row"></div>
+                                                <div class="row"></div>
+                                                <div class="row"></div>
+                                            </div>
+                                            <div id="sdr_mission" class="mission_type">
+                                                <div class="row"></div>
+                                                <div class="row"></div>
+                                                <div class="row"></div>
+                                                <div class="row"></div>
+                                            </div>
+                                            <div id="fire_mission" class="mission_type">
+                                                <div class="row"></div>
+                                                <div class="row"></div>
+                                                <div class="row"></div>
+                                                <div class="row"></div>
+                                            </div>
+                                            <div id="custom_mission" class="mission_type">
+                                                <div class="row">
+                                                    <h3>Upload your custom code or use our mission tool.</h3>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-6"><input type="radio" name="code_type" value="tool"> Mission Tool</div>
+                                                    <div class="col-md-6"><input type="radio" name="code_type" value="custom" checked="checked"> Custom Code</div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <textarea name="c_code" id="c_code" rows="20" cols="60" placeholder="Put your code here!"></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-3"><input type="radio" name="miss_type" value="event"> Event Based</div>
+                                                    <div class="col-md-3"><input type="radio" name="miss_type" value="time" checked="checked"> Time Based</div>
+                                                    <div class="col-md-3"><input type="radio" name="miss_type" value="continuous"> Continuous</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row"></div>
                                 </div>
                                 <div class="card-footer">
                                     <button type="submit" class="btn btn-fill btn-primary">OK</button>
@@ -175,6 +223,7 @@
         <!-- Control Center for Black Dashboard: parallax effects, scripts for the example pages etc -->
         <script src="assets/js/black-dashboard.min.js?v=1.0.0"></script>
         <script src="assets/exodus/init.js"></script>
+        <script src="assets/exodus/missionsettings.js"></script>
     </body>
 
 </html>
