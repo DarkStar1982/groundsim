@@ -21,11 +21,12 @@ class SatelliteSimulation():
     def __init__():
         pass
 
-    # at 1 second resolution
+    # at 1 second resolution - input is Environment simulation output
     def evolve_step_forward():
         pass
 
-    def process_command():
+    # should include ground station visibility calculation
+    def queue_command():
         pass
 
     def get_state():
