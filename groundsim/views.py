@@ -22,7 +22,7 @@ def convert_to_float(element):
     value = sign + '0.'+ mantissa +'E-' + exponent
     return float(value)
 
-# floating pointcomparison
+# floating point comparison
 def f_equals(a,b,c):
     if fabs(fabs(a)-fabs(c))<c:
         return True
@@ -168,6 +168,7 @@ def get_satellite_list():
     resp_sats["status"] = "ok"
     resp_sats["satelites"] = sat_list
     return resp_sats
+
 def get_telematry(norad_id):
     return {"status":"ok", "power":[{"param":"param","value":"value"},{"param":"param2","value":"value2"},{"param":"param3","value":"value3"},{"param":"param4","value":"value4"}], "thermal":[{"param":"param","value":"value"},{"param":"param2","value":"value2"},{"param":"param3","value":"value3"},{"param":"param4","value":"value4"}], "obdh":[{"param":"param","value":"value"},{"param":"param2","value":"value2"},{"param":"param3","value":"value3"},{"param":"param4","value":"value4"}], "adcs":[{"param":"param","value":"value"},{"param":"param2","value":"value2"},{"param":"param3","value":"value3"},{"param":"param4","value":"value4"}]}
 
