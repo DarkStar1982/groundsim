@@ -9,6 +9,7 @@ from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from groundsim.models import Satellite
+from groundsim.mse import EnvironmentSimulation, SatelliteSimulation
 
 def convert_to_float(element):
     if element[0] == '-':
@@ -177,6 +178,17 @@ def get_log(norad_id):
 
 def get_instruments(norad_id, page):
     return {"status":"ok", "page":0, "instruments":[]}
+
+class InitializeHandler(View):
+    def get(self, request):
+        norad_id = int(request.GET.get("norad_id", none_is_zero(None)))
+        str_date = request.GET.get("date", None)
+        formatted = [int(x) for x in str_date.split(',')]
+        start_date = datetime(formatted[0], formatted[1], formatted[2], formatted[3],formatted[4],formatted[5])
+        # should be user session
+        environment = EnvironmentSimulation(norad_id, start_date)
+        satellite = SatelliteSimulation()
+        return HttpResponse(json.dumps("OK"))
 
 class LocationHandler(View):
     def get(self, request):
