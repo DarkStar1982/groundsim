@@ -143,7 +143,7 @@ class EnvironmentSimulation():
     def reset_to_start():
         pass
 
-    def get_state_value():
+    def get_state_values():
         mse_state = {}
         return mse_state
 
@@ -166,3 +166,7 @@ class SatelliteSimulation():
     # ???
     def get_event_log():
         pass
+
+    def get_telemetry():
+        mse_state = {}
+        return mse_state

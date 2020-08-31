@@ -185,7 +185,7 @@ class InitializeHandler(View):
         str_date = request.GET.get("date", None)
         formatted = [int(x) for x in str_date.split(',')]
         start_date = datetime(formatted[0], formatted[1], formatted[2], formatted[3],formatted[4],formatted[5])
-        # should be user session
+        # shouldn't be be user session?
         environment = EnvironmentSimulation(norad_id, start_date)
         satellite = SatelliteSimulation()
         return HttpResponse(json.dumps("OK"))
