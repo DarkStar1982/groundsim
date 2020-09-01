@@ -2,6 +2,8 @@
 # environment simulator + satellite system simulator
 from sgp4.earth_gravity import wgs72, wgs84
 from sgp4.io import twoline2rv
+from groundsim.models import Satellite
+
 
 # Global Constants
 
@@ -15,6 +17,57 @@ def get_epoch_time(tle_string):
     days =  float(tle_string[2:])
     date_a = datetime(year, 1, 1,tzinfo=timezone.utc) + timedelta(days - 1)
     return date_a
+
+# floating point comparison
+def f_equals(a,b,c):
+    if fabs(fabs(a)-fabs(c))<c:
+        return True
+    else:
+        return False
+
+def none_is_zero(obj):
+    if obj is None:
+        return 0
+    else:
+        return obj
+
+def convert_to_float(element):
+    if element[0] == '-':
+        sign = '-'
+        mantissa = element[1:5]
+        exponent = element[-1]
+    else:
+        sign = ''
+        mantissa = element[0:4]
+        exponent = element[-1]
+    value = sign + '0.'+ mantissa +'E-' + exponent
+    return float(value)
+
+#update or insert
+def update_satellite(p_data):
+    tle_lines = p_data.splitlines()
+    object_data = parse_tle_lines(tle_lines[1], tle_lines[2])
+    sat = None
+    norad_id = object_data["catalog_number"]
+    try:
+        sat = Satellite.objects.get(norad_id=norad_id)
+    except Satellite.DoesNotExist:
+        sat = Satellite()
+    sat.satellite_name = tle_lines[0]
+    sat.satellite_tle1 = tle_lines[1]
+    sat.satellite_tle2 = tle_lines[2]
+    sat.norad_id = norad_id
+    sat.save()
+
+def get_satellite_list():
+    resp_sats = {}
+    sat_list = []
+    satellites= Satellite.objects.all()
+    for item in satellites:
+        sat_list.append({"sat_name":item.satellite_name, "norad_id":item.norad_id})
+    resp_sats["status"] = "ok"
+    resp_sats["satelites"] = sat_list
+    return resp_sats
 
 class EnvironmentSimulation():
     # start date, NORAD ID, mode, ground station locations?
@@ -149,24 +202,32 @@ class EnvironmentSimulation():
 
 class SatelliteSimulation():
     # satellite configuration:
-    def __init__(self):
-        pass
+    def __init__(self, p_environment):
+        self.environment = p_environment
 
     # at 1 second resolution - input is Environment simulation output
-    def evolve_step_forward():
-        pass
+    def evolve_steps_forward(self, p_step_seconds):
+        i = 0
+        while i<p_step_seconds:
+            self.environment.evolve_step_forward()
+            i = i + 1
 
     # should include ground station visibility calculation
-    def queue_command():
+    def queue_command(self):
         pass
 
-    def get_state():
+    def get_state(self):
         pass
 
-    # ???
-    def get_event_log():
-        pass
-
-    def get_telemetry():
+    def get_telemetry(self):
         mse_state = {}
         return mse_state
+
+    def get_log(self):
+        return {"status":"ok", "page":0, "log":[]}
+
+    def get_instruments(self):
+        return {"status":"ok", "page":0, "instruments":[]}
+
+    def get_telemetry(norad_id):
+        return {"status":"ok", "power":[{"param":"param","value":"value"},{"param":"param2","value":"value2"},{"param":"param3","value":"value3"},{"param":"param4","value":"value4"}], "thermal":[{"param":"param","value":"value"},{"param":"param2","value":"value2"},{"param":"param3","value":"value3"},{"param":"param4","value":"value4"}], "obdh":[{"param":"param","value":"value"},{"param":"param2","value":"value2"},{"param":"param3","value":"value3"},{"param":"param4","value":"value4"}], "adcs":[{"param":"param","value":"value"},{"param":"param2","value":"value2"},{"param":"param3","value":"value3"},{"param":"param4","value":"value4"}]}

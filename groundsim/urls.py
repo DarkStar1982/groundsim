@@ -21,10 +21,11 @@ from django.views.decorators.csrf import csrf_exempt
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('location/', views.LocationHandler.as_view()),
-    path('init_mse/', views.InitializeHandler.as_view()),
     path('list/', views.SatelliteListHandler.as_view()),
     path('telemetry/', views.TelemetryListHandler.as_view()),
     path('log/', views.LogListHandler.as_view()),
     path('instruments/', views.InstrumentsListHandler.as_view()),
-    path('update/', views.UpdateSatetellite.as_view())
+    path('update/', views.UpdateSatetellite.as_view()),
+    path('mse_init/', views.InitializeHandler.as_view()),
+    path('mse_step/', views.SimulationController.as_view())
 ]
