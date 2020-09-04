@@ -194,7 +194,7 @@ def get_ground_track(tle_data, orbital_vector, p_date):
 
 # at 1 second resolution
 def evolve_environment(p_environment, p_seconds):
-    p_environment["elapsed_timer"] = p_environment["elapsed_time"] + p_seconds
+    p_environment["elapsed_timer"] = p_environment["elapsed_timer"] + p_seconds
     p_environment["mission_timer"] = increment_mission_timer(p_environment["mission_timer"], p_seconds)
     p_environment["orbit_vector"] = propagate_orbit(p_environment["tle_data"], p_environment["mission_timer"])
     p_environment["ground_track"] = get_ground_track(p_environment["tle_data"], p_environment["orbit_vector"], p_environment["mission_timer"])
