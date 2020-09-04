@@ -184,11 +184,12 @@ class InitializeHandler(View):
     def get(self, request):
         norad_id = int(request.GET.get("norad_id", none_is_zero(None)))
         str_date = request.GET.get("date", None)
-        formatted = [int(x) for x in str_date.split(',')]
-        start_date = datetime(formatted[0], formatted[1], formatted[2], formatted[3],formatted[4],formatted[5])
-        # shouldn't be one per user session???
+        split_date = [int(x) for x in str_date.split(',')]
+        start_date = datetime(split_date[0], split_date[1], split_date[2], split_date[3],split_date[4],split_date[5])
+
         sat_environment = create_mission_environment(norad_id, start_date)
         sat_instance = create_mission_satellite()
+        # using user sessions - anonymous for now
         request.session['mission_instance'] = create_mission_instance(sat_environment, sat_instance)
         return HttpResponse(json.dumps("OK"))
 
@@ -196,12 +197,11 @@ class SimulationController(View):
     def get(self, request):
         step_seconds = int(request.GET.get("steps", none_is_zero(None)))
         mission_instance = request.session.get('mission_instance')
+        if mission_instance is None:
+            return HttpResponse(json.dumps("Satellite Mission not initialized"))
+        else:
+            request.session['mission_instance'] = simulate_mission_steps(request.session['mission_instance'], step_seconds)
         return HttpResponse(json.dumps(mission_instance))
-        #if mission_instance is None:
-        #    return HttpResponse(json.dumps("Satellite Mission not initialized"))
-        #else:
-        #    request.session['mission_instance'] = simulate_mission_steps(request.session['mission_instance'], (step_seconds))
-        #    return HttpResponse(json.dumps("OK"))
 
 class LocationHandler(View):
     def get(self, request):

@@ -2,6 +2,7 @@
 # environment simulator + satellite system simulator
 import julian
 from math import floor, fmod, pi, atan, sqrt, sin, fabs, cos, atan2, trunc
+from datetime import datetime, timezone, timedelta
 from sgp4.earth_gravity import wgs72, wgs84
 from sgp4.io import twoline2rv
 from groundsim.models import Satellite
@@ -142,16 +143,15 @@ def convert_to_geodetic(tle_data, position, date):
 
 def generate_tle_data(norad_id):
     satellite_record = Satellite.objects.get(norad_id=norad_id)
-    satellite_object = twoline2rv(satellite_record.satellite_tle1, satellite_record.satellite_tle2, wgs72)
-    tle_object = parse_tle_lines(satellite_record.satellite_tle1, satellite_record.satellite_tle2)
-    return { "tle_object":tle_object, "satellite_object":satellite_object}
+    #satellite_object = twoline2rv(satellite_record.satellite_tle1, satellite_record.satellite_tle2, wgs72)
+    #tle_object = parse_tle_lines(satellite_record.satellite_tle1, satellite_record.satellite_tle2)
+    return { "line_1":satellite_record.satellite_tle1, "line_2":satellite_record.satellite_tle2 }
 
 #####################################
 #### ENVIRONMENT SIMULATION CODE ####
 #####################################
 def create_mission_environment(p_norad_id, p_start_date):
     environment = {}
-
     environment["norad_id"] = p_norad_id
     #environment["start_date_packed"] = p_start_date <-not JSONable
     environment["mission_timer"] = {
@@ -162,15 +162,21 @@ def create_mission_environment(p_norad_id, p_start_date):
         "min":  p_start_date.minute,
         "sec":  p_start_date.second
     }
-    environment["elapsed"] = 0
+    environment["tle_data"] = generate_tle_data(p_norad_id)
+    environment["elapsed_timer"] = 0
     environment["ground_track"] = None
     environment["orbit_vector"] = None
     environment["sun_vector"] = None
     environment["ground_stations"] = []
     return environment
 
+def increment_mission_timer(mission_timer, p_seconds):
+    # TODO
+    return mission_timer
+
 def propagate_orbit(tle_data, mission_timer):
-    position, velocity = tle_data["satellite_object"].propagate(
+    satellite_object = twoline2rv(tle_data["line_1"], tle_data["line_2"], wgs72)
+    position, velocity = satellite_object.propagate(
         mission_timer["year"],
         mission_timer["month"],
         mission_timer["day"],
@@ -180,37 +186,31 @@ def propagate_orbit(tle_data, mission_timer):
     )
     return {"orbit_position": position, "orbit_velocity":velocity}
 
-def get_ground_track(tle_data, orbital_vector, current_date):
-    ground_track = convert_to_geodetic(tle_data["tle_object"], orbit_vector["orbit_position"], current_date)
+def get_ground_track(tle_data, orbital_vector, p_date):
+    current_date = datetime(p_date["year"], p_date["month"], p_date["day"], p_date["hour"],p_date["min"],p_date["sec"])
+    tle_object = parse_tle_lines(tle_data["line_1"], tle_data["line_2"])
+    ground_track = convert_to_geodetic(tle_object, orbital_vector["orbit_position"], current_date)
     return ground_track
 
 # at 1 second resolution
-def evolve_one_step(tle_data, p_environment):
-    environment["orbit_vector"] = propagate_orbit()
-    ground_track = get_ground_track()
-    # increment mission clocks
-    # elapsed = self.elapsed + 1
-    #self.mission_timer
-    #self.current_date
-    #... and so on
+def evolve_environment(p_environment, p_seconds):
+    p_environment["elapsed_timer"] = p_environment["elapsed_time"] + p_seconds
+    p_environment["mission_timer"] = increment_mission_timer(p_environment["mission_timer"], p_seconds)
+    p_environment["orbit_vector"] = propagate_orbit(p_environment["tle_data"], p_environment["mission_timer"])
+    p_environment["ground_track"] = get_ground_track(p_environment["tle_data"], p_environment["orbit_vector"], p_environment["mission_timer"])
+    return p_environment
 
-def get_state_values():
-    mse_state = {}
-    return mse_state
 
-def reset_to_start():
-    pass
-
-###################################
-#### SATELLITE SIMULATION CODE ####
-###################################
+################################################################################
+########################## SATELLITE SIMULATION CODE ###########################
+################################################################################
 def create_mission_satellite():
     satellite = {}
     return satellite
 
 # at 1 second resolution - input is Environment simulation output
-def evolve_one_step():
-    pass
+def evolve_satellite(p_satellite, p_seconds):
+    return p_satellite
 
 def get_log():
     return {"status":"ok", "page":0, "log":[]}
@@ -251,7 +251,6 @@ def get_telemetry(norad_id):
 def queue_command():
     pass
 
-
 #################################
 #### MISSION SIMULATION CODE ####
 #################################
@@ -262,4 +261,6 @@ def create_mission_instance(p_environment, p_satellite):
     return mission
 
 def simulate_mission_steps(p_mission, p_seconds):
-    return None
+    p_mission["environment"] = evolve_environment(p_mission["environment"], p_seconds)
+    p_mission["satellite"] = evolve_satellite(p_mission["satellite"], p_seconds)
+    return p_mission
