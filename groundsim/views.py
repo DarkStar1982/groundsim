@@ -15,6 +15,7 @@ from groundsim.mse import (
     create_mission_instance,
     simulate_mission_steps,
     get_satellite_list,
+    get_satellite_position,
     update_satellite,
 )
 
@@ -47,11 +48,10 @@ class SimulationController(View):
             request.session['mission_instance'] = simulate_mission_steps(request.session['mission_instance'], step_seconds)
         return HttpResponse(json.dumps("OK"))
 
+
 class LocationHandler(View):
     def get(self, request):
-        norad_id = int(request.GET.get("norad_id", none_is_zero(None)))
-        date = request.GET.get("date", None)
-        response = compute_orbit(norad_id, date)
+        response = get_satellite_position(request.session['mission_instance'])
         return HttpResponse(json.dumps(response))
 
 class SatelliteListHandler(View):

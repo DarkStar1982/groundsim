@@ -1,16 +1,22 @@
 # mission simulation environment:
 # environment simulator + satellite system simulator
 import julian
+import calendar
 from math import floor, fmod, pi, atan, sqrt, sin, fabs, cos, atan2, trunc
 from datetime import datetime, timezone, timedelta
 from sgp4.earth_gravity import wgs72, wgs84
 from sgp4.io import twoline2rv
 from groundsim.models import Satellite
 
+################################################################################
+############################### GLOBAL CONSTANTS ###############################
+################################################################################
 
-###############################
-#### HELPER FUNCTIONS CODE ####
-###############################
+R_EARTH = 6378 # in km
+
+################################################################################
+############################# HELPER FUNCTIONS CODE ############################
+################################################################################
 
 def get_epoch_time(tle_string):
     year = int(tle_string[0:2])
@@ -133,18 +139,18 @@ def convert_to_geodetic(tle_data, position, date):
     else:
         alt = sqrt(x*x + y*y)/ cos(lat) - a/sqrt(1.0 - e * e * sin(lat) * sin(lat))
     geo_data["alt"] = fabs(alt)
-    #geo_data["a"] = a + geo_data["alt"]
     return geo_data
 
 def generate_tle_data(norad_id):
     satellite_record = Satellite.objects.get(norad_id=norad_id)
-    #satellite_object = twoline2rv(satellite_record.satellite_tle1, satellite_record.satellite_tle2, wgs72)
-    #tle_object = parse_tle_lines(satellite_record.satellite_tle1, satellite_record.satellite_tle2)
-    return { "line_1":satellite_record.satellite_tle1, "line_2":satellite_record.satellite_tle2 }
+    return {
+        "line_1":satellite_record.satellite_tle1,
+        "line_2":satellite_record.satellite_tle2
+    }
 
-#####################################
-#### ENVIRONMENT SIMULATION CODE ####
-#####################################
+################################################################################
+########################## ENVIRONMENT SIMULATION CODE #########################
+################################################################################
 def create_mission_environment(p_norad_id, p_start_date):
     environment = {}
     environment["norad_id"] = p_norad_id
@@ -186,6 +192,17 @@ def increment_mission_timer(p_mission_timer, p_seconds):
     p_mission_timer["min"] = new_date.minute
     p_mission_timer["sec"] = new_date.second
     return p_mission_timer
+
+def mission_timer_to_str(p_mission_timer):
+    str_timer = "%02i:%02i:%02i, %02i %s %s" % (
+        p_mission_timer["hour"],
+        p_mission_timer["min"],
+        p_mission_timer["sec"],
+        p_mission_timer["day"],
+        calendar.month_abbr[p_mission_timer["month"]],
+        p_mission_timer["year"],
+    )
+    return str_timer
 
 def propagate_orbit(tle_data, mission_timer):
     satellite_object = twoline2rv(tle_data["line_1"], tle_data["line_2"], wgs72)
@@ -265,7 +282,7 @@ def queue_command():
     pass
 
 #################################
-#### MISSION SIMULATION CODE ####
+#### MISSION SIMULATION API ####
 #################################
 def create_mission_instance(p_environment, p_satellite):
     mission = {}
@@ -277,3 +294,26 @@ def simulate_mission_steps(p_mission, p_seconds):
     p_mission["environment"] = evolve_environment(p_mission["environment"], p_seconds)
     p_mission["satellite"] = evolve_satellite(p_mission["satellite"], p_seconds)
     return p_mission
+
+def get_satellite_position(p_mission):
+    position_object = {}
+    tle_details = parse_tle_lines(
+        p_mission["environment"]["tle_data"]["line_1"],
+        p_mission["environment"]["tle_data"]["line_2"]
+    )
+    position_object["lat"] = p_mission["environment"]["ground_track"]["lat"]
+    position_object["lng"] = p_mission["environment"]["ground_track"]["lng"]
+    position_object["alt"] = p_mission["environment"]["ground_track"]["alt"]
+    position_object["e"] = tle_details["eccentricity"]
+    position_object["i"] = tle_details["inclination"]
+    position_object["ra"] = tle_details["ra_ascending_node"]
+    position_object["w"] = tle_details["argument_perigee"]
+    position_object["time"] = mission_timer_to_str(p_mission["environment"]["mission_timer"])
+
+    # time since periapsis calculation
+    radius = position_object["alt"] + R_EARTH
+    mean_motion = (2*pi)/(86400/tle_details["mean_motion"])
+    position_object["mean_motion"] = 0.0
+    #position_object["a"] = R_EARTH + position_object["alt"]
+
+    return position_object
