@@ -29,11 +29,6 @@ def f_equals(a,b,c):
     else:
         return False
 
-def none_is_zero(obj):
-    if obj is None:
-        return 0
-    else:
-        return obj
 
 def convert_to_float(element):
     if element[0] == '-':
@@ -170,9 +165,27 @@ def create_mission_environment(p_norad_id, p_start_date):
     environment["ground_stations"] = []
     return environment
 
-def increment_mission_timer(mission_timer, p_seconds):
-    # TODO
-    return mission_timer
+def increment_mission_timer(p_mission_timer, p_seconds):
+    # date_start = convert mission timer to datetime
+    current_date = datetime(
+        p_mission_timer["year"],
+        p_mission_timer["month"],
+        p_mission_timer["day"],
+        p_mission_timer["hour"],
+        p_mission_timer["min"],
+        p_mission_timer["sec"]
+    )
+    # add delta in seconds
+    delta = timedelta(seconds=p_seconds)
+    new_date = current_date + delta
+    # convert back to expanded view
+    p_mission_timer["year"] = new_date.year
+    p_mission_timer["month"] = new_date.month
+    p_mission_timer["day"] = new_date.day
+    p_mission_timer["hour"] = new_date.hour
+    p_mission_timer["min"] = new_date.minute
+    p_mission_timer["sec"] = new_date.second
+    return p_mission_timer
 
 def propagate_orbit(tle_data, mission_timer):
     satellite_object = twoline2rv(tle_data["line_1"], tle_data["line_2"], wgs72)
