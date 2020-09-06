@@ -43,7 +43,7 @@ class SimulationController(View):
         step_seconds = int(request.GET.get("steps", none_is_zero(None)))
         mission_instance = request.session.get('mission_instance')
         if mission_instance is None:
-            return HttpResponse(json.dumps("Satellite Mission not initialized"))
+            return HttpResponse(json.dumps("Satellite mission not initialized"))
         else:
             request.session['mission_instance'] = simulate_mission_steps(request.session['mission_instance'], step_seconds)
         return HttpResponse(json.dumps("OK"))
@@ -51,7 +51,11 @@ class SimulationController(View):
 
 class LocationHandler(View):
     def get(self, request):
-        response = get_satellite_position(request.session['mission_instance'])
+        mission_instance = request.session.get('mission_instance')
+        if mission_instance is None:
+            return HttpResponse(json.dumps("Satellite mission not initialized"))
+        else:
+            response = get_satellite_position(mission_instance)
         return HttpResponse(json.dumps(response))
 
 class SatelliteListHandler(View):

@@ -2,7 +2,7 @@
 # environment simulator + satellite system simulator
 import julian
 import calendar
-from math import floor, fmod, pi, atan, sqrt, sin, fabs, cos, atan2, trunc
+from math import floor, fmod, pi, atan, sqrt, sin, fabs, cos, atan2, trunc, acos
 from datetime import datetime, timezone, timedelta
 from sgp4.earth_gravity import wgs72, wgs84
 from sgp4.io import twoline2rv
@@ -12,7 +12,8 @@ from groundsim.models import Satellite
 ############################### GLOBAL CONSTANTS ###############################
 ################################################################################
 
-R_EARTH = 6378 # in km
+R_EARTH = 6378.137 # in km
+MU_EARTH = 3.986E14
 
 ################################################################################
 ############################# HELPER FUNCTIONS CODE ############################
@@ -123,7 +124,7 @@ def convert_to_geodetic(tle_data, position, date):
 
     # latitude calculation
     lat = atan(z/sqrt(x*x + y*y))
-    a = 6378.137
+    a = R_EARTH
     e = 0.081819190842622
     delta = 1.0
     while (delta>0.001):
@@ -222,6 +223,17 @@ def get_ground_track(tle_data, orbital_vector, p_date):
     ground_track = convert_to_geodetic(tle_object, orbital_vector["orbit_position"], current_date)
     return ground_track
 
+# time since periapsis calculation - all wrong!
+def time_since_periapsis(position_object, mean_motion):
+    radius = (position_object["alt"] + R_EARTH)*1000
+    orbital_period = 86400/mean_motion
+    eccentricity = position_object["e"]
+    semimajor_axis = ((pow(orbital_period,2) * MU_EARTH) / (4*pow(pi,2)))**(1.0/3.0)
+    eccentric_anomaly = acos((1 - radius/semimajor_axis)/eccentricity)
+    mean_anomaly = eccentric_anomaly - eccentricity*sin(eccentric_anomaly)
+    time_since_periapsis = mean_anomaly/(2*pi) * orbital_period
+    return time_since_periapsis
+
 # at 1 second resolution
 def evolve_environment(p_environment, p_seconds):
     p_environment["elapsed_timer"] = p_environment["elapsed_timer"] + p_seconds
@@ -310,10 +322,8 @@ def get_satellite_position(p_mission):
     position_object["w"] = tle_details["argument_perigee"]
     position_object["time"] = mission_timer_to_str(p_mission["environment"]["mission_timer"])
 
-    # time since periapsis calculation
-    radius = position_object["alt"] + R_EARTH
-    mean_motion = (2*pi)/(86400/tle_details["mean_motion"])
-    position_object["mean_motion"] = 0.0
+
+    position_object["tp"] = time_since_periapsis(position_object, tle_details["mean_motion"])
     #position_object["a"] = R_EARTH + position_object["alt"]
 
     return position_object
