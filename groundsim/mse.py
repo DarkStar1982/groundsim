@@ -239,7 +239,11 @@ def evolve_environment(p_environment, p_seconds):
     p_environment["elapsed_timer"] = p_environment["elapsed_timer"] + p_seconds
     p_environment["mission_timer"] = increment_mission_timer(p_environment["mission_timer"], p_seconds)
     p_environment["orbit_vector"] = propagate_orbit(p_environment["tle_data"], p_environment["mission_timer"])
-    p_environment["ground_track"] = get_ground_track(p_environment["tle_data"], p_environment["orbit_vector"], p_environment["mission_timer"])
+    p_environment["ground_track"] = get_ground_track(
+        p_environment["tle_data"],
+        p_environment["orbit_vector"],
+        p_environment["mission_timer"]
+    )
     return p_environment
 
 
@@ -247,7 +251,46 @@ def evolve_environment(p_environment, p_seconds):
 ########################## SATELLITE SIMULATION CODE ###########################
 ################################################################################
 def create_mission_satellite():
+    # should be configurable
     satellite = {}
+    # initialize power subsystem after deployment
+    satellite["power_subsystem"] = {
+        "battery_level":100.0,
+        "battery_input":0.0,
+        "battery_output":0.0,
+        "solar_panel_output":0.0
+    }
+
+    # initialize attitude control subsystem
+    satellite["adcs_subsystem"] = {
+        "gyro_rpm":0,
+        "attitude_mode": "SUN_POINTING",
+        "adcs_status": "OK",
+        "adcs_vectors":[]
+    }
+
+    # initialize onboard computer - should support SPLICE opcodes
+    satellite["obdh_subsystem"] = {
+        "obdh_status":"OK",
+        "cpu_load": 0.0,
+        "storage_capacity":100.0,
+        "tasks_running":[]
+    }
+
+    # initialize thermal states
+    satellite["thermal_sensors"] = {
+        "chassis_temp": 0.0,
+        "solar_panel_temp":0.0,
+        "obdh_board_temp":0.0,
+        "battery_temp":0.0
+    }
+
+    # initialize instruments
+    satellite["instrument_list"] = None
+
+    # turn on communication sumbsystems
+    satellite["comms_subsystem"] = None
+
     return satellite
 
 # at 1 second resolution - input is Environment simulation output
@@ -260,34 +303,6 @@ def get_log():
 def get_instruments_status():
     return {"status":"ok", "page":0, "instruments":[]}
 
-def get_telemetry(norad_id):
-    return {
-        "status":"ok",
-        "power":[
-            {"param":"param","value":"value"},
-            {"param":"param2","value":"value2"},
-            {"param":"param3","value":"value3"},
-            {"param":"param4","value":"value4"}
-        ],
-        "thermal":[
-            {"param":"param","value":"value"},
-            {"param":"param2","value":"value2"},
-            {"param":"param3","value":"value3"},
-            {"param":"param4","value":"value4"}
-        ],
-        "obdh":[
-            {"param":"param","value":"value"},
-            {"param":"param2","value":"value2"},
-            {"param":"param3","value":"value3"},
-            {"param":"param4","value":"value4"}
-        ],
-        "adcs":[
-            {"param":"param","value":"value"},
-            {"param":"param2","value":"value2"},
-            {"param":"param3","value":"value3"},
-            {"param":"param4","value":"value4"}
-        ]
-    }
 
 # should include ground station visibility calculation
 def queue_command():
@@ -321,9 +336,36 @@ def get_satellite_position(p_mission):
     position_object["ra"] = tle_details["ra_ascending_node"]
     position_object["w"] = tle_details["argument_perigee"]
     position_object["time"] = mission_timer_to_str(p_mission["environment"]["mission_timer"])
-
-
+    position_object["status"] = "OK"
     position_object["tp"] = time_since_periapsis(position_object, tle_details["mean_motion"])
-    #position_object["a"] = R_EARTH + position_object["alt"]
-
     return position_object
+
+def get_satellite_telemetry(p_mission):
+    telemetry_object =  {
+        "status":"ok",
+        "power": {
+            "battery_level": p_mission["satellite"]["power_subsystem"]["battery_level"],
+            "battery_output":p_mission["satellite"]["power_subsystem"]["battery_output"],
+            "battery_input": p_mission["satellite"]["power_subsystem"]["battery_input"],
+            "solar_panel_output":p_mission["satellite"]["power_subsystem"]["solar_panel_output"],
+        },
+        "thermal":{
+            "chassis_temp": p_mission["satellite"]["thermal_sensors"]["chassis_temp"],
+            "solar_panel_temp":p_mission["satellite"]["thermal_sensors"]["solar_panel_temp"],
+            "obdh_board_temp":p_mission["satellite"]["thermal_sensors"]["obdh_board_temp"],
+            "battery_temp":p_mission["satellite"]["thermal_sensors"]["battery_temp"]
+        },
+        "obdh":{
+            "obdh_status":p_mission["satellite"]["obdh_subsystem"]["obdh_status"],
+            "cpu_load": p_mission["satellite"]["obdh_subsystem"]["cpu_load"],
+            "storage_capacity":p_mission["satellite"]["obdh_subsystem"]["storage_capacity"],
+            "tasks_running":p_mission["satellite"]["obdh_subsystem"]["tasks_running"],
+        },
+        "adcs":{
+            "gyro_rpm":p_mission["satellite"]["adcs_subsystem"]["gyro_rpm"],
+            "attitude_mode": p_mission["satellite"]["adcs_subsystem"]["attitude_mode"],
+            "adcs_status":p_mission["satellite"]["adcs_subsystem"]["adcs_status"],
+            "adcs_vectors":p_mission["satellite"]["adcs_subsystem"]["adcs_vectors"],
+        }
+    }
+    return telemetry_object

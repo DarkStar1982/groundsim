@@ -17,6 +17,7 @@ from groundsim.mse import (
     get_satellite_list,
     get_satellite_position,
     update_satellite,
+    get_satellite_telemetry
 )
 
 def none_is_zero(obj):
@@ -46,7 +47,7 @@ class SimulationController(View):
             return HttpResponse(json.dumps("Satellite mission not initialized"))
         else:
             request.session['mission_instance'] = simulate_mission_steps(request.session['mission_instance'], step_seconds)
-        return HttpResponse(json.dumps("OK"))
+            return HttpResponse(json.dumps("OK"))
 
 
 class LocationHandler(View):
@@ -56,17 +57,21 @@ class LocationHandler(View):
             return HttpResponse(json.dumps("Satellite mission not initialized"))
         else:
             response = get_satellite_position(mission_instance)
-        return HttpResponse(json.dumps(response))
+            return HttpResponse(json.dumps(response))
+
+class TelemetryHandler(View):
+    def get(self, request):
+        mission_instance = request.session.get('mission_instance')
+        print (mission_instance)
+        if mission_instance is None:
+            return HttpResponse(json.dumps("Satellite mission not initialized"))
+        else:
+            response = get_satellite_telemetry(mission_instance)
+            return HttpResponse(json.dumps(response))
 
 class SatelliteListHandler(View):
     def get(self, request):
         response = get_satellite_list()
-        return HttpResponse(json.dumps(response))
-
-class TelemetryListHandler(View):
-    def get(self, request):
-        norad_id = int(request.GET.get("norad_id", none_is_zero(None)))
-        response = get_telemetry(norad_id)
         return HttpResponse(json.dumps(response))
 
 class LogListHandler(View):
