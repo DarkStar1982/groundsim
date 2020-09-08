@@ -88,8 +88,7 @@
     },
     "adcs": {
         "gyro_rpm": 0,
-        "attitude_mode":
-        "SUN_POINTING",
+        "attitude_mode": "SUN_POINTING",
         "adcs_status": "OK",
         "adcs_vectors": []
      }
