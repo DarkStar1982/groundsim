@@ -9,17 +9,17 @@
 "OK"/Error
 
 ## Simulation Control
-### URL: {GROUND_SIM_HOST}/mse_step/?steps=1
-### Request type: HTTP GET
-### Parameters:
+**URL:** {GROUND_SIM_HOST}/mse_step/?steps=1
+**Request type:** HTTP GET
+**Parameters:**
 * steps - number of seconds to step forward
-### Response Type: JSON
+**Response Type:** JSON
 "OK"/Error
 
 ## Location
-### URL: {GROUND_SIM_HOST}/location
-### Request type: HTTP GET
-### Response: JSON
+**URL:** {GROUND_SIM_HOST}/location
+**Request type:** HTTP GET
+**Response:** JSON
 ```
 {
     "status":"ok/error",
@@ -38,48 +38,36 @@
 ```
 
 ## Telemetry
-### URL: {GROUND_SIM_HOST}/telemetry
-### Request type: HTTP GET
-### Response: JSON
+**URL:** {GROUND_SIM_HOST}/telemetry
+**Request type:** HTTP GET
+**Response type:** JSON
 ```
 {
-    "status": "ok/error",
-    "error": "{error message}",
-    "power": [
-        {
-            "param": "Parameter label/name",
-            "value": "parameter value"
-        },
-        {
-            "param": "Parameter label/name",
-            "value": "parameter value"
-        },
-        {
-            "param": "Parameter label/name",
-            "value": "parameter value"
-        },
-        {
-            "param": "Parameter label/name",
-            "value": "parameter value"
-        }
-    ],
-    "thermal": [
-        {
-            "param": "Parameter label/name",
-            "value": "parameter value"
-        },
-        {
-            "param": "Parameter label/name",
-            "value": "parameter value"
-        },
-        {
-            "param": "Parameter label/name",
-            "value": "parameter value"
-        },
-        {
-            "param": "Parameter label/name",
-            "value": "parameter value"
-        }
-    ],
-    "obdh": [
+    "status": "ok", 
+    "power": {
+        "battery_level": 100.0, 
+        "battery_output": 0.0, 
+        "battery_input": 0.0, 
+        "solar_panel_output": 0.0
+    }, 
+    "thermal": {
+        "chassis_temp": 0.0, 
+        "solar_panel_temp": 0.0, 
+        "obdh_board_temp": 0.0, 
+        "battery_temp": 0.0
+    }, 
+    "obdh": {
+        "obdh_status": "OK",
+        "cpu_load": 0.0,
+        "storage_capacity": 100.0, 
+        "tasks_running": []
+    }, 
+    "adcs": {
+        "gyro_rpm": 0, 
+        "attitude_mode": 
+        "SUN_POINTING", 
+        "adcs_status": "OK", 
+        "adcs_vectors": []
+     }
+   }
    ```
