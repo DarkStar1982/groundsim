@@ -1,4 +1,18 @@
 # Groundsim API reference
+## Satellite List
+**URL:** {GROUND_SIM_HOST}/list
+
+**Request type:** HTTP GET
+
+**Response Type:** JSON<br/>
+```
+{
+  "status": "ok",
+  "satelites": [
+    {"sat_name": "USA224", "norad_id": 37348}
+  ]
+}
+```
 ## Initialization
 **URL:** {GROUND_SIM_HOST}/mse_init/?norad_id=37348&date=2019,02,04,14,45,45
 
@@ -53,30 +67,30 @@
 **Response type:** JSON
 ```
 {
-    "status": "ok", 
+    "status": "ok",
     "power": {
-        "battery_level": 100.0, 
-        "battery_output": 0.0, 
-        "battery_input": 0.0, 
+        "battery_level": 100.0,
+        "battery_output": 0.0,
+        "battery_input": 0.0,
         "solar_panel_output": 0.0
-    }, 
+    },
     "thermal": {
-        "chassis_temp": 0.0, 
-        "solar_panel_temp": 0.0, 
-        "obdh_board_temp": 0.0, 
+        "chassis_temp": 0.0,
+        "solar_panel_temp": 0.0,
+        "obdh_board_temp": 0.0,
         "battery_temp": 0.0
-    }, 
+    },
     "obdh": {
         "obdh_status": "OK",
         "cpu_load": 0.0,
-        "storage_capacity": 100.0, 
+        "storage_capacity": 100.0,
         "tasks_running": []
-    }, 
+    },
     "adcs": {
-        "gyro_rpm": 0, 
-        "attitude_mode": 
-        "SUN_POINTING", 
-        "adcs_status": "OK", 
+        "gyro_rpm": 0,
+        "attitude_mode":
+        "SUN_POINTING",
+        "adcs_status": "OK",
         "adcs_vectors": []
      }
    }
