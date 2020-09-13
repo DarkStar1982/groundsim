@@ -27,5 +27,6 @@ urlpatterns = [
     path('instruments/', views.InstrumentsListHandler.as_view()),
     path('update/', views.UpdateSatetellite.as_view()),
     path('mse_init/', views.InitializeHandler.as_view()),
-    path('mse_step/', views.SimulationController.as_view())
+    path('mse_step/', views.SimulationController.as_view()),
+    path('mse_test/', views.TestAPIHandler.as_view())
 ]

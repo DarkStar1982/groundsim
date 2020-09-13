@@ -2,7 +2,7 @@
 # environment simulator + satellite system simulator
 import julian
 import calendar
-from math import floor, fmod, pi, atan, sqrt, sin, fabs, cos, atan2, trunc, acos
+from math import floor, fmod, pi, tan, atan, sqrt, sin, fabs, cos, atan2, trunc, acos
 from datetime import datetime, timezone, timedelta
 from sgp4.earth_gravity import wgs72, wgs84
 from sgp4.io import twoline2rv
@@ -13,7 +13,11 @@ from groundsim.models import Satellite
 ################################################################################
 
 R_EARTH = 6378.137 # in km
+J2 = 1.08E-3 # second harmonic
 MU_EARTH = 3.986E14
+# day duration
+SIDEREAL_DAY = 86164.0905
+UTC_DAY = 86400
 
 ################################################################################
 ############################# HELPER FUNCTIONS CODE ############################
@@ -35,7 +39,6 @@ def f_equals(a,b,c):
         return True
     else:
         return False
-
 
 def convert_to_float(element):
     if element[0] == '-':
@@ -70,15 +73,25 @@ def get_satellite_list():
     sat_list = []
     satellites= Satellite.objects.all()
     for item in satellites:
-        sat_list.append({"sat_name":item.satellite_name, "norad_id":item.norad_id})
+        sat_list.append(
+            {"sat_name":item.satellite_name,
+            "norad_id":item.norad_id}
+        )
     resp_sats["status"] = "ok"
     resp_sats["satelites"] = sat_list
     return resp_sats
 
+def generate_tle_data(norad_id):
+    satellite_record = Satellite.objects.get(norad_id=norad_id)
+    return {
+        "line_1":satellite_record.satellite_tle1,
+        "line_2":satellite_record.satellite_tle2
+    }
+
 def parse_tle_lines(tle_line_1, tle_line_2):
     tle_data = {}
     line_1 = [x for x in tle_line_1.split(' ') if len(x)>0]
-    # insert whitespace separator to correctly process last two elements - maybe optional!
+    # insert whitespace to correctly process last two elements - maybe optional!
     if tle_line_2[-5] !=' ':
         line3 = tle_line_2[0:-4] + ' '+ tle_line_2[-4:]
     line_2 = [x for x in line3.split(' ') if len(x)>0]
@@ -100,55 +113,14 @@ def parse_tle_lines(tle_line_1, tle_line_2):
     tle_data["revolution_number"] = int(line_2[8][:-1])
     return tle_data
 
-def convert_to_geodetic(tle_data, position, date):
-    geo_data = {}
-    # copy the data from SGP4 output
-    x = position[0]
-    y = position[1]
-    z = position[2]
 
-    # longitude calculation
-    jd = julian.to_jd(date)
-    ut = fmod(jd + 0.5, 1.0)
-    t = (jd - ut - 2451545.0) / 36525.0
-    omega = 1.0 + 8640184.812866 / 3155760000.0;
-    gmst0 = 24110.54841 + t * (8640184.812866 + t * (0.093104 - t * 6.2E-6))
-    theta_GMST = fmod(gmst0 + 86400* omega * ut, 86400) * 2 * pi / 86400
-    lon = atan2(y,x)-theta_GMST
-    lon = lon*180/pi
-    geo_data["lng"] = lon
-    if lon<-180:
-        geo_data["lng"] = 360 + lon
-    if lon>-180:
-        geo_data["lng"] = lon
+def calculate_camera_fov(d,f):
+    alpha = 2*atan(d/(2*f))
+    return alpha
 
-    # latitude calculation
-    lat = atan(z/sqrt(x*x + y*y))
-    a = R_EARTH
-    e = 0.081819190842622
-    delta = 1.0
-    while (delta>0.001):
-        lat0 = lat
-        c = (a * e * e * sin(lat0))/sqrt(1.0 - e * e * sin(lat0) * sin(lat0))
-        lat = atan((z + c)/sqrt(x*x + y*y))
-        delta = fabs(lat - lat0)
-    geo_data["lat"] = 180*lat/pi
-
-    #altitude calculation
-    if f_equals(lat,pi/2,0.01):
-        alt = z/sin(lat) - a*sqrt(1-e*e)
-    else:
-        alt = sqrt(x*x + y*y)/ cos(lat) - a/sqrt(1.0 - e * e * sin(lat) * sin(lat))
-    geo_data["alt"] = fabs(alt)
-    return geo_data
-
-def generate_tle_data(norad_id):
-    satellite_record = Satellite.objects.get(norad_id=norad_id)
-    return {
-        "line_1":satellite_record.satellite_tle1,
-        "line_2":satellite_record.satellite_tle2
-    }
-
+def calculate_resolution(ifov, alt):
+    d = 2*alt*tan(ifov/2)
+    return d
 ################################################################################
 ########################## ENVIRONMENT SIMULATION CODE #########################
 ################################################################################
@@ -205,6 +177,48 @@ def mission_timer_to_str(p_mission_timer):
     )
     return str_timer
 
+def convert_to_geodetic(tle_data, position, date):
+    geo_data = {}
+    # copy the data from SGP4 output
+    x = position[0]
+    y = position[1]
+    z = position[2]
+
+    # longitude calculation
+    jd = julian.to_jd(date)
+    ut = fmod(jd + 0.5, 1.0)
+    t = (jd - ut - 2451545.0) / 36525.0
+    omega = 1.0 + 8640184.812866 / 3155760000.0;
+    gmst0 = 24110.54841 + t * (8640184.812866 + t * (0.093104 - t * 6.2E-6))
+    theta_GMST = fmod(gmst0 + 86400* omega * ut, 86400) * 2 * pi / 86400
+    lon = atan2(y,x)-theta_GMST
+    lon = lon*180/pi
+    geo_data["lng"] = lon
+    if lon<-180:
+        geo_data["lng"] = 360 + lon
+    if lon>-180:
+        geo_data["lng"] = lon
+
+    # latitude calculation
+    lat = atan(z/sqrt(x*x + y*y))
+    a = R_EARTH
+    e = 0.081819190842622
+    delta = 1.0
+    while (delta>0.001):
+        lat0 = lat
+        c = (a * e * e * sin(lat0))/sqrt(1.0 - e * e * sin(lat0) * sin(lat0))
+        lat = atan((z + c)/sqrt(x*x + y*y))
+        delta = fabs(lat - lat0)
+    geo_data["lat"] = 180*lat/pi
+
+    #altitude calculation
+    if f_equals(lat,pi/2,0.01):
+        alt = z/sin(lat) - a*sqrt(1-e*e)
+    else:
+        alt = sqrt(x*x + y*y)/cos(lat) - a/sqrt(1.0 - e*e*sin(lat)*sin(lat))
+    geo_data["alt"] = fabs(alt)
+    return geo_data
+
 def propagate_orbit(tle_data, mission_timer):
     satellite_object = twoline2rv(tle_data["line_1"], tle_data["line_2"], wgs72)
     position, velocity = satellite_object.propagate(
@@ -218,17 +232,29 @@ def propagate_orbit(tle_data, mission_timer):
     return {"orbit_position": position, "orbit_velocity":velocity}
 
 def get_ground_track(tle_data, orbital_vector, p_date):
-    current_date = datetime(p_date["year"], p_date["month"], p_date["day"], p_date["hour"],p_date["min"],p_date["sec"])
+    current_date = datetime(
+        p_date["year"],
+        p_date["month"],
+        p_date["day"],
+        p_date["hour"],
+        p_date["min"],
+        p_date["sec"]
+    )
     tle_object = parse_tle_lines(tle_data["line_1"], tle_data["line_2"])
-    ground_track = convert_to_geodetic(tle_object, orbital_vector["orbit_position"], current_date)
+    ground_track = convert_to_geodetic(
+        tle_object,
+        orbital_vector["orbit_position"],
+        current_date
+    )
     return ground_track
 
 # time since periapsis calculation - all wrong!
+# FIXME!
 def time_since_periapsis(position_object, mean_motion):
     radius = (position_object["alt"] + R_EARTH)*1000
     orbital_period = 86400/mean_motion
     eccentricity = position_object["e"]
-    semimajor_axis = ((pow(orbital_period,2) * MU_EARTH) / (4*pow(pi,2)))**(1.0/3.0)
+    semimajor_axis = ((pow(orbital_period,2)*MU_EARTH)/(4*pow(pi,2)))**(1.0/3.0)
     eccentric_anomaly = acos((1 - radius/semimajor_axis)/eccentricity)
     mean_anomaly = eccentric_anomaly - eccentricity*sin(eccentric_anomaly)
     time_since_periapsis = mean_anomaly/(2*pi) * orbital_period
@@ -237,8 +263,14 @@ def time_since_periapsis(position_object, mean_motion):
 # at 1 second resolution
 def evolve_environment(p_environment, p_seconds):
     p_environment["elapsed_timer"] = p_environment["elapsed_timer"] + p_seconds
-    p_environment["mission_timer"] = increment_mission_timer(p_environment["mission_timer"], p_seconds)
-    p_environment["orbit_vector"] = propagate_orbit(p_environment["tle_data"], p_environment["mission_timer"])
+    p_environment["mission_timer"] = increment_mission_timer(
+        p_environment["mission_timer"],
+        p_seconds
+    )
+    p_environment["orbit_vector"] = propagate_orbit(
+        p_environment["tle_data"],
+        p_environment["mission_timer"]
+    )
     p_environment["ground_track"] = get_ground_track(
         p_environment["tle_data"],
         p_environment["orbit_vector"],
@@ -250,52 +282,94 @@ def evolve_environment(p_environment, p_seconds):
 ################################################################################
 ########################## SATELLITE SIMULATION CODE ###########################
 ################################################################################
+
+def initialize_satellite_geometry():
+    sat_geometry = {}
+    return sat_geometry
+
+def initialize_satellite_subsystems():
+    sat_components = {
+        "power": {
+            "solar_panels": {},
+            "battery":{},
+            "pdu":{},
+            "power_bus":{}
+        },
+        "adcs": {
+            "imu" :{},
+            "gyro_x":{},
+            "gyro_y":{},
+        },
+        "obdh": {
+            "cpu": {},
+            "ram": {},
+            "storage":{},
+            "data_bus":{}
+        },
+        "comm":{
+            "receiver":{},
+            "transmitter":{},
+            "data_bus":{}
+        }
+    }
+    return sat_components
+
+def initialize_satellite_telemetry():
+    telemetry = {
+        "power": {
+            "battery_level":100.0,
+            "battery_input":0.0,
+            "battery_output":0.0,
+            "solar_panel_output":0.0
+        },
+        "adcs": {
+            "gyro_rpm":0,
+            "attitude_mode": "SUN_POINTING",
+            "adcs_status": "OK",
+            "adcs_vectors":[]
+        },
+        "obdh": {
+            "obdh_status":"OK",
+            "cpu_load": 0.0,
+            "storage_capacity":100.0,
+            "tasks_running":[]
+        },
+        "thermal": {
+            "chassis_temp": 0.0,
+            "solar_panel_temp":0.0,
+            "obdh_board_temp":0.0,
+            "battery_temp":0.0
+        }
+    }
+    return telemetry
+
+def initialize_satellite_instruments():
+    instruments = {
+        "imager": {},
+        "sdr": {}
+    }
+
+    return instruments
+
 def create_mission_satellite():
     # should be configurable
-    satellite = {}
-    # initialize power subsystem after deployment
-    satellite["power_subsystem"] = {
-        "battery_level":100.0,
-        "battery_input":0.0,
-        "battery_output":0.0,
-        "solar_panel_output":0.0
+    satellite = {
+        "geometry":{},
+        "subsystems":{},
+        "instruments":{},
+        "telemetry":{},
     }
 
-    # initialize attitude control subsystem
-    satellite["adcs_subsystem"] = {
-        "gyro_rpm":0,
-        "attitude_mode": "SUN_POINTING",
-        "adcs_status": "OK",
-        "adcs_vectors":[]
-    }
+    # load from DB - TBD
 
-    # initialize onboard computer - should support SPLICE opcodes
-    satellite["obdh_subsystem"] = {
-        "obdh_status":"OK",
-        "cpu_load": 0.0,
-        "storage_capacity":100.0,
-        "tasks_running":[]
-    }
-
-    # initialize thermal states
-    satellite["thermal_sensors"] = {
-        "chassis_temp": 0.0,
-        "solar_panel_temp":0.0,
-        "obdh_board_temp":0.0,
-        "battery_temp":0.0
-    }
-
-    # initialize instruments
-    satellite["instrument_list"] = None
-
-    # turn on communication sumbsystems
-    satellite["comms_subsystem"] = None
-
+    satellite["geometry"] = initialize_satellite_geometry()
+    # initialize satellite subsystems
+    satellite["subsystems"] = initialize_satellite_subsystems()
+    # initialize telemetry parameters
+    satellite["telemetry"] = initialize_satellite_telemetry()
+    # initialize satellite instruments
+    satellite["instruments"] = initialize_satellite_instruments()
     return satellite
-
-# at 1 second resolution - input is Environment simulation output
-def evolve_satellite(p_satellite, p_seconds):
-    return p_satellite
 
 def get_log():
     return {"status":"ok", "page":0, "log":[]}
@@ -303,23 +377,36 @@ def get_log():
 def get_instruments_status():
     return {"status":"ok", "page":0, "instruments":[]}
 
-
 # should include ground station visibility calculation
-def queue_command():
+def queue_commands():
     pass
 
-#################################
-#### MISSION SIMULATION API ####
-#################################
+# at 1 second resolution - input is Environment simulation output
+
+def get_imager_fov(p_camera, p_environment):
+    # input:
+    # - camera focal length
+    # - orbital parameters
+    # output:
+    # - lat-lon pair top/left, bottom/right
+    # - longitudal swath in x km
+    pass
+
+def evolve_satellite(p_satellite, p_environemnt, p_seconds):
+    return p_satellite
+
+################################################################################
+############################ MISSION SIMULATION API ############################
+################################################################################
 def create_mission_instance(p_environment, p_satellite):
     mission = {}
     mission["environment"] = p_environment
     mission["satellite"] = p_satellite
     return mission
 
-def simulate_mission_steps(p_mission, p_seconds):
-    p_mission["environment"] = evolve_environment(p_mission["environment"], p_seconds)
-    p_mission["satellite"] = evolve_satellite(p_mission["satellite"], p_seconds)
+def simulate_mission_steps(p_mission, steps):
+    p_mission["environment"] = evolve_environment(p_mission["environment"], steps)
+    p_mission["satellite"] = evolve_satellite(p_mission["satellite"], p_mission["environment"], steps)
     return p_mission
 
 def get_satellite_position(p_mission):
@@ -344,28 +431,28 @@ def get_satellite_telemetry(p_mission):
     telemetry_object =  {
         "status":"ok",
         "power": {
-            "battery_level": p_mission["satellite"]["power_subsystem"]["battery_level"],
-            "battery_output":p_mission["satellite"]["power_subsystem"]["battery_output"],
-            "battery_input": p_mission["satellite"]["power_subsystem"]["battery_input"],
-            "solar_panel_output":p_mission["satellite"]["power_subsystem"]["solar_panel_output"],
+            "battery_level": p_mission["satellite"]["telemetry"]["power"]["battery_level"],
+            "battery_output":p_mission["satellite"]["telemetry"]["power"]["battery_output"],
+            "battery_input": p_mission["satellite"]["telemetry"]["power"]["battery_input"],
+            "solar_panel_output":p_mission["satellite"]["telemetry"]["power"]["solar_panel_output"],
         },
         "thermal":{
-            "chassis_temp": p_mission["satellite"]["thermal_sensors"]["chassis_temp"],
-            "solar_panel_temp":p_mission["satellite"]["thermal_sensors"]["solar_panel_temp"],
-            "obdh_board_temp":p_mission["satellite"]["thermal_sensors"]["obdh_board_temp"],
-            "battery_temp":p_mission["satellite"]["thermal_sensors"]["battery_temp"]
+            "chassis_temp": p_mission["satellite"]["telemetry"]["thermal"]["chassis_temp"],
+            "solar_panel_temp":p_mission["satellite"]["telemetry"]["thermal"]["solar_panel_temp"],
+            "obdh_board_temp":p_mission["satellite"]["telemetry"]["thermal"]["obdh_board_temp"],
+            "battery_temp":p_mission["satellite"]["telemetry"]["thermal"]["battery_temp"]
         },
         "obdh":{
-            "obdh_status":p_mission["satellite"]["obdh_subsystem"]["obdh_status"],
-            "cpu_load": p_mission["satellite"]["obdh_subsystem"]["cpu_load"],
-            "storage_capacity":p_mission["satellite"]["obdh_subsystem"]["storage_capacity"],
-            "tasks_running":p_mission["satellite"]["obdh_subsystem"]["tasks_running"],
+            "obdh_status":p_mission["satellite"]["telemetry"]["obdh"]["obdh_status"],
+            "cpu_load": p_mission["satellite"]["telemetry"]["obdh"]["cpu_load"],
+            "storage_capacity":p_mission["satellite"]["telemetry"]["obdh"]["storage_capacity"],
+            "tasks_running":p_mission["satellite"]["telemetry"]["obdh"]["tasks_running"],
         },
         "adcs":{
-            "gyro_rpm":p_mission["satellite"]["adcs_subsystem"]["gyro_rpm"],
-            "attitude_mode": p_mission["satellite"]["adcs_subsystem"]["attitude_mode"],
-            "adcs_status":p_mission["satellite"]["adcs_subsystem"]["adcs_status"],
-            "adcs_vectors":p_mission["satellite"]["adcs_subsystem"]["adcs_vectors"],
+            "gyro_rpm":p_mission["satellite"]["telemetry"]["adcs"]["gyro_rpm"],
+            "attitude_mode": p_mission["satellite"]["telemetry"]["adcs"]["attitude_mode"],
+            "adcs_status":p_mission["satellite"]["telemetry"]["adcs"]["adcs_status"],
+            "adcs_vectors":p_mission["satellite"]["telemetry"]["adcs"]["adcs_vectors"],
         }
     }
     return telemetry_object

@@ -17,7 +17,9 @@ from groundsim.mse import (
     get_satellite_list,
     get_satellite_position,
     update_satellite,
-    get_satellite_telemetry
+    get_satellite_telemetry,
+    calculate_camera_fov,
+    calculate_resolution
 )
 
 def none_is_zero(obj):
@@ -84,6 +86,12 @@ class InstrumentsListHandler(View):
     def get(self, request):
         norad_id = int(request.GET.get("norad_id", none_is_zero(None)))
         response = get_instruments(norad_id, page)
+        return HttpResponse(json.dumps(response))
+
+class TestAPIHandler(View):
+    def get(self, request):
+        ifov = calculate_camera_fov(1.1393e-06, 0.00402)
+        response = calculate_resolution(ifov, 500000)
         return HttpResponse(json.dumps(response))
 
 @method_decorator(csrf_exempt, name='dispatch')
