@@ -382,16 +382,21 @@ def queue_commands():
     pass
 
 # at 1 second resolution - input is Environment simulation output
+# input:
+# - camera fov schema
+#  |\
+#  | \
+# a|  \ c
+#  |   \
+#  -----
+#     b
+def get_imager_frame(fov_angle, altitude):
+    swath=2*altitude*tan(fov_angle/2.0) # in meters?
+    return swath
 
-def get_imager_fov(p_camera, p_environment):
-    # input:
-    # - camera focal length
-    # - orbital parameters
-    # output:
-    # - lat-lon pair top/left, bottom/right
-    # - longitudal swath in x km
+def get_camera_frame():
     pass
-
+    
 def evolve_satellite(p_satellite, p_environemnt, p_seconds):
     return p_satellite
 

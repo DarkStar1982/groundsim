@@ -19,7 +19,8 @@ from groundsim.mse import (
     update_satellite,
     get_satellite_telemetry,
     calculate_camera_fov,
-    calculate_resolution
+    calculate_resolution,
+    get_imager_frame
 )
 
 def none_is_zero(obj):
@@ -27,6 +28,18 @@ def none_is_zero(obj):
         return 0
     else:
         return obj
+
+class SatelliteListHandler(View):
+    def get(self, request):
+        response = get_satellite_list()
+        return HttpResponse(json.dumps(response))
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UpdateSatetellite(View):
+    def post(self, request):
+        data = request.POST.get("tle_data", None)
+        update_satellite(data)
+        return {"id":3, "status":"ok", "description":"satellite update succeeded"}
 
 class InitializeHandler(View):
     def get(self, request):
@@ -51,7 +64,6 @@ class SimulationController(View):
             request.session['mission_instance'] = simulate_mission_steps(request.session['mission_instance'], step_seconds)
             return HttpResponse(json.dumps("OK"))
 
-
 class LocationHandler(View):
     def get(self, request):
         mission_instance = request.session.get('mission_instance')
@@ -71,11 +83,6 @@ class TelemetryHandler(View):
             response = get_satellite_telemetry(mission_instance)
             return HttpResponse(json.dumps(response))
 
-class SatelliteListHandler(View):
-    def get(self, request):
-        response = get_satellite_list()
-        return HttpResponse(json.dumps(response))
-
 class LogListHandler(View):
     def get(self, request):
         norad_id = int(request.GET.get("norad_id", none_is_zero(None)))
@@ -88,15 +95,12 @@ class InstrumentsListHandler(View):
         response = get_instruments(norad_id, page)
         return HttpResponse(json.dumps(response))
 
-class TestAPIHandler(View):
+class ImagerFrameHandler(View):
     def get(self, request):
-        ifov = calculate_camera_fov(1.1393e-06, 0.00402)
-        response = calculate_resolution(ifov, 500000)
-        return HttpResponse(json.dumps(response))
-
-@method_decorator(csrf_exempt, name='dispatch')
-class UpdateSatetellite(View):
-    def post(self, request):
-        data = request.POST.get("tle_data", None)
-        update_satellite(data)
-        return {"id":3, "status":"ok", "description":"satellite update succeeded"}
+        mission_instance = request.session.get('mission_instance')
+        print (mission_instance)
+        if mission_instance is None:
+            return HttpResponse(json.dumps("Satellite mission not initialized"))
+        else:
+            response = get_imager_frame(0.03874630939427412, 500000)
+            return HttpResponse(json.dumps(response))
