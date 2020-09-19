@@ -121,6 +121,14 @@ def calculate_camera_fov(d,f):
 def calculate_resolution(ifov, alt):
     d = 2*alt*tan(ifov/2)
     return d
+
+# lat lon should be in radians
+def calculate_degree_len(lat):
+    # calculate latitude degree length
+    length_lat = (111132.954 - 559.822 * cos(2*lat)+1.175 * cos(4*lat))/1000.0
+    length_lon = (pi * R_EARTH * cos (lat))/180
+    return {"length_lon":length_lon, "length_lat":length_lat}
+
 ################################################################################
 ########################## ENVIRONMENT SIMULATION CODE #########################
 ################################################################################
@@ -345,7 +353,12 @@ def initialize_satellite_telemetry():
 
 def initialize_satellite_instruments():
     instruments = {
-        "imager": {},
+        "imager": {
+            "fov":0.03874630939427412,
+            "f":0.58,
+            "sensor":[4096,3072],
+            "pixel":5.5E-6
+        },
         "sdr": {}
     }
 
@@ -381,22 +394,28 @@ def get_instruments_status():
 def queue_commands():
     pass
 
-# at 1 second resolution - input is Environment simulation output
 # input:
-# - camera fov schema
+# - camera fov drawing
 #  |\
 #  | \
 # a|  \ c
 #  |   \
 #  -----
 #     b
-def get_imager_frame(fov_angle, altitude):
-    swath=2*altitude*tan(fov_angle/2.0) # in meters?
-    return swath
+def get_imager_frame(p_mission):
+    fov_angle = p_mission["satellite"]["instruments"]["imager"]["fov"]
+    altitude = p_mission["environment"]["ground_track"]["alt"]
+    lat = pi*p_mission["environment"]["ground_track"]["lat"]/180
+    swath=2*altitude*tan(fov_angle/2.0)
+    deg_length = calculate_degree_len(lat)
+    result = {
+        "swath":swath,
+        "swath_lat":swath/deg_length["length_lat"],
+        "swath_lon":swath/deg_length["length_lon"],
+    }
+    return result
 
-def get_camera_frame():
-    pass
-    
+# at 1 second resolution - input is Environment, output is new satellite
 def evolve_satellite(p_satellite, p_environemnt, p_seconds):
     return p_satellite
 
@@ -423,6 +442,7 @@ def get_satellite_position(p_mission):
     position_object["lat"] = p_mission["environment"]["ground_track"]["lat"]
     position_object["lng"] = p_mission["environment"]["ground_track"]["lng"]
     position_object["alt"] = p_mission["environment"]["ground_track"]["alt"]
+    # position_object["a"] = TBD
     position_object["e"] = tle_details["eccentricity"]
     position_object["i"] = tle_details["inclination"]
     position_object["ra"] = tle_details["ra_ascending_node"]

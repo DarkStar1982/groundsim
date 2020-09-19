@@ -102,5 +102,5 @@ class ImagerFrameHandler(View):
         if mission_instance is None:
             return HttpResponse(json.dumps("Satellite mission not initialized"))
         else:
-            response = get_imager_frame(0.03874630939427412, 500000)
+            response = get_imager_frame(mission_instance)
             return HttpResponse(json.dumps(response))
