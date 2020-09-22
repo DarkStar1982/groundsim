@@ -51,8 +51,9 @@ class InitializeHandler(View):
         sat_environment = create_mission_environment(norad_id, start_date)
         sat_instance = create_mission_satellite()
         # using user sessions - anonymous for now
-        request.session['mission_instance'] = create_mission_instance(sat_environment, sat_instance)
-        return HttpResponse(json.dumps("OK"))
+        mission_instance = create_mission_instance(sat_environment, sat_instance)
+        request.session['mission_instance'] = mission_instance
+        return HttpResponse(json.dumps({"status":"ok", "mission_instance":mission_instance}))
 
 class SimulationController(View):
     def get(self, request):
