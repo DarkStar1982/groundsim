@@ -55,6 +55,7 @@ class InitializeHandler(View):
         request.session['mission_instance'] = mission_instance
         return HttpResponse(json.dumps({"status":"ok", "mission_instance":mission_instance}))
 
+@method_decorator(csrf_exempt, name='dispatch')
 class SimulationController(View):
     def get(self, request):
         step_seconds = int(request.GET.get("steps", none_is_zero(None)))
@@ -64,6 +65,16 @@ class SimulationController(View):
         else:
             request.session['mission_instance'] = simulate_mission_steps(request.session['mission_instance'], step_seconds)
             return HttpResponse(json.dumps("OK"))
+
+    def post(self, request):
+        step_seconds = int(request.GET.get("steps", none_is_zero(None)))
+        mission_instance = json.loads(request.POST.get("mission_instance"))
+        if mission_instance is None:
+            return HttpResponse(json.dumps("Satellite mission not initialized"))
+        else:
+            mission_instance = simulate_mission_steps(mission_instance, step_seconds)
+        return HttpResponse(json.dumps({"status":"ok", "mission_instance":mission_instance}))
+
 
 class LocationHandler(View):
     def get(self, request):
@@ -99,7 +110,6 @@ class InstrumentsListHandler(View):
 class ImagerFrameHandler(View):
     def get(self, request):
         mission_instance = request.session.get('mission_instance')
-        print (mission_instance)
         if mission_instance is None:
             return HttpResponse(json.dumps("Satellite mission not initialized"))
         else:
