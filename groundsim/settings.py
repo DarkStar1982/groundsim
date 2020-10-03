@@ -25,7 +25,12 @@ SECRET_KEY = 'n)nsi*5wq5#3d5q50h28)w$dqt%2os3zzq@6rru-4x7dvyq^em'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    'nova.test',
+    'nova.test:80',
+    'api.nova.test',
+    'api.nova.test:8000',
+]
 
 
 # Application definition
@@ -127,3 +132,12 @@ STATIC_URL = '/static/'
 STATIC_ROOT = '/home/exodus/webnova/groundsim/groundsim/static/'
 
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_WHITELIST = [
+    'http://nova.test',
+    'http://api.nova.test:8000',
+] # If this is used, then not need to use `CORS_ORIGIN_ALLOW_ALL = True`
+CORS_ORIGIN_REGEX_WHITELIST = [
+    'http://nova.test',
+    'http://api.nova.test:8000',
+]

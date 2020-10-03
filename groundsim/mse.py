@@ -448,7 +448,7 @@ def get_satellite_position(p_mission):
     position_object["ra"] = tle_details["ra_ascending_node"]
     position_object["w"] = tle_details["argument_perigee"]
     position_object["time"] = mission_timer_to_str(p_mission["environment"]["mission_timer"])
-    position_object["status"] = "OK"
+    position_object["status"] = "ok"
     position_object["tp"] = time_since_periapsis(position_object, tle_details["mean_motion"])
     return position_object
 
