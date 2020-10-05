@@ -88,7 +88,6 @@ class LocationHandler(View):
 class TelemetryHandler(View):
     def get(self, request):
         mission_instance = request.session.get('mission_instance')
-        print (mission_instance)
         if mission_instance is None:
             return HttpResponse(json.dumps({"status":"error","message":"Satellite mission not initialized"}))
         else:

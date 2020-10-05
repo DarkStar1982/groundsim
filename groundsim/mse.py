@@ -442,7 +442,8 @@ def get_satellite_position(p_mission):
     position_object["lat"] = p_mission["environment"]["ground_track"]["lat"]
     position_object["lng"] = p_mission["environment"]["ground_track"]["lng"]
     position_object["alt"] = p_mission["environment"]["ground_track"]["alt"]
-    # position_object["a"] = TBD
+    # value a TBD
+    position_object["a"] = 0
     position_object["e"] = tle_details["eccentricity"]
     position_object["i"] = tle_details["inclination"]
     position_object["ra"] = tle_details["ra_ascending_node"]
@@ -456,28 +457,28 @@ def get_satellite_telemetry(p_mission):
     telemetry_object =  {
         "status":"ok",
         "power": {
-            "battery_level": p_mission["satellite"]["telemetry"]["power"]["battery_level"],
-            "battery_output":p_mission["satellite"]["telemetry"]["power"]["battery_output"],
-            "battery_input": p_mission["satellite"]["telemetry"]["power"]["battery_input"],
-            "solar_panel_output":p_mission["satellite"]["telemetry"]["power"]["solar_panel_output"],
+            "1": {"name":"battery_level","value":p_mission["satellite"]["telemetry"]["power"]["battery_level"]},
+            "2": {"name":"battery_output","value":p_mission["satellite"]["telemetry"]["power"]["battery_output"]},
+            "3": {"name":"battery_input","value":p_mission["satellite"]["telemetry"]["power"]["battery_input"]},
+            "4": {"name":"solar_panel_output","value":p_mission["satellite"]["telemetry"]["power"]["solar_panel_output"]},
         },
         "thermal":{
-            "chassis_temp": p_mission["satellite"]["telemetry"]["thermal"]["chassis_temp"],
-            "solar_panel_temp":p_mission["satellite"]["telemetry"]["thermal"]["solar_panel_temp"],
-            "obdh_board_temp":p_mission["satellite"]["telemetry"]["thermal"]["obdh_board_temp"],
-            "battery_temp":p_mission["satellite"]["telemetry"]["thermal"]["battery_temp"]
+            "1": {"name":"chassis_temp","value":p_mission["satellite"]["telemetry"]["thermal"]["chassis_temp"]},
+            "2": {"name":"solar_panel_temp","value":p_mission["satellite"]["telemetry"]["thermal"]["solar_panel_temp"]},
+            "3": {"name":"obdh_board_temp","value":p_mission["satellite"]["telemetry"]["thermal"]["obdh_board_temp"]},
+            "4": {"name":"battery_temp","value":p_mission["satellite"]["telemetry"]["thermal"]["battery_temp"]},
         },
         "obdh":{
-            "obdh_status":p_mission["satellite"]["telemetry"]["obdh"]["obdh_status"],
-            "cpu_load": p_mission["satellite"]["telemetry"]["obdh"]["cpu_load"],
-            "storage_capacity":p_mission["satellite"]["telemetry"]["obdh"]["storage_capacity"],
-            "tasks_running":p_mission["satellite"]["telemetry"]["obdh"]["tasks_running"],
+            "1": {"name":"obdh_status","value":p_mission["satellite"]["telemetry"]["obdh"]["obdh_status"]},
+            "2": {"name":"cpu_load","value":p_mission["satellite"]["telemetry"]["obdh"]["cpu_load"]},
+            "3": {"name":"storage_capacity","value":p_mission["satellite"]["telemetry"]["obdh"]["storage_capacity"]},
+            "4": {"name":"tasks_running","value":p_mission["satellite"]["telemetry"]["obdh"]["tasks_running"]},
         },
         "adcs":{
-            "gyro_rpm":p_mission["satellite"]["telemetry"]["adcs"]["gyro_rpm"],
-            "attitude_mode": p_mission["satellite"]["telemetry"]["adcs"]["attitude_mode"],
-            "adcs_status":p_mission["satellite"]["telemetry"]["adcs"]["adcs_status"],
-            "adcs_vectors":p_mission["satellite"]["telemetry"]["adcs"]["adcs_vectors"],
+            "1": {"name":"gyro_rpm","value":p_mission["satellite"]["telemetry"]["adcs"]["gyro_rpm"]},
+            "2": {"name":"attitude_mode","value":p_mission["satellite"]["telemetry"]["adcs"]["attitude_mode"]},
+            "3": {"name":"adcs_status","value":p_mission["satellite"]["telemetry"]["adcs"]["adcs_status"]},
+            "4": {"name":"adcs_vectors","value":p_mission["satellite"]["telemetry"]["adcs"]["adcs_vectors"]},
         }
     }
     return telemetry_object
