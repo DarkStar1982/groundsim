@@ -47,11 +47,9 @@ class InitializeHandler(View):
         str_date = request.GET.get("date", None)
         split_date = [int(x) for x in str_date.split(',')]
         start_date = datetime(split_date[0], split_date[1], split_date[2], split_date[3],split_date[4],split_date[5])
-
-        sat_environment = create_mission_environment(norad_id, start_date)
-        sat_instance = create_mission_satellite()
+    
         # using user sessions - anonymous for now
-        mission_instance = create_mission_instance(sat_environment, sat_instance)
+        mission_instance = create_mission_instance(norad_id,start_date) #sat_environment, sat_instance)
         return HttpResponse(json.dumps({"status":"ok", "mission_instance":mission_instance}))
 
 @method_decorator(csrf_exempt, name='dispatch')
