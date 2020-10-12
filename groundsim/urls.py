@@ -22,15 +22,16 @@ urlpatterns = [
     # internal
     path('admin/', admin.site.urls),
     path('list/', views.SatelliteListHandler.as_view()),
-    path('update/', views.UpdateSatetellite.as_view()),
+    path('update/', views.UpdateSatellite.as_view()),
     # mission control
     path('mse_init/', views.InitializeHandler.as_view()),
     path('mse_step/', views.SimulationController.as_view()),
-    # satellite TT&C
-    path('location/', views.LocationHandler.as_view()),
-    path('telemetry/', views.TelemetryHandler.as_view()),
-    path('log/', views.LogListHandler.as_view()),
-    path('instruments/', views.InstrumentsListHandler.as_view()),
-    path('get_frame/', views.ImagerFrameHandler.as_view()),
-
+    path('mse_save/', views.SaveController.as_view()),
+    path('mse_load/', views.LoadController.as_view()),
+    # satellite TT&C - locally computed
+    # path('location/', views.LocationHandler.as_view()),
+    # path('telemetry/', views.TelemetryHandler.as_view()),
+    # path('log/', views.LogListHandler.as_view()),
+    # path('instruments/', views.InstrumentsListHandler.as_view()),
+    # path('get_frame/', views.ImagerFrameHandler.as_view()),
 ]

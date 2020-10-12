@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 from sgp4.earth_gravity import wgs72, wgs84
 from sgp4.io import twoline2rv
 from django.views.generic import View
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotFound
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from groundsim.models import Satellite
@@ -35,7 +35,7 @@ class SatelliteListHandler(View):
         return HttpResponse(json.dumps(response))
 
 @method_decorator(csrf_exempt, name='dispatch')
-class UpdateSatetellite(View):
+class UpdateSatellite(View):
     def post(self, request):
         data = request.POST.get("tle_data", None)
         update_satellite(data)
@@ -52,20 +52,10 @@ class InitializeHandler(View):
         sat_instance = create_mission_satellite()
         # using user sessions - anonymous for now
         mission_instance = create_mission_instance(sat_environment, sat_instance)
-        request.session['mission_instance'] = mission_instance
         return HttpResponse(json.dumps({"status":"ok", "mission_instance":mission_instance}))
 
 @method_decorator(csrf_exempt, name='dispatch')
 class SimulationController(View):
-    def get(self, request):
-        step_seconds = int(request.GET.get("steps", none_is_zero(None)))
-        mission_instance = request.session.get('mission_instance')
-        if mission_instance is None:
-            return HttpResponse(json.dumps({"status":"error","message":"Satellite mission not initialized"}))
-        else:
-            request.session['mission_instance'] = simulate_mission_steps(request.session['mission_instance'], step_seconds)
-            return HttpResponse(json.dumps({"status":"ok"}))
-
     def post(self, request):
         step_seconds = int(request.GET.get("steps", none_is_zero(None)))
         mission_instance = json.loads(request.POST.get("mission_instance"))
@@ -75,42 +65,20 @@ class SimulationController(View):
             mission_instance = simulate_mission_steps(mission_instance, step_seconds)
         return HttpResponse(json.dumps({"status":"ok", "mission_instance":mission_instance}))
 
-
-class LocationHandler(View):
-    def get(self, request):
-        mission_instance = request.session.get('mission_instance')
+class SaveController(View):
+    def post(self, request):
+        mission_instance = json.loads(request.POST.get("mission_instance"))
         if mission_instance is None:
-            return HttpResponse(json.dumps("Satellite mission not initialized"))
+            return HttpResponse(json.dumps("Satellite mission data not found"))
         else:
-            response = get_satellite_position(mission_instance)
-            return HttpResponse(json.dumps(response))
+            save_mission(mission_instance)
+        return HttpResponse(json.dumps({"status":"ok"}))
 
-class TelemetryHandler(View):
+class LoadController(View):
     def get(self, request):
-        mission_instance = request.session.get('mission_instance')
+        hash_id = request.GET.get("hash_id", None)
+        mission_instance = load_mission(hash_id)
         if mission_instance is None:
-            return HttpResponse(json.dumps({"status":"error","message":"Satellite mission not initialized"}))
+            return HttpResponseNotFound("Mission Not Found")
         else:
-            response = get_satellite_telemetry(mission_instance)
-            return HttpResponse(json.dumps(response))
-
-class LogListHandler(View):
-    def get(self, request):
-        norad_id = int(request.GET.get("norad_id", none_is_zero(None)))
-        response = get_log(norad_id)
-        return HttpResponse(json.dumps(response))
-
-class InstrumentsListHandler(View):
-    def get(self, request):
-        norad_id = int(request.GET.get("norad_id", none_is_zero(None)))
-        response = get_instruments(norad_id, page)
-        return HttpResponse(json.dumps(response))
-
-class ImagerFrameHandler(View):
-    def get(self, request):
-        mission_instance = request.session.get('mission_instance')
-        if mission_instance is None:
-            return HttpResponse(json.dumps({"status":"error","message":"Satellite mission not initialized"}))
-        else:
-            response = get_imager_frame(mission_instance)
-            return HttpResponse(json.dumps(response))
+            return HttpResponse(json.dumps({"status":"ok", "mission_instance":mission_instance}))

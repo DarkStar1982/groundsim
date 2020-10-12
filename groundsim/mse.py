@@ -419,20 +419,6 @@ def get_imager_frame(p_mission):
 def evolve_satellite(p_satellite, p_environemnt, p_seconds):
     return p_satellite
 
-################################################################################
-############################ MISSION SIMULATION API ############################
-################################################################################
-def create_mission_instance(p_environment, p_satellite):
-    mission = {}
-    mission["environment"] = p_environment
-    mission["satellite"] = p_satellite
-    return mission
-
-def simulate_mission_steps(p_mission, steps):
-    p_mission["environment"] = evolve_environment(p_mission["environment"], steps)
-    p_mission["satellite"] = evolve_satellite(p_mission["satellite"], p_mission["environment"], steps)
-    return p_mission
-
 def get_satellite_position(p_mission):
     position_object = {}
     tle_details = parse_tle_lines(
@@ -482,3 +468,23 @@ def get_satellite_telemetry(p_mission):
         }
     }
     return telemetry_object
+
+################################################################################
+############################ MISSION SIMULATION API ############################
+################################################################################
+def create_mission_instance(p_environment, p_satellite):
+    mission = {}
+    mission["environment"] = p_environment
+    mission["satellite"] = p_satellite
+    return mission
+
+def simulate_mission_steps(p_mission, steps):
+    p_mission["environment"] = evolve_environment(p_mission["environment"], steps)
+    p_mission["satellite"] = evolve_satellite(p_mission["satellite"], p_mission["environment"], steps)
+    return p_mission
+
+def save_mission():
+    return None
+
+def load_mission(hash_id):
+    return None

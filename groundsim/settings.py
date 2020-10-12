@@ -30,6 +30,7 @@ ALLOWED_HOSTS = [
     'nova.test:80',
     'api.nova.test',
     'api.nova.test:8000',
+    'localhost',
 ]
 
 
