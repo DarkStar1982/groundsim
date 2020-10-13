@@ -98,6 +98,7 @@ def calculate_degree_len(lat):
     length_lat = (111132.954 - 559.822 * cos(2*lat)+1.175 * cos(4*lat))/1000.0
     length_lon = (pi * R_EARTH * cos (lat))/180
     return {"length_lon":length_lon, "length_lat":length_lat}
+
 def convert_to_geodetic(tle_data, position, date):
     geo_data = {}
     # copy the data from SGP4 output
@@ -394,6 +395,26 @@ def get_satellite_position(p_mission):
     position_object["tp"] = time_since_periapsis(position_object, tle_details["mean_motion"])
     return position_object
 
+def get_satellite_position(p_mission):
+    position_object = {}
+    tle_details = parse_tle_lines(
+        p_mission["environment"]["tle_data"]["line_1"],
+        p_mission["environment"]["tle_data"]["line_2"]
+    )
+    position_object["lat"] = p_mission["environment"]["ground_track"]["lat"]
+    position_object["lng"] = p_mission["environment"]["ground_track"]["lng"]
+    position_object["alt"] = p_mission["environment"]["ground_track"]["alt"]
+    # value a TBD
+    position_object["a"] = 0
+    position_object["e"] = tle_details["eccentricity"]
+    position_object["i"] = tle_details["inclination"]
+    position_object["ra"] = tle_details["ra_ascending_node"]
+    position_object["w"] = tle_details["argument_perigee"]
+    position_object["time"] = mission_timer_to_str(p_mission["environment"]["mission_timer"])
+    position_object["status"] = "ok"
+    position_object["tp"] = time_since_periapsis(position_object, tle_details["mean_motion"])
+    return position_object
+
 # REMOVE ME
 def get_satellite_telemetry(p_mission):
     telemetry_object =  {
@@ -430,8 +451,10 @@ def queue_commands():
     pass
 
 # at 1 second resolution - input is Environment, output is new satellite
-def evolve_satellite(p_satellite, p_environemnt, p_seconds):
-    return p_satellite
+def evolve_satellite(p_mission, p_seconds):
+    p_mission["satellite"]["location"] = get_satellite_position(p_mission)
+    p_mission["satellite"]["formatted_telemetry"] = get_satellite_telemetry(p_mission)
+    return p_mission["satellite"]
 
 ################################################################################
 ############################### MISSION ADMIN API ##############################
@@ -478,7 +501,7 @@ def create_mission_instance(norad_id, start_date):
 
 def simulate_mission_steps(p_mission, steps):
     p_mission["environment"] = evolve_environment(p_mission["environment"], steps)
-    p_mission["satellite"] = evolve_satellite(p_mission["satellite"], p_mission["environment"], steps)
+    p_mission["satellite"] = evolve_satellite(p_mission, steps)
     return p_mission
 
 def save_mission():
