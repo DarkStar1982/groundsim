@@ -1,6 +1,7 @@
 
-MISSION SIMULATION ENVIRONMENT DESCRIPTION
+# MISSION SIMULATION ENVIRONMENT DESCRIPTION
 
+## Environment Simulation Parameters
 | Environment Inputs | Environment Outputs | 
 | :------------- | :----------: |
 | Orbital vector	 |	Ground track lat/lon   | 
@@ -12,53 +13,45 @@ MISSION SIMULATION ENVIRONMENT DESCRIPTION
 | Magnetic field vector | |
 | Thermal irradiation scalar | |
   
-Satellite Simulation
+## Satellite Simulation Parameters
 
 | **Internal Inputs** | **Outputs** | 
 | :------------- | :----------: |
 | Solar Panel Power Out	 | Solar Panel Power Out | 
-| Attitude vectors | 	Attitude vector |
+| Attitude vector | Attitude vector |
 | Battery Power In | Battery Power In |
-| Ground stations list |Thermal power input |
-| **Constants** | Visible light input |
-| Visible light irradiation scalar | 	Ground station visibility |
-| Magnetic field vector | |
-| Thermal irradiation scalar | |
-
-		
+| Battery Power Out | Battery Power Out |
+| Battery Capacity Left | Battery Capacity Left | 
+| Camera Power Draw |Camera Power Draw | 
+| SDR Power Draw | SDR Power Draw | 
+| ADCS Power Draw | ADCS Power Draw | 	
+| ADCS Power Draw | ADCS Power Draw | 
+| Thermal sensors data | Thermal sensors data | 
+| Instrument states | Instrument states | 
+| Storage queues | Storage queues | 
+| **External inputs** | | 
+| Camera buffer | | 	
+| SDR input buffer | |		
+| Uplink command buffer | |
+| **Constants** | |
+| Satellite geometry | |	
+| Satellite TLE | |	
+| Satellite configuration | |	
 	
 
-
-Battery Power Out	Battery Power Out
-Battery Capacity Left	Battery Capacity Left
-Camera Power Draw	Camera Power Draw
-SDR Power Draw	SDR Power Draw
-ADCS Power Draw	ADCS Power Draw
-Thermal sensors	Temperature sensors
-Instrument states	Instrument states
-Storage queues	Storage queues
-External inputs	
-Camera buffer	
-SDR input buffer	
-Uplink command buffer	
-Constants	
-Satellite geometry	
-Satellite TLE	
-Satellite configuration	
-
-Architecture
-•	Backend: API HTTP server + satellite simulator as standalone module
-o	DB schema: work in-progress
-•	Frontend: Vue.js + jQuery
-•	Workflow
-o	Frontend:
-	calls “initialize” API and then calls “step forward” API repeatedly
-	Simulation instance data is stored on the frontend (client-side)
-	On each “step” call simulation instance is sent towards the server
-o	Server:
-	Creates initial simulation instance after “initialize” called.
-	Steps simulation instance forward in time after “step forward” call.
-	Receives data from front-end, steps in forward in time and returns back to front-end
+## Architecture
+* Backend: API HTTP server + satellite simulator as standalone module
+   * DB schema: work in-progress
+   * Frontend: Vue.js + jQuery
+* Workflow
+* Frontend:
+** calls “initialize” API and then calls “step forward” API repeatedly
+** Simulation instance data is stored on the frontend (client-side)
+** On each “step” call simulation instance is sent towards the server
+** Server:
+** Creates initial simulation instance after “initialize” called.
+** Steps simulation instance forward in time after “step forward” call.
+* Receives data from front-end, steps in forward in time and returns back to front-end
 
 Satellite simulation features/subsystems features simulated
 •	Payload APIs
