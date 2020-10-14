@@ -45,64 +45,64 @@
    * Frontend: Vue.js + jQuery
 * Workflow
 * Frontend:
-** calls “initialize” API and then calls “step forward” API repeatedly
-** Simulation instance data is stored on the frontend (client-side)
-** On each “step” call simulation instance is sent towards the server
-** Server:
-** Creates initial simulation instance after “initialize” called.
-** Steps simulation instance forward in time after “step forward” call.
-* Receives data from front-end, steps in forward in time and returns back to front-end
+    * calls “initialize” API and then calls “step forward” API repeatedly
+    * Simulation instance data is stored on the frontend (client-side)
+    * On each “step” call simulation instance is sent towards the server
+* Server:
+    * Creates initial simulation instance after “initialize” called.
+    * Steps simulation instance forward in time after “step forward” call.
+    * Receives data from front-end, steps in forward in time and returns back to front-end
 
-Satellite simulation features/subsystems features simulated
-•	Payload APIs
-o	Camera
-	Get image frame
-	Make a shot 
-o	SDR
-	Set receiver parameters
-	Start recording
-	Stop recording
-o	ADCS
-	Change attitude mode
-	Desaturate RCS
-o	COMM
-	Get telemetry
-	Upload mission script
-	Download science data
-•	Subsystem behavior
-o	Geometry & mass
-	Important for ADCS
-	All subsystems are modelled as blocks
-o	Power subsystem
-	Current/voltage/power draw simulation
-	Thermal dissipation
-o	Thermal subsystem
-	Use nodal model
-o	OBDH (take runtime from OPS_SAT)
-o	COMM (include ground station visibility)
+## Satellite simulation - features/subsystems notes
+* Payload APIs
+    * Camera
+        * Get image frame
+        * Make a shot 
+    * SDR
+        * Set receiver parameters
+        * Start recording
+        * Stop recording
+    * ADCS
+        * Change attitude mode
+        * Desaturate RCS
+    * COMM
+        * Get telemetry
+        * Upload mission script
+        * Download science data
+* Subsystem behavior
+    * Geometry & mass
+        * Important for ADCS
+        * All subsystems are modelled as blocks
+    * Power subsystem
+        * Current/voltage/power draw simulation
+        * Thermal dissipation
+    * Thermal subsystem
+        * Use nodal model
+    * OBDH (take runtime from OPS_SAT)
+    * COMM (include ground station visibility)
 
-Mission Scenarios
-•	Save/Resume logic
-o	Upon creation, create and save mission instance in the DB
-o	Create unique mission hash/create database object
-o	On each step, update mission simulation object
+## Environment & satellite simulation - TODO
+* Add night-day functionality.
+* Add irradiation conditions (beta angle, thermals, etc)
+* Add proper orbit simulation?
+* Add ADCS functionality (how to use quaternions??)
+* Share mission functionality (add screen to enter email to get mission url with hash) 
 
-TODO:
-Mission scenarios
-•	Create a few example mission scenarios
-•	Take examples from VEGA MiniSim
-o	Imager missions
-	take photo on the ground
-	take photo of celestial object
-	take photo of another satellite
-o	SDR missions
-	AIS intercept
-	ADS-B intercept
-	“Other satellite” transmission intercept
+## Mission Scenarios - TODO
+* Save/Resume logic
+* Upon creation, create and save mission instance in the DB
+* Create unique mission hash/create database object
+* On each step, update mission simulation object
+* Take examples from VEGA MiniSim for scenarios
 
-Environment & satellite simulation
-•	Add night-day functionality.
-•	Add irradiation conditions (beta angle, thermals, etc)
-•	Add proper orbit simulation?
-•	Add ADCS functionality (how to use quaternions??)
-•	Share mission functionality (add screen to enter email to get mission url with hash) 
+## Example mission scenarios - TODO
+* Imager missions
+    * take photo on the ground
+    * take photo of celestial object
+    * take photo of another satellite
+* SDR missions
+    * AIS intercept
+    * ADS-B intercept
+    * “Other satellite” transmission intercept
+
+
