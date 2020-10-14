@@ -23,15 +23,19 @@
 * date - mission start date
 
 **Response Type:** JSON<br/>
-"OK"/Error
+
+**Response Data**: Initial mission simulation state
 
 ## Simulation Control
 **URL:** {GROUND_SIM_HOST}/mse_step/?steps=1
 
-**Request type:** HTTP GET
+**Request type:** HTTP POST<br/>
+
+**Request data:** Mission simulation state at step X
 
 **Parameters:**
 * steps - number of seconds to step forward
 
 **Response Type:** JSON <br/>
-"OK"/Error
+
+**Response Data**: Mission simulation state at step X+ steps
