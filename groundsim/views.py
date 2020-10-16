@@ -1,5 +1,6 @@
 import json
 import julian
+from hashlib import sha256
 from math import floor, fmod, pi, atan, sqrt, sin, fabs, cos, atan2, trunc
 from datetime import datetime, timezone, timedelta
 from sgp4.earth_gravity import wgs72, wgs84
@@ -20,7 +21,8 @@ from groundsim.mse import (
     get_satellite_telemetry,
     calculate_camera_fov,
     calculate_resolution,
-    get_imager_frame
+    get_imager_frame,
+    save_mission
 )
 
 def none_is_zero(obj):
@@ -49,7 +51,7 @@ class InitializeHandler(View):
         start_date = datetime(split_date[0], split_date[1], split_date[2], split_date[3],split_date[4],split_date[5])
 
         # using user sessions - anonymous for now
-        mission_instance = create_mission_instance(norad_id,start_date) #sat_environment, sat_instance)
+        mission_instance = create_mission_instance(norad_id,start_date)
         return HttpResponse(json.dumps({"status":"ok", "mission_instance":mission_instance}))
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -63,14 +65,17 @@ class SimulationController(View):
             mission_instance = simulate_mission_steps(mission_instance, step_seconds)
         return HttpResponse(json.dumps({"status":"ok", "mission_instance":mission_instance}))
 
+@method_decorator(csrf_exempt, name='dispatch')
 class SaveController(View):
     def post(self, request):
-        mission_instance = json.loads(request.POST.get("mission_instance"))
-        if mission_instance is None:
+        mission_instance_str = request.POST.get("mission_instance",None)
+        if mission_instance_str is None:
             return HttpResponse(json.dumps("Satellite mission data not found"))
         else:
-            save_mission(mission_instance)
-        return HttpResponse(json.dumps({"status":"ok"}))
+            mission_instance = json.loads(mission_instance_str)
+            hash_id = sha256(mission_instance_str.encode('utf-8')).hexdigest()
+            result_data = save_mission(mission_instance, hash_id)
+        return HttpResponse(json.dumps(result_data))
 
 class LoadController(View):
     def get(self, request):

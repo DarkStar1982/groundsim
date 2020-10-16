@@ -6,17 +6,17 @@ class Satellite(models.Model):
     satellite_name = models.CharField(max_length=24) # tle line 0
     satellite_tle1 = models.CharField(max_length=70)
     satellite_tle2 = models.CharField(max_length=70)
-    norad_id = models.IntegerField(default=0)
+    norad_id = models.IntegerField(default=0)  # should be primary key!
 
 class SatelliteInstance(models.Model):
-    satellite_id = models.IntegerField(default=0) # primary key
+    satellite_id = models.IntegerField(default=0) # not a primary key!
     geometry = models.CharField(blank=True, max_length=4096)
     subsystems = models.CharField(blank=True, max_length=4096)
     instruments = models.CharField(blank=True, max_length=4096)
 
 class MissionInstance(models.Model):
     # initialization data
-    mission_hash = models.CharField(max_length=64) # primary key
+    mission_hash = models.CharField(max_length=64) # primary key!
     norad_id = models.IntegerField(default=0)
     start_date = models.DateTimeField(null=True, blank=True)
     mission_timer = models.IntegerField(default=0)
