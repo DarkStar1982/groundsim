@@ -22,7 +22,8 @@ from groundsim.mse import (
     calculate_camera_fov,
     calculate_resolution,
     get_imager_frame,
-    save_mission
+    save_mission,
+    load_mission
 )
 
 def none_is_zero(obj):
@@ -45,13 +46,15 @@ class UpdateSatellite(View):
 
 class InitializeHandler(View):
     def get(self, request):
-        norad_id = int(request.GET.get("norad_id", none_is_zero(None)))
-        str_date = request.GET.get("date", None)
-        split_date = [int(x) for x in str_date.split(',')]
-        start_date = datetime(split_date[0], split_date[1], split_date[2], split_date[3],split_date[4],split_date[5])
-
-        # using user sessions - anonymous for now
-        mission_instance = create_mission_instance(norad_id,start_date)
+        hash_id = request.GET.get("hash_id", None)
+        if hash_id is not None:
+            mission_instance = load_mission(hash_id)
+        else:
+            norad_id = int(request.GET.get("norad_id", none_is_zero(None)))
+            str_date = request.GET.get("date", None)
+            split_date = [int(x) for x in str_date.split(',')]
+            start_date = datetime(split_date[0], split_date[1], split_date[2], split_date[3],split_date[4],split_date[5])
+            mission_instance = create_mission_instance(norad_id,start_date)
         return HttpResponse(json.dumps({"status":"ok", "mission_instance":mission_instance}))
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -76,12 +79,3 @@ class SaveController(View):
             hash_id = sha256(mission_instance_str.encode('utf-8')).hexdigest()
             result_data = save_mission(mission_instance, hash_id)
         return HttpResponse(json.dumps(result_data))
-
-class LoadController(View):
-    def get(self, request):
-        hash_id = request.GET.get("hash_id", None)
-        mission_instance = load_mission(hash_id)
-        if mission_instance is None:
-            return HttpResponseNotFound("Mission Not Found")
-        else:
-            return HttpResponse(json.dumps({"status":"ok", "mission_instance":mission_instance}))

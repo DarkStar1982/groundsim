@@ -2,6 +2,7 @@
 # environment simulator + satellite system simulator
 import julian
 import calendar
+import json
 from math import floor, fmod, pi, tan, atan, sqrt, sin, fabs, cos, atan2, trunc, acos
 from datetime import datetime, timezone, timedelta
 from sgp4.earth_gravity import wgs72, wgs84
@@ -354,6 +355,15 @@ def create_mission_satellite():
     satellite["instruments"] = initialize_satellite_instruments()
     return satellite
 
+def load_mission_satellite(satellite_record):
+    satellite = {
+        "geometry":json.loads(satellite_record.geometry),
+        "subsystems":json.loads(satellite_record.subsystems),
+        "instruments":json.loads(satellite_record.instruments),
+        "telemetry":initialize_satellite_telemetry(),
+    }
+    return satellite
+
 # input:
 # - camera fov drawing
 #  |\
@@ -508,9 +518,9 @@ def save_mission(p_mission, hash_id):
     mission_record = MissionInstance()
     satellite_record = SatelliteInstance()
     satellite_record.satellite_id = p_mission["environment"]["norad_id"]
-    satellite_record.geometry = p_mission["satellite"]["geometry"]
-    satellite_record.subsystems = p_mission["satellite"]["subsystems"]
-    satellite_record.instruments = p_mission["satellite"]["instruments"]
+    satellite_record.geometry = json.dumps(p_mission["satellite"]["geometry"])
+    satellite_record.subsystems = json.dumps(p_mission["satellite"]["subsystems"])
+    satellite_record.instruments = json.dumps(p_mission["satellite"]["instruments"])
     satellite_record.save()
     mission_record.mission_hash = hash_id
     mission_record.norad_id = p_mission["environment"]["norad_id"]
@@ -531,7 +541,13 @@ def save_mission(p_mission, hash_id):
     return {"status":"ok", "hash_id":hash_id}
 
 def load_mission(hash_id):
-    return None
+    mission = {}
+    #find mission instance
+    mission_record = MissionInstance.objects.get(mission_hash=hash_id)
+    mission["environment"] = create_mission_environment(mission_record.norad_id, mission_record.start_date)
+    mission["satellite"] = load_mission_satellite(mission_record.satellite_ref)
+    # load mission
+    return mission
 
 def get_log(hash_id):
     return {"status":"ok", "page":0, "log":[]}
