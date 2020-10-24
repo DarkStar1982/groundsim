@@ -160,8 +160,7 @@ def time_since_periapsis(position_object, mean_motion):
 def create_mission_environment(p_norad_id, p_start_date):
     environment = {}
     environment["norad_id"] = p_norad_id
-    #environment["start_date_packed"] = p_start_date <-not JSONable
-    environment["mission_timer"] = {
+    environment["current_date"] = {
         "year": p_start_date.year,
         "month":p_start_date.month,
         "day":  p_start_date.day,
@@ -169,6 +168,7 @@ def create_mission_environment(p_norad_id, p_start_date):
         "min":  p_start_date.minute,
         "sec":  p_start_date.second
     }
+    environment["start_date"] = environment["current_date"]
     environment["tle_data"] = generate_tle_data(p_norad_id)
     environment["elapsed_timer"] = 0
     environment["ground_track"] = None
@@ -242,18 +242,18 @@ def propagate_orbit(tle_data, mission_timer):
 # at 1 second resolution
 def evolve_environment(p_environment, p_seconds):
     p_environment["elapsed_timer"] = p_environment["elapsed_timer"] + p_seconds
-    p_environment["mission_timer"] = increment_mission_timer(
-        p_environment["mission_timer"],
+    p_environment["current_date"] = increment_mission_timer(
+        p_environment["current_date"],
         p_seconds
     )
     p_environment["orbit_vector"] = propagate_orbit(
         p_environment["tle_data"],
-        p_environment["mission_timer"]
+        p_environment["current_date"]
     )
     p_environment["ground_track"] = get_ground_track(
         p_environment["tle_data"],
         p_environment["orbit_vector"],
-        p_environment["mission_timer"]
+        p_environment["current_date"]
     )
     return p_environment
 
@@ -400,32 +400,12 @@ def get_satellite_position(p_mission):
     position_object["i"] = tle_details["inclination"]
     position_object["ra"] = tle_details["ra_ascending_node"]
     position_object["w"] = tle_details["argument_perigee"]
-    position_object["time"] = mission_timer_to_str(p_mission["environment"]["mission_timer"])
+    position_object["time"] = mission_timer_to_str(p_mission["environment"]["current_date"])
     position_object["status"] = "ok"
     position_object["tp"] = time_since_periapsis(position_object, tle_details["mean_motion"])
     return position_object
 
-def get_satellite_position(p_mission):
-    position_object = {}
-    tle_details = parse_tle_lines(
-        p_mission["environment"]["tle_data"]["line_1"],
-        p_mission["environment"]["tle_data"]["line_2"]
-    )
-    position_object["lat"] = p_mission["environment"]["ground_track"]["lat"]
-    position_object["lng"] = p_mission["environment"]["ground_track"]["lng"]
-    position_object["alt"] = p_mission["environment"]["ground_track"]["alt"]
-    # value a TBD
-    position_object["a"] = 0
-    position_object["e"] = tle_details["eccentricity"]
-    position_object["i"] = tle_details["inclination"]
-    position_object["ra"] = tle_details["ra_ascending_node"]
-    position_object["w"] = tle_details["argument_perigee"]
-    position_object["time"] = mission_timer_to_str(p_mission["environment"]["mission_timer"])
-    position_object["status"] = "ok"
-    position_object["tp"] = time_since_periapsis(position_object, tle_details["mean_motion"])
-    return position_object
-
-# REMOVE ME
+# REMOVE ME - TBD
 def get_satellite_telemetry(p_mission):
     telemetry_object =  {
         "status":"ok",
@@ -525,12 +505,12 @@ def save_mission(p_mission, hash_id):
     mission_record.mission_hash = hash_id
     mission_record.norad_id = p_mission["environment"]["norad_id"]
     mission_record.start_date = datetime(
-        p_mission["environment"]["mission_timer"]["year"],
-        p_mission["environment"]["mission_timer"]["month"],
-        p_mission["environment"]["mission_timer"]["day"],
-        p_mission["environment"]["mission_timer"]["hour"],
-        p_mission["environment"]["mission_timer"]["min"],
-        p_mission["environment"]["mission_timer"]["sec"]
+        p_mission["environment"]["start_date"]["year"],
+        p_mission["environment"]["start_date"]["month"],
+        p_mission["environment"]["start_date"]["day"],
+        p_mission["environment"]["start_date"]["hour"],
+        p_mission["environment"]["start_date"]["min"],
+        p_mission["environment"]["start_date"]["sec"]
     )
     mission_record.mission_timer = p_mission["environment"]["elapsed_timer"]
     mission_record.tle_line_1 = p_mission["environment"]["tle_data"]["line_1"]
@@ -546,7 +526,7 @@ def load_mission(hash_id):
     mission_record = MissionInstance.objects.get(mission_hash=hash_id)
     mission["environment"] = create_mission_environment(mission_record.norad_id, mission_record.start_date)
     mission["satellite"] = load_mission_satellite(mission_record.satellite_ref)
-    # load mission
+    # return mission object
     return mission
 
 def get_log(hash_id):

@@ -16,12 +16,7 @@ from groundsim.mse import (
     create_mission_instance,
     simulate_mission_steps,
     get_satellite_list,
-    get_satellite_position,
     update_satellite,
-    get_satellite_telemetry,
-    calculate_camera_fov,
-    calculate_resolution,
-    get_imager_frame,
     save_mission,
     load_mission
 )
@@ -66,6 +61,25 @@ class SimulationController(View):
             return HttpResponse(json.dumps("Satellite mission not initialized"))
         else:
             mission_instance = simulate_mission_steps(mission_instance, step_seconds)
+        return HttpResponse(json.dumps({"status":"ok", "mission_instance":mission_instance}))
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ResetController(View):
+    def post(self, request):
+        mission_instance = json.loads(request.POST.get("mission_instance"))
+        if mission_instance is None:
+            return HttpResponse(json.dumps("Satellite mission not initialized"))
+        else:
+            norad_id = mission_instance["environment"]["norad_id"]
+            start_date = datetime(
+                mission_instance["environment"]["start_date"]["year"],
+                mission_instance["environment"]["start_date"]["month"],
+                mission_instance["environment"]["start_date"]["day"],
+                mission_instance["environment"]["start_date"]["hour"],
+                mission_instance["environment"]["start_date"]["min"],
+                mission_instance["environment"]["start_date"]["sec"]
+            )
+            mission_instance = create_mission_instance(norad_id, start_date)
         return HttpResponse(json.dumps({"status":"ok", "mission_instance":mission_instance}))
 
 @method_decorator(csrf_exempt, name='dispatch')
