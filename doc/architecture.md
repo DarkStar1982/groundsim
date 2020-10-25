@@ -90,8 +90,11 @@
 
 ## Mission Scenarios - TODO
 * Save/Resume logic
-* Upon creation, create and save mission instance in the DB
-* Create unique mission hash/create database object
+    * First save is a "save as..."
+    	* Create unique mission hash/create database object
+        * Prompts a modal with name/email to register, saves into the database
+	* Then send an email to the user with an url to load saved mission
+    * Second and subsequent saves just update the saved mission 
 * On each step, update mission simulation object
 * Take examples from VEGA MiniSim for scenarios
 
