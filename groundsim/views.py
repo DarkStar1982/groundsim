@@ -10,7 +10,7 @@ from django.http import HttpResponse, HttpResponseNotFound
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from groundsim.models import Satellite
-from groundsim.mse import (
+from groundsim.mse.core import (
     create_mission_environment,
     create_mission_satellite,
     create_mission_instance,
@@ -86,10 +86,12 @@ class ResetController(View):
 class SaveController(View):
     def post(self, request):
         mission_instance_str = request.POST.get("mission_instance",None)
+        user = request.POST.get("user", None)
+        email = request.POST.get("email", None)
         if mission_instance_str is None:
             return HttpResponse(json.dumps("Satellite mission data not found"))
         else:
             mission_instance = json.loads(mission_instance_str)
             hash_id = sha256(mission_instance_str.encode('utf-8')).hexdigest()
-            result_data = save_mission(mission_instance, hash_id)
+            result_data = save_mission(mission_instance, hash_id, user, email)
         return HttpResponse(json.dumps(result_data))

@@ -7,7 +7,14 @@ from math import floor, fmod, pi, tan, atan, sqrt, sin, fabs, cos, atan2, trunc,
 from datetime import datetime, timezone, timedelta
 from sgp4.earth_gravity import wgs72, wgs84
 from sgp4.io import twoline2rv
-from groundsim.models import Satellite, SatelliteInstance, MissionInstance
+from groundsim.models import Satellite, SatelliteInstance, MissionInstance, UserInstance
+#from groundsim.mse.utils import f_equals, calculate_degree_len
+
+
+################################################################################
+################################ GLOBAL OBJECTS ################################
+################################################################################
+
 
 ################################################################################
 ############################### GLOBAL CONSTANTS ###############################
@@ -34,13 +41,6 @@ def get_epoch_time(tle_string):
     date_a = datetime(year, 1, 1,tzinfo=timezone.utc) + timedelta(days - 1)
     return date_a
 
-# floating point comparison
-def f_equals(a,b,c):
-    if fabs(fabs(a)-fabs(c))<c:
-        return True
-    else:
-        return False
-
 def convert_to_float(element):
     if element[0] == '-':
         sign = '-'
@@ -52,6 +52,28 @@ def convert_to_float(element):
         exponent = element[-1]
     value = sign + '0.'+ mantissa +'E-' + exponent
     return float(value)
+
+# floating point comparison
+def f_equals(a,b,c):
+    if fabs(fabs(a)-fabs(c))<c:
+        return True
+    else:
+        return False
+
+def calculate_camera_fov(d,f):
+    alpha = 2*atan(d/(2*f))
+    return alpha
+
+def calculate_resolution(ifov, alt):
+    d = 2*alt*tan(ifov/2)
+    return d
+
+# lat lon should be in radians
+def calculate_degree_len(lat):
+    # calculate latitude degree length
+    length_lat = (111132.954 - 559.822 * cos(2*lat)+1.175 * cos(4*lat))/1000.0
+    length_lon = (pi * R_EARTH * cos (lat))/180
+    return {"length_lon":length_lon, "length_lat":length_lat}
 
 def generate_tle_data(norad_id):
     satellite_record = Satellite.objects.get(norad_id=norad_id)
@@ -85,28 +107,12 @@ def parse_tle_lines(tle_line_1, tle_line_2):
     tle_data["revolution_number"] = int(line_2[8][:-1])
     return tle_data
 
-def calculate_camera_fov(d,f):
-    alpha = 2*atan(d/(2*f))
-    return alpha
-
-def calculate_resolution(ifov, alt):
-    d = 2*alt*tan(ifov/2)
-    return d
-
-# lat lon should be in radians
-def calculate_degree_len(lat):
-    # calculate latitude degree length
-    length_lat = (111132.954 - 559.822 * cos(2*lat)+1.175 * cos(4*lat))/1000.0
-    length_lon = (pi * R_EARTH * cos (lat))/180
-    return {"length_lon":length_lon, "length_lat":length_lat}
-
 def convert_to_geodetic(tle_data, position, date):
     geo_data = {}
     # copy the data from SGP4 output
     x = position[0]
     y = position[1]
     z = position[2]
-
     # longitude calculation
     jd = julian.to_jd(date)
     ut = fmod(jd + 0.5, 1.0)
@@ -121,7 +127,6 @@ def convert_to_geodetic(tle_data, position, date):
         geo_data["lng"] = 360 + lon
     if lon>-180:
         geo_data["lng"] = lon
-
     # latitude calculation
     lat = atan(z/sqrt(x*x + y*y))
     a = R_EARTH
@@ -133,7 +138,6 @@ def convert_to_geodetic(tle_data, position, date):
         lat = atan((z + c)/sqrt(x*x + y*y))
         delta = fabs(lat - lat0)
     geo_data["lat"] = 180*lat/pi
-
     #altitude calculation
     if f_equals(lat,pi/2,0.01):
         alt = z/sin(lat) - a*sqrt(1-e*e)
@@ -175,6 +179,8 @@ def create_mission_environment(p_norad_id, p_start_date):
     environment["orbit_vector"] = None
     environment["sun_vector"] = None
     environment["ground_stations"] = []
+    environment["user"] = None
+    environment["email"] = None
     return environment
 
 def increment_mission_timer(p_mission_timer, p_seconds):
@@ -494,7 +500,7 @@ def simulate_mission_steps(p_mission, steps):
     p_mission["satellite"] = evolve_satellite(p_mission, steps)
     return p_mission
 
-def save_mission(p_mission, hash_id):
+def save_mission(p_mission, hash_id, p_user, p_email):
     mission_record = MissionInstance()
     satellite_record = SatelliteInstance()
     satellite_record.satellite_id = p_mission["environment"]["norad_id"]
@@ -517,8 +523,16 @@ def save_mission(p_mission, hash_id):
     mission_record.tle_line_2 = p_mission["environment"]["tle_data"]["line_2"]
     # satellite reference data
     mission_record.satellite_ref = satellite_record
+    if p_mission["environment"]["user"] is None and p_mission["environment"]["email"] is None:
+        user_record = UserInstance()
+        user_record.user = p_user
+        user_record.email = p_email
+        user_record.save()
+        mission_record.user_ref = user_record
+        p_mission["environment"]["user"] = p_user
+        p_mission["environment"]["email"] = p_email
     mission_record.save()
-    return {"status":"ok", "hash_id":hash_id}
+    return {"status":"ok", "hash_id":hash_id, "mission_instance":p_mission}
 
 def load_mission(hash_id):
     mission = {}
