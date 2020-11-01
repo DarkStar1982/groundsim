@@ -11,8 +11,6 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from groundsim.models import Satellite
 from groundsim.mse.core import (
-    create_mission_environment,
-    create_mission_satellite,
     create_mission_instance,
     simulate_mission_steps,
     get_satellite_list,

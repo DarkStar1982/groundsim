@@ -15,8 +15,8 @@ class SatelliteInstance(models.Model):
     instruments = models.CharField(blank=True, max_length=4096)
 
 class UserInstance(models.Model):
-    user = models.CharField(max_length=128)
-    email = models.CharField(max_length=128)
+    user = models.CharField(max_length=128, null=True)
+    email = models.CharField(max_length=128, null=True)
 
 class MissionInstance(models.Model):
     mission_hash = models.CharField(max_length=64) # primary key!
