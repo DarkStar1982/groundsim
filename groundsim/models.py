@@ -36,8 +36,10 @@ class UserInstance(models.Model):
 # class MissionScenario(models.Model):
 #   satellite_id = models.IntegerField(default=0)
 #   start_date = models.DateTimeField()
+#   mission_name = models.CharField(blank=True, max_length=255)
 #   timestamp = models.DateTimeField()
-#   message = models.CharField(blank=True, max_length=255)
+#   initial_conditions = models.CharField(blank=True, max_length=255)
+#   objectives = models.CharField(blank=True, max_length=255)
 
 admin.site.register(Satellite)
 admin.site.register(MissionInstance)

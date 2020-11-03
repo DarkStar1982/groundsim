@@ -15,7 +15,9 @@ from groundsim.mse.core import (
     get_satellite_list,
     update_satellite,
     save_mission,
-    load_mission
+    load_mission,
+    get_mission_list,
+    get_mission_details
 )
 
 def none_is_zero(obj):
@@ -31,13 +33,13 @@ class SatelliteListHandler(View):
 
 class ListMissions(View):
     def get(self, request):
-        response = []
+        response = get_mission_list()
         return HttpResponse(json.dumps(response))
 
 class GetMissionDetails(View):
     def get(self, request):
         mission_id = int(request.GET.get("mission_id", none_is_zero(None)))
-        response = []
+        response = get_mission_details(mission_id)
         return HttpResponse(json.dumps(response))
 
 @method_decorator(csrf_exempt, name='dispatch')

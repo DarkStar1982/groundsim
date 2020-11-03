@@ -405,6 +405,14 @@ def load_mission(hash_id):
     mission["satellite"] = SatelliteSimulator.load_mission_satellite(mission_record.satellite_ref)
     return mission
 
+#TBD
+def get_mission_list():
+    return []
+
+#TBD
+def get_mission_details(p_mission_id):
+    return []
+
 def get_mission_log(hash_id):
     return {"status":"ok", "page":0, "log":[]}
 
