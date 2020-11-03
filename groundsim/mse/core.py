@@ -2,7 +2,8 @@
 # environment simulator + satellite system simulator
 import calendar
 import json
-from math import floor, fmod, pi, tan, atan, sqrt, sin, fabs, cos, atan2, trunc, acos
+from hashlib import sha256
+from math import pi, tan, atan, sqrt, sin, fabs, cos, atan2, trunc, acos
 from datetime import datetime, timezone, timedelta
 from sgp4.earth_gravity import wgs72, wgs84
 from sgp4.io import twoline2rv
@@ -34,6 +35,8 @@ class CMSE_Env():
         environment["ground_stations"] = []
         environment["user"] = None
         environment["email"] = None
+        environment["hash_id"] = None
+        environment["mission_selected"] = None
         return environment
 
     def generate_tle_data(self, norad_id):
@@ -346,15 +349,36 @@ def simulate_mission_steps(p_mission, steps):
     p_mission["satellite"] = SatelliteSimulator.evolve_satellite(p_mission, steps)
     return p_mission
 
-def save_mission(p_mission, hash_id, p_user, p_email):
-    mission_record = MissionInstance()
-    satellite_record = SatelliteInstance()
+def save_user(p_user, p_email):
+    record, created = UserInstance.objects.get_or_create(user=p_user, email = p_email)
+    return record
+
+# check if mission record already exists before saving
+def save_mission(p_mission, p_user, p_email):
+    if p_mission["environment"]["user"] is None and p_mission["environment"]["email"] is None:
+        hash_id = sha256(json.dumps(p_mission).encode('utf-8')).hexdigest()
+        user_record = save_user(p_user, p_email)
+        mission_record = MissionInstance()
+        satellite_record = SatelliteInstance()
+        p_mission["environment"]["user"] = p_user
+        p_mission["environment"]["email"] = p_email
+        p_mission["environment"]["hash_id"] = hash_id
+        mission_record.mission_hash = hash_id
+        mission_record.save()
+        user_record.mission_ref = mission_record
+        user_record.save()
+    else:
+        hash_id = p_mission["environment"]["hash_id"]
+        mission_record = MissionInstance.objects.get(
+            mission_hash=hash_id
+        )
+        satellite_record = mission_record.satellite_ref
+        # hash_id = sha256(json.dumps(p_mission).encode('utf-8')).hexdigest()
     satellite_record.satellite_id = p_mission["environment"]["norad_id"]
     satellite_record.geometry = json.dumps(p_mission["satellite"]["geometry"])
     satellite_record.subsystems = json.dumps(p_mission["satellite"]["subsystems"])
     satellite_record.instruments = json.dumps(p_mission["satellite"]["instruments"])
     satellite_record.save()
-    mission_record.mission_hash = hash_id
     mission_record.norad_id = p_mission["environment"]["norad_id"]
     mission_record.start_date = datetime(
         p_mission["environment"]["start_date"]["year"],
@@ -369,16 +393,9 @@ def save_mission(p_mission, hash_id, p_user, p_email):
     mission_record.tle_line_2 = p_mission["environment"]["tle_data"]["line_2"]
     # satellite reference data
     mission_record.satellite_ref = satellite_record
-    if p_mission["environment"]["user"] is None and p_mission["environment"]["email"] is None:
-        user_record = UserInstance()
-        user_record.user = p_user
-        user_record.email = p_email
-        user_record.save()
-        mission_record.user_ref = user_record
-        p_mission["environment"]["user"] = p_user
-        p_mission["environment"]["email"] = p_email
+    mission_record.mission_hash = hash_id
     mission_record.save()
-    return {"status":"ok", "hash_id":hash_id, "mission_instance":p_mission}
+    return {"status":"ok", "mission_instance":p_mission}
 
 def load_mission(hash_id):
     mission = {}
@@ -391,6 +408,12 @@ def load_mission(hash_id):
 def get_mission_log(hash_id):
     return {"status":"ok", "page":0, "log":[]}
 
-# Initialiazed on start
+def evaluate_progress(p_mission):
+    # check state of the mission vs expected result
+    # has to be exposed via api call
+    pass
+
+
+# Initialiaze on start
 EnvironmentSimulator = CMSE_Env()
 SatelliteSimulator = CMSE_Sat()

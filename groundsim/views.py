@@ -1,6 +1,5 @@
 import json
 import julian
-from hashlib import sha256
 from math import floor, fmod, pi, atan, sqrt, sin, fabs, cos, atan2, trunc
 from datetime import datetime, timezone, timedelta
 from sgp4.earth_gravity import wgs72, wgs84
@@ -28,6 +27,17 @@ def none_is_zero(obj):
 class SatelliteListHandler(View):
     def get(self, request):
         response = get_satellite_list()
+        return HttpResponse(json.dumps(response))
+
+class ListMissions(View):
+    def get(self, request):
+        response = []
+        return HttpResponse(json.dumps(response))
+
+class GetMissionDetails(View):
+    def get(self, request):
+        mission_id = int(request.GET.get("mission_id", none_is_zero(None)))
+        response = []
         return HttpResponse(json.dumps(response))
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -90,6 +100,5 @@ class SaveController(View):
             return HttpResponse(json.dumps("Satellite mission data not found"))
         else:
             mission_instance = json.loads(mission_instance_str)
-            hash_id = sha256(mission_instance_str.encode('utf-8')).hexdigest()
-            result_data = save_mission(mission_instance, hash_id, user, email)
+            result_data = save_mission(mission_instance, user, email)
         return HttpResponse(json.dumps(result_data))

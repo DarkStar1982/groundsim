@@ -14,25 +14,28 @@ class SatelliteInstance(models.Model):
     subsystems = models.CharField(blank=True, max_length=4096)
     instruments = models.CharField(blank=True, max_length=4096)
 
-class UserInstance(models.Model):
-    user = models.CharField(max_length=128, null=True)
-    email = models.CharField(max_length=128, null=True)
-
 class MissionInstance(models.Model):
-    mission_hash = models.CharField(max_length=64) # primary key!
+    mission_hash = models.CharField(max_length=64, primary_key=True)
     norad_id = models.IntegerField(default=0)
     start_date = models.DateTimeField(null=True, blank=True)
     mission_timer = models.IntegerField(default=0)
     tle_line_1 = models.CharField(blank=True, max_length=70)
     tle_line_2 = models.CharField(blank=True, max_length=70)
-    # satellite reference data
     satellite_ref = models.OneToOneField(SatelliteInstance, on_delete=models.CASCADE, null=True)
-    user_ref = models.OneToOneField(UserInstance, on_delete=models.CASCADE, null=True)
 
-
+class UserInstance(models.Model):
+    user = models.CharField(max_length=128, null=True)
+    email = models.CharField(max_length=128, null=True, unique=True)
+    mission_ref = models.ForeignKey(MissionInstance, on_delete=models.CASCADE, null=True)
 
 # class MissionEventLog(models.Model):
 #   mission_hash = ForeignKey(MissionInstance)
+#   timestamp = models.DateTimeField()
+#   message = models.CharField(blank=True, max_length=255)
+
+# class MissionScenario(models.Model):
+#   satellite_id = models.IntegerField(default=0)
+#   start_date = models.DateTimeField()
 #   timestamp = models.DateTimeField()
 #   message = models.CharField(blank=True, max_length=255)
 

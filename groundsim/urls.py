@@ -23,6 +23,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('list/', views.SatelliteListHandler.as_view()),
     path('update/', views.UpdateSatellite.as_view()),
+    # mission selection
+    path('mse_mission_list', views.ListMissions.as_view()),
+    path('mse_mission_details', views.GetMissionDetails.as_view()),
     # mission control
     path('mse_init/', views.InitializeHandler.as_view()),
     path('mse_step/', views.SimulationController.as_view()),
