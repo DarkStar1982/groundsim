@@ -3,10 +3,10 @@ from django.contrib import admin
 
 # satellite TLE record +
 class Satellite(models.Model):
-    satellite_name = models.CharField(max_length=24) # tle line 0
+    satellite_name = models.CharField(max_length=24)
     satellite_tle1 = models.CharField(max_length=70)
     satellite_tle2 = models.CharField(max_length=70)
-    norad_id = models.IntegerField(default=0)  # should be primary key!
+    norad_id = models.IntegerField(default=0, primary_key=True)
 
 class SatelliteInstance(models.Model):
     satellite_id = models.IntegerField(default=0) # not a primary key!
@@ -28,20 +28,23 @@ class UserInstance(models.Model):
     email = models.CharField(max_length=128, null=True, unique=True)
     mission_ref = models.ForeignKey(MissionInstance, on_delete=models.CASCADE, null=True)
 
+class MissionScenario(models.Model):
+    scenario_id = models.IntegerField(default=0, primary_key=True)
+    start_date = models.DateTimeField(null=True, blank=True)
+    mission_name = models.CharField(blank=True, max_length=255)
+    description = models.CharField(blank=True, max_length=4096)
+    initial_setup = models.CharField(blank=True, max_length=4096)
+    objectives = models.CharField(blank=True, max_length=4096)
+
 # class MissionEventLog(models.Model):
 #   mission_hash = ForeignKey(MissionInstance)
 #   timestamp = models.DateTimeField()
 #   message = models.CharField(blank=True, max_length=255)
 
-# class MissionScenario(models.Model):
-#   satellite_id = models.IntegerField(default=0)
-#   start_date = models.DateTimeField()
-#   mission_name = models.CharField(blank=True, max_length=255)
-#   timestamp = models.DateTimeField()
-#   initial_conditions = models.CharField(blank=True, max_length=255)
-#   objectives = models.CharField(blank=True, max_length=255)
+
 
 admin.site.register(Satellite)
 admin.site.register(MissionInstance)
 admin.site.register(SatelliteInstance)
 admin.site.register(UserInstance)
+admin.site.register(MissionScenario)

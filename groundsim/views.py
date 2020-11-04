@@ -8,7 +8,7 @@ from django.views.generic import View
 from django.http import HttpResponse, HttpResponseNotFound
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from groundsim.models import Satellite
+from groundsim.models import Satellite, MissionScenario
 from groundsim.mse.core import (
     create_mission_instance,
     simulate_mission_steps,
@@ -16,8 +16,6 @@ from groundsim.mse.core import (
     update_satellite,
     save_mission,
     load_mission,
-    get_mission_list,
-    get_mission_details
 )
 
 def none_is_zero(obj):
@@ -25,6 +23,22 @@ def none_is_zero(obj):
         return 0
     else:
         return obj
+
+def get_mission_list():
+    mission_scenarios = MissionScenario.objects.all()
+    result = []
+    for item in mission_scenarios:
+        result.append({"mission_id":item.scenario_id, "name": item.mission_name})
+    return result
+
+def get_mission_details(p_mission_id):
+    mission_scenario = MissionScenario.objects.get(scenario_id=p_mission_id)
+    result = {
+        "mission_id": mission_scenario.scenario_id,
+        "mission_name": mission_scenario.mission_name,
+        "mission_details":mission_scenario.description
+    }
+    return result
 
 class SatelliteListHandler(View):
     def get(self, request):
