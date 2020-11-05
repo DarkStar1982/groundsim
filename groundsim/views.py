@@ -26,14 +26,16 @@ def none_is_zero(obj):
 
 def get_mission_list():
     mission_scenarios = MissionScenario.objects.all()
-    result = []
+    result = {"status":"ok", "data": []}
+    
     for item in mission_scenarios:
-        result.append({"mission_id":item.scenario_id, "name": item.mission_name})
+        result['data'].append({"mission_id":item.scenario_id, "name": item.mission_name})
     return result
 
 def get_mission_details(p_mission_id):
     mission_scenario = MissionScenario.objects.get(scenario_id=p_mission_id)
     result = {
+        "status":"ok",
         "mission_id": mission_scenario.scenario_id,
         "mission_name": mission_scenario.mission_name,
         "mission_details":mission_scenario.description
