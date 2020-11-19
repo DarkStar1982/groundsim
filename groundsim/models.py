@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib import admin
 
-# satellite TLE record +
+# satellite TLE record + other data
 class Satellite(models.Model):
     satellite_name = models.CharField(max_length=24)
     satellite_tle1 = models.CharField(max_length=70)
@@ -36,11 +36,10 @@ class MissionScenario(models.Model):
     initial_setup = models.CharField(blank=True, max_length=4096)
     objectives = models.CharField(blank=True, max_length=4096)
 
-# class MissionEventLog(models.Model):
-#   mission_hash = ForeignKey(MissionInstance)
-#   timestamp = models.DateTimeField()
-#   message = models.CharField(blank=True, max_length=255)
-
+class MissionEventLog(models.Model):
+   mission_ref = models.ForeignKey(MissionInstance, on_delete=models.CASCADE, null=True)
+   timestamp = models.DateTimeField(null=True, blank=True)
+   message = models.CharField(blank=True, max_length=255)
 
 
 admin.site.register(Satellite)
@@ -48,3 +47,4 @@ admin.site.register(MissionInstance)
 admin.site.register(SatelliteInstance)
 admin.site.register(UserInstance)
 admin.site.register(MissionScenario)
+admin.site.register(MissionEventLog)

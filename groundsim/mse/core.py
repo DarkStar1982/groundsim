@@ -411,6 +411,11 @@ def get_mission_log(hash_id):
 def evaluate_progress(p_mission):
     # check state of the mission vs expected result
     # has to be exposed via api call
+    # check on mission objectives:
+    #   photo taken - 25%
+    #   photo with correct bounding box - 25%
+    #   photo downloaded - 50%
+    #   if 100% then mission completed, else continue
     pass
 
 
