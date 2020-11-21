@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 from sgp4.earth_gravity import wgs72, wgs84
 from sgp4.io import twoline2rv
 from groundsim.models import Satellite, SatelliteInstance, MissionInstance, UserInstance
-from groundsim.mse.utils import time_since_periapsis, parse_tle_lines, convert_to_geodetic
+from groundsim.mse.utils import time_since_periapsis, parse_tle_lines, convert_to_geodetic, calculate_degree_len
 
 ################################################################################
 ########################## ENVIRONMENT SIMULATION CODE #########################
@@ -290,12 +290,20 @@ class CMSE_Sat():
         fov_angle = p_mission["satellite"]["instruments"]["imager"]["fov"]
         altitude = p_mission["environment"]["ground_track"]["alt"]
         lat = pi*p_mission["environment"]["ground_track"]["lat"]/180
+        lon = pi*p_mission["environment"]["ground_track"]["lng"]/180
         swath=2*altitude*tan(fov_angle/2.0)
         deg_length = calculate_degree_len(lat)
+        swath_lat = swath/deg_length["length_lat"]
+        swath_lon = swath/deg_length["length_lon"]
+        a = p_mission["environment"]["ground_track"]["lat"] + swath_lat/2
+        b = p_mission["environment"]["ground_track"]["lat"] - swath_lat/2
+        c = p_mission["environment"]["ground_track"]["lng"] + swath_lon/2
+        d = p_mission["environment"]["ground_track"]["lng"] - swath_lon/2
         result = {
-            "swath":swath,
-            "swath_lat":swath/deg_length["length_lat"],
-            "swath_lon":swath/deg_length["length_lon"],
+            "top": max(a,b),
+            "left": min(c,d),
+            "bottom": min(a,b),
+            "right":max(c,d)
         }
         return result
 
@@ -303,6 +311,7 @@ class CMSE_Sat():
     def evolve_satellite(self, p_mission, p_seconds):
         p_mission["satellite"]["location"] = self.get_satellite_position(p_mission)
         p_mission["satellite"]["formatted_telemetry"] = self.get_satellite_telemetry(p_mission)
+        p_mission["satellite"]["instruments"]["imager"]["frame"] = self.get_imager_frame(p_mission)
         return p_mission["satellite"]
 
 ################################################################################

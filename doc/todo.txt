@@ -3,3 +3,8 @@
 - Add example mission with objectives
 - Add eventlog table
 - Add SPLICE interpreter to backend
+
+01/20/2020
+- Add proper mission simulation
+- Add uplink/downlink behavior
+- Add SPLICE interpreter to backend
