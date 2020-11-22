@@ -37,6 +37,7 @@ class CMSE_Env():
         environment["email"] = None
         environment["hash_id"] = None
         environment["mission_selected"] = None
+        environment["log_buffer"] = []
         return environment
 
     def generate_tle_data(self, norad_id):
@@ -48,14 +49,7 @@ class CMSE_Env():
 
     def increment_mission_timer(self, p_mission_timer, p_seconds):
         # date_start = convert mission timer to datetime
-        current_date = datetime(
-            p_mission_timer["year"],
-            p_mission_timer["month"],
-            p_mission_timer["day"],
-            p_mission_timer["hour"],
-            p_mission_timer["min"],
-            p_mission_timer["sec"]
-        )
+        current_date = self.mission_timer_to_datetime(p_mission_timer)
         # add delta in seconds
         delta = timedelta(seconds=p_seconds)
         new_date = current_date + delta
@@ -67,6 +61,28 @@ class CMSE_Env():
         p_mission_timer["min"] = new_date.minute
         p_mission_timer["sec"] = new_date.second
         return p_mission_timer
+
+    def mission_timer_to_str(self, p_mission_timer):
+        str_timer = "%02i:%02i:%02i, %02i %s %s" % (
+            p_mission_timer["hour"],
+            p_mission_timer["min"],
+            p_mission_timer["sec"],
+            p_mission_timer["day"],
+            calendar.month_abbr[p_mission_timer["month"]],
+            p_mission_timer["year"],
+        )
+        return str_timer
+
+    def mission_timer_to_datetime(self, p_mission_timer):
+        packed_date = datetime(
+            p_mission_timer["year"],
+            p_mission_timer["month"],
+            p_mission_timer["day"],
+            p_mission_timer["hour"],
+            p_mission_timer["min"],
+            p_mission_timer["sec"]
+        )
+        return packed_date
 
     def propagate_orbit(self, tle_data, mission_timer):
         satellite_object = twoline2rv(tle_data["line_1"], tle_data["line_2"], wgs72)
@@ -97,6 +113,22 @@ class CMSE_Env():
         )
         return ground_track
 
+    def log_event(self, p_environment, p_event_string):
+        # save event  if mission exists in DB
+        if p_environment["hash_id"] is not None:
+            mission_record = MissionInstance.objects.get(mission_hash=hash_id)
+            event_record = MissionEventLog()
+            event_record.mission_ref = mission_record
+            event_record.timestamp = self.mission_timer_to_datetime(p_environment["current_date"])
+            event_record.message = p_event_string
+            event_record.save()
+        timestamp = self.mission_timer_to_str(p_environment["current_date"])
+        p_environment["log_buffer"].append([timestamp, p_event_string])
+        # keep length of the buffer at 10
+        if len(p_environment["log_buffer"])>10:
+            p_environment["log_buffer"].pop(0)
+        return p_environment
+
     # at 1 second resolution
     def evolve_environment(self, p_environment, p_seconds):
         p_environment["elapsed_timer"] = p_environment["elapsed_timer"] + p_seconds
@@ -113,6 +145,8 @@ class CMSE_Env():
             p_environment["orbit_vector"],
             p_environment["current_date"]
         )
+        event_message = "Test mission event %s" % int(p_environment["elapsed_timer"]/p_seconds)
+        p_environment = self.log_event(p_environment, event_message)
         return p_environment
 
 ################################################################################
@@ -212,17 +246,6 @@ class CMSE_Sat():
         }
         return satellite
 
-    def mission_timer_to_str(self, p_mission_timer):
-        str_timer = "%02i:%02i:%02i, %02i %s %s" % (
-            p_mission_timer["hour"],
-            p_mission_timer["min"],
-            p_mission_timer["sec"],
-            p_mission_timer["day"],
-            calendar.month_abbr[p_mission_timer["month"]],
-            p_mission_timer["year"],
-        )
-        return str_timer
-
     def get_satellite_position(self, p_mission):
         position_object = {}
         tle_details = parse_tle_lines(
@@ -238,7 +261,7 @@ class CMSE_Sat():
         position_object["i"] = tle_details["inclination"]
         position_object["ra"] = tle_details["ra_ascending_node"]
         position_object["w"] = tle_details["argument_perigee"]
-        position_object["time"] = self.mission_timer_to_str(p_mission["environment"]["current_date"])
+        position_object["time"] = EnvironmentSimulator.mission_timer_to_str(p_mission["environment"]["current_date"])
         position_object["status"] = "ok"
         position_object["tp"] = time_since_periapsis(position_object, tle_details["mean_motion"])
         return position_object
@@ -274,18 +297,10 @@ class CMSE_Sat():
         }
         return telemetry_object
 
-    # should include ground station visibility calculation
+    # should include ground station visibility calculation - TBD
     def process_command_script(self):
         pass
 
-    # input:
-    # - camera fov drawing
-    #  |\
-    #  | \
-    # a|  \ c
-    #  |   \
-    #  -----
-    #     b
     def get_imager_frame(self, p_mission):
         fov_angle = p_mission["satellite"]["instruments"]["imager"]["fov"]
         altitude = p_mission["environment"]["ground_track"]["alt"]
@@ -389,18 +404,10 @@ def save_mission(p_mission, p_user, p_email):
     satellite_record.instruments = json.dumps(p_mission["satellite"]["instruments"])
     satellite_record.save()
     mission_record.norad_id = p_mission["environment"]["norad_id"]
-    mission_record.start_date = datetime(
-        p_mission["environment"]["start_date"]["year"],
-        p_mission["environment"]["start_date"]["month"],
-        p_mission["environment"]["start_date"]["day"],
-        p_mission["environment"]["start_date"]["hour"],
-        p_mission["environment"]["start_date"]["min"],
-        p_mission["environment"]["start_date"]["sec"]
-    )
+    mission_record.start_date = EnvironmentSimulator.mission_timer_to_datetime(p_mission["environment"]["start_date"])
     mission_record.mission_timer = p_mission["environment"]["elapsed_timer"]
     mission_record.tle_line_1 = p_mission["environment"]["tle_data"]["line_1"]
     mission_record.tle_line_2 = p_mission["environment"]["tle_data"]["line_2"]
-    # satellite reference data
     mission_record.satellite_ref = satellite_record
     mission_record.mission_hash = hash_id
     mission_record.save()
@@ -408,16 +415,20 @@ def save_mission(p_mission, p_user, p_email):
 
 def load_mission(hash_id):
     mission = {}
-    #find mission instance
     mission_record = MissionInstance.objects.get(mission_hash=hash_id)
     mission["environment"] = EnvironmentSimulator.create_mission_environment(mission_record.norad_id, mission_record.start_date)
     mission["satellite"] = SatelliteSimulator.load_mission_satellite(mission_record.satellite_ref)
     return mission
 
-def get_mission_log(hash_id):
-    return {"status":"ok", "page":0, "log":[]}
+def get_mission_logs(hash_id):
+    # load all messages for a given mission
+    json_data = {"status":"ok", "event_logs":[]}
+    db_records = MissionEventLog.objects.get(mission_hash=hash_id)
+    for item in db_records:
+        json_data["event_logs"].append([item.timestamp, item.message])
+    return json_data
 
-def evaluate_progress(p_mission):
+def estimate_progress(p_mission):
     # check state of the mission vs expected result
     # has to be exposed via api call
     # check on mission objectives:

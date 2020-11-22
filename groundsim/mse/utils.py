@@ -44,6 +44,7 @@ def f_equals(a,b,c):
     else:
         return False
 
+# camera calculations
 def calculate_camera_fov(d,f):
     alpha = 2*atan(d/(2*f))
     return alpha

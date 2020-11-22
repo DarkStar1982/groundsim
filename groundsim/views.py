@@ -16,6 +16,7 @@ from groundsim.mse.core import (
     update_satellite,
     save_mission,
     load_mission,
+    get_mission_logs
 )
 
 def none_is_zero(obj):
@@ -27,7 +28,7 @@ def none_is_zero(obj):
 def get_mission_list():
     mission_scenarios = MissionScenario.objects.all()
     result = {"status":"ok", "data": []}
-    
+
     for item in mission_scenarios:
         result['data'].append({"mission_id":item.scenario_id, "name": item.mission_name})
     return result
@@ -56,6 +57,15 @@ class GetMissionDetails(View):
     def get(self, request):
         mission_id = int(request.GET.get("mission_id", none_is_zero(None)))
         response = get_mission_details(mission_id)
+        return HttpResponse(json.dumps(response))
+
+class GetMissionLog(View):
+    def get(self, request):
+        hash_id = request.GET.get("hash_id", None)
+        if hash_id is None:
+            response = {"status":"ok", "logs":[]}
+        else:
+            response = get_mission_logs(hash_id)
         return HttpResponse(json.dumps(response))
 
 @method_decorator(csrf_exempt, name='dispatch')
