@@ -2,9 +2,9 @@
 # MISSION SIMULATION ENVIRONMENT DESCRIPTION
 
 ## Environment Simulation Parameters
-| Environment Inputs | Environment Outputs | 
+| Environment Inputs | Environment Outputs |
 | :------------- | :----------: |
-| Orbital vector	 |	Ground track lat/lon   | 
+| Orbital vector	 |	Ground track lat/lon   |
 | Sun vector | Day/night phase |
 | Magnetic field vector | 	Ground station visibility |
 | Ground stations list |Thermal power input |
@@ -12,32 +12,32 @@
 | Visible light irradiation scalar | 	Ground station visibility |
 | Magnetic field vector | |
 | Thermal irradiation scalar | |
-  
+
 ## Satellite Simulation Parameters
 
-| **Internal Inputs** | **Outputs** | 
+| **Internal Inputs** | **Outputs** |
 | :------------- | :----------: |
-| Solar Panel Power Out	 | Solar Panel Power Out | 
+| Solar Panel Power Out	 | Solar Panel Power Out |
 | Attitude vector | Attitude vector |
 | Battery Power In | Battery Power In |
 | Battery Power Out | Battery Power Out |
-| Battery Capacity Left | Battery Capacity Left | 
-| Camera Power Draw |Camera Power Draw | 
-| SDR Power Draw | SDR Power Draw | 
+| Battery Capacity Left | Battery Capacity Left |
+| Camera Power Draw |Camera Power Draw |
+| SDR Power Draw | SDR Power Draw |
 | ADCS Power Draw | ADCS Power Draw | 	
-| ADCS Power Draw | ADCS Power Draw | 
-| Thermal sensors data | Thermal sensors data | 
-| Instrument states | Instrument states | 
-| Storage queues | Storage queues | 
-| **External inputs** | | 
+| ADCS Power Draw | ADCS Power Draw |
+| Thermal sensors data | Thermal sensors data |
+| Instrument states | Instrument states |
+| Storage queues | Storage queues |
+| **External inputs** | |
 | Camera buffer | | 	
 | SDR input buffer | |		
 | Uplink command buffer | |
 | **Constants** | |
-| Satellite geometry | |	
-| Satellite TLE | |	
-| Satellite configuration | |	
-	
+| Satellite geometry | |
+| Satellite TLE | |
+| Satellite configuration | |
+
 
 ## Architecture
 * Backend: API HTTP server + satellite simulator as standalone module
@@ -57,7 +57,7 @@
 * Payload APIs
     * Camera
         * Get image frame
-        * Make a shot 
+        * Make a shot
     * SDR
         * Set receiver parameters
         * Start recording
@@ -86,7 +86,7 @@
 * Add irradiation conditions (beta angle, thermals, etc)
 * Add proper orbit simulation?
 * Add ADCS functionality (how to use quaternions??)
-* Share mission functionality (add screen to enter email to get mission url with hash) 
+* Share mission functionality (add screen to enter email to get mission url with hash)
 
 ## Mission Scenarios - TODO
 * Save/Resume logic
@@ -94,7 +94,7 @@
     	* Create unique mission hash/create database object
         * Prompts a modal with name/email to register, saves into the database
 	* Then send an email to the user with an url to load saved mission
-    * Second and subsequent saves just update the saved mission 
+    * Second and subsequent saves just update the saved mission
 * On each step, update mission simulation object
 * Take examples from VEGA MiniSim for scenarios
 
@@ -108,4 +108,11 @@
     * ADS-B intercept
     * “Other satellite” transmission intercept
 
-
+## Astrodynamics Library Review
+* Poliastro - not suitable
+* Astropy - not suitable
+* Plyades - not suitable
+* Orekit - maybe later?
+* Beyond - possible
+* Skyfield - possible
+* SPICE - too complex
