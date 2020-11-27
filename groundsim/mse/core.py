@@ -154,7 +154,7 @@ class CMSE_Env():
 ################################################################################
 
 class CMSE_Sat():
-    #load physics model
+    # load physical model from database
     def initialize_satellite_geometry(self):
         sat_geometry = {}
         return sat_geometry
@@ -297,10 +297,6 @@ class CMSE_Sat():
         }
         return telemetry_object
 
-    # should include ground station visibility calculation - TBD
-    def process_command_script(self):
-        pass
-
     def get_imager_frame(self, p_mission):
         fov_angle = p_mission["satellite"]["instruments"]["imager"]["fov"]
         altitude = p_mission["environment"]["ground_track"]["alt"]
@@ -322,12 +318,34 @@ class CMSE_Sat():
         }
         return result
 
+    # should include ground station visibility calculation - TBD
+    def process_command_script(self):
+        pass
+
     # at 1 second resolution - input is Environment, output is new satellite
     def evolve_satellite(self, p_mission, p_seconds):
         p_mission["satellite"]["location"] = self.get_satellite_position(p_mission)
         p_mission["satellite"]["formatted_telemetry"] = self.get_satellite_telemetry(p_mission)
         p_mission["satellite"]["instruments"]["imager"]["frame"] = self.get_imager_frame(p_mission)
         return p_mission["satellite"]
+
+class CMSE_SceEng():
+    # load db data
+    def create_mission_scenario(self,p_scenario_id):
+        scenario_data = {
+            "scenario_id":p_scenario_id
+        }
+        return scenario_data
+
+    # check state of the mission vs expected result
+    # has to be exposed via api call
+    # check on mission objectives example:
+    #   photo taken - 25%
+    #   photo with correct bounding box - 25%
+    #   photo downloaded - 50%
+    #   if 100% then mission completed, else continue
+    def evaluate_progress(self, p_mission):
+        return p_mission
 
 ################################################################################
 ############################ MISSION SIMULATION API ############################
@@ -362,15 +380,17 @@ def get_satellite_list():
     resp_sats["satelites"] = sat_list
     return resp_sats
 
-def create_mission_instance(norad_id, start_date):
+def create_mission_instance(norad_id, scenario_id, start_date):
     mission = {}
     mission["environment"] = EnvironmentSimulator.create_mission_environment(norad_id, start_date)
     mission["satellite"] = SatelliteSimulator.create_mission_satellite()
+    mission["scenario"] = ScenarioEngine.create_mission_scenario(scenario_id)
     return mission
 
 def simulate_mission_steps(p_mission, steps):
     p_mission["environment"] = EnvironmentSimulator.evolve_environment(p_mission["environment"], steps)
     p_mission["satellite"] = SatelliteSimulator.evolve_satellite(p_mission, steps)
+    p_mission["scenario"] = ScenarioEngine.evaluate_progress(p_mission)
     return p_mission
 
 def save_user(p_user, p_email):
@@ -382,15 +402,15 @@ def save_mission(p_mission, p_user, p_email):
     if p_mission["environment"]["user"] is None and p_mission["environment"]["email"] is None:
         hash_id = sha256(json.dumps(p_mission).encode('utf-8')).hexdigest()
         user_record = save_user(p_user, p_email)
+        user_record.save()
         mission_record = MissionInstance()
         satellite_record = SatelliteInstance()
         p_mission["environment"]["user"] = p_user
         p_mission["environment"]["email"] = p_email
         p_mission["environment"]["hash_id"] = hash_id
         mission_record.mission_hash = hash_id
+        mission_record.user_ref = user_record
         mission_record.save()
-        user_record.mission_ref = mission_record
-        user_record.save()
     else:
         hash_id = p_mission["environment"]["hash_id"]
         mission_record = MissionInstance.objects.get(
@@ -418,6 +438,7 @@ def load_mission(hash_id):
     mission_record = MissionInstance.objects.get(mission_hash=hash_id)
     mission["environment"] = EnvironmentSimulator.create_mission_environment(mission_record.norad_id, mission_record.start_date)
     mission["satellite"] = SatelliteSimulator.load_mission_satellite(mission_record.satellite_ref)
+    mission["scenario"] = ScenarioEngine.create_mission_scenario(mission_record.scenario_ref.scenario_id)
     return mission
 
 def get_mission_logs(hash_id):
@@ -428,17 +449,7 @@ def get_mission_logs(hash_id):
         json_data["event_logs"].append([item.timestamp, item.message])
     return json_data
 
-def estimate_progress(p_mission):
-    # check state of the mission vs expected result
-    # has to be exposed via api call
-    # check on mission objectives:
-    #   photo taken - 25%
-    #   photo with correct bounding box - 25%
-    #   photo downloaded - 50%
-    #   if 100% then mission completed, else continue
-    pass
-
-
 # Initialiaze on start
 EnvironmentSimulator = CMSE_Env()
 SatelliteSimulator = CMSE_Sat()
+ScenarioEngine = CMSE_SceEng()

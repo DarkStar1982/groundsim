@@ -78,6 +78,7 @@ class UpdateSatellite(View):
 class InitializeHandler(View):
     def get(self, request):
         hash_id = request.GET.get("hash_id", None)
+        scenario_id = request.GET.get("scenario_id", None)
         if hash_id is not None:
             mission_instance = load_mission(hash_id)
         else:
@@ -85,7 +86,7 @@ class InitializeHandler(View):
             str_date = request.GET.get("date", None)
             split_date = [int(x) for x in str_date.split(',')]
             start_date = datetime(split_date[0], split_date[1], split_date[2], split_date[3],split_date[4],split_date[5])
-            mission_instance = create_mission_instance(norad_id,start_date)
+            mission_instance = create_mission_instance(norad_id, scenario_id, start_date)
         return HttpResponse(json.dumps({"status":"ok", "mission_instance":mission_instance}))
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -107,6 +108,7 @@ class ResetController(View):
             return HttpResponse(json.dumps("Satellite mission not initialized"))
         else:
             norad_id = mission_instance["environment"]["norad_id"]
+            scenario_id = mission_instance["scenario"]["scenario_id"]
             start_date = datetime(
                 mission_instance["environment"]["start_date"]["year"],
                 mission_instance["environment"]["start_date"]["month"],
@@ -115,7 +117,7 @@ class ResetController(View):
                 mission_instance["environment"]["start_date"]["min"],
                 mission_instance["environment"]["start_date"]["sec"]
             )
-            mission_instance = create_mission_instance(norad_id, start_date)
+            mission_instance = create_mission_instance(norad_id, scenario_id, start_date)
         return HttpResponse(json.dumps({"status":"ok", "mission_instance":mission_instance}))
 
 @method_decorator(csrf_exempt, name='dispatch')
