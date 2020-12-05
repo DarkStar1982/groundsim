@@ -23,3 +23,6 @@
 = onboard computer with SPLICE interpreter
 - ground station features
 = uplink/downlink functions
+
+05/12/2020
+= Port code to use Skyfield libary
