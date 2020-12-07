@@ -9,7 +9,7 @@ from sgp4.earth_gravity import wgs72, wgs84
 from sgp4.io import twoline2rv
 from groundsim.models import Satellite, SatelliteInstance, MissionInstance, UserInstance
 from groundsim.mse.utils import time_since_periapsis, parse_tle_lines, convert_to_geodetic, calculate_degree_len
-from groundsim.mse.sim_astro import get_orbital_data
+from groundsim.mse.aux_astro import get_orbital_data
 ################################################################################
 ########################## ENVIRONMENT SIMULATION CODE #########################
 ################################################################################
