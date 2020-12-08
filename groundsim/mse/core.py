@@ -5,10 +5,8 @@ import json
 from hashlib import sha256
 from math import pi, tan, atan, sqrt, sin, fabs, cos, atan2, trunc, acos
 from datetime import datetime, timezone, timedelta
-from sgp4.earth_gravity import wgs72, wgs84
-from sgp4.io import twoline2rv
 from groundsim.models import Satellite, SatelliteInstance, MissionInstance, UserInstance
-from groundsim.mse.utils import time_since_periapsis, parse_tle_lines, convert_to_geodetic, calculate_degree_len
+from groundsim.mse.utils import parse_tle_lines, calculate_degree_len
 from groundsim.mse.aux_astro import get_orbital_data
 ################################################################################
 ########################## ENVIRONMENT SIMULATION CODE #########################
@@ -48,12 +46,9 @@ class CMSE_Env():
         }
 
     def increment_mission_timer(self, p_mission_timer, p_seconds):
-        # date_start = convert mission timer to datetime
         current_date = self.mission_timer_to_datetime(p_mission_timer)
-        # add delta in seconds
         delta = timedelta(seconds=p_seconds)
         new_date = current_date + delta
-        # convert back to expanded view
         p_mission_timer["year"] = new_date.year
         p_mission_timer["month"] = new_date.month
         p_mission_timer["day"] = new_date.day
@@ -84,35 +79,6 @@ class CMSE_Env():
         )
         return packed_date
 
-    def propagate_orbit(self, tle_data, mission_timer):
-        satellite_object = twoline2rv(tle_data["line_1"], tle_data["line_2"], wgs72)
-        position, velocity = satellite_object.propagate(
-            mission_timer["year"],
-            mission_timer["month"],
-            mission_timer["day"],
-            mission_timer["hour"],
-            mission_timer["min"],
-            mission_timer["sec"]
-        )
-        return {"orbit_position": position, "orbit_velocity":velocity}
-
-    def get_ground_track(self, tle_data, orbital_vector, p_date):
-        current_date = datetime(
-            p_date["year"],
-            p_date["month"],
-            p_date["day"],
-            p_date["hour"],
-            p_date["min"],
-            p_date["sec"]
-        )
-        tle_object = parse_tle_lines(tle_data["line_1"], tle_data["line_2"])
-        ground_track = convert_to_geodetic(
-            tle_object,
-            orbital_vector["orbit_position"],
-            current_date
-        )
-        return ground_track
-
     def log_event(self, p_environment, p_event_string):
         # save event  if mission exists in DB
         if p_environment["hash_id"] is not None:
@@ -136,15 +102,21 @@ class CMSE_Env():
             p_environment["current_date"],
             p_seconds
         )
-        p_environment["orbit_vector"] = self.propagate_orbit(
-            p_environment["tle_data"],
-            p_environment["current_date"]
-        )
-        p_environment["ground_track"] = self.get_ground_track(
-            p_environment["tle_data"],
-            p_environment["orbit_vector"],
-            p_environment["current_date"]
-        )
+        orbital_data = get_orbital_data(p_environment["tle_data"], p_environment["current_date"])
+        p_environment["orbit_vector"] = [float(x) for x in orbital_data["gcrs_vector"]]
+        p_environment["ground_track"] = {
+            "lat": orbital_data["lat"],
+            "lng": orbital_data["lng"],
+            "alt": orbital_data["alt"]
+        }
+        p_environment["elements"] = {
+            "a": float(orbital_data["elements"].semi_major_axis.km),
+            "e": float(orbital_data["elements"].eccentricity),
+            "i": float(orbital_data["elements"].inclination.degrees),
+            "ra":float(orbital_data["elements"].longitude_of_ascending_node.degrees),
+            "w": float(orbital_data["elements"].argument_of_periapsis.degrees),
+            "tp": float(86400*orbital_data["elements"].period_in_days * orbital_data["elements"].true_anomaly.degrees/360)
+        }
         event_message = "Test mission event %s" % int(p_environment["elapsed_timer"]/p_seconds)
         p_environment = self.log_event(p_environment, event_message)
         return p_environment
@@ -248,22 +220,17 @@ class CMSE_Sat():
 
     def get_satellite_position(self, p_mission):
         position_object = {}
-        tle_details = parse_tle_lines(
-            p_mission["environment"]["tle_data"]["line_1"],
-            p_mission["environment"]["tle_data"]["line_2"]
-        )
+        position_object["time"] = EnvironmentSimulator.mission_timer_to_str(p_mission["environment"]["current_date"])
         position_object["lat"] = p_mission["environment"]["ground_track"]["lat"]
         position_object["lng"] = p_mission["environment"]["ground_track"]["lng"]
         position_object["alt"] = p_mission["environment"]["ground_track"]["alt"]
-        # value a TBD
-        position_object["a"] = 0
-        position_object["e"] = tle_details["eccentricity"]
-        position_object["i"] = tle_details["inclination"]
-        position_object["ra"] = tle_details["ra_ascending_node"]
-        position_object["w"] = tle_details["argument_perigee"]
-        position_object["time"] = EnvironmentSimulator.mission_timer_to_str(p_mission["environment"]["current_date"])
+        position_object["a"] = p_mission["environment"]["elements"]["a"]
+        position_object["e"] = p_mission["environment"]["elements"]["e"]
+        position_object["i"] = p_mission["environment"]["elements"]["i"]
+        position_object["ra"] = p_mission["environment"]["elements"]["ra"]
+        position_object["w"] = p_mission["environment"]["elements"]["w"],
+        position_object["tp"] = p_mission["environment"]["elements"]["tp"]
         position_object["status"] = "ok"
-        position_object["tp"] = time_since_periapsis(position_object, tle_details["mean_motion"])
         return position_object
 
     # REMOVE ME - TBD
@@ -297,6 +264,7 @@ class CMSE_Sat():
         }
         return telemetry_object
 
+    # should move to sys_payload!
     def get_imager_frame(self, p_mission):
         fov_angle = p_mission["satellite"]["instruments"]["imager"]["fov"]
         altitude = p_mission["environment"]["ground_track"]["alt"]
@@ -317,10 +285,6 @@ class CMSE_Sat():
             "right":max(c,d)
         }
         return result
-
-    # should include ground station visibility calculation - TBD
-    def process_command_script(self):
-        pass
 
     # at 1 second resolution - input is Environment, output is new satellite
     def evolve_satellite(self, p_mission, p_seconds):
@@ -345,7 +309,7 @@ class CMSE_SceEng():
     #   photo downloaded - 50%
     #   if 100% then mission completed, else continue
     def evaluate_progress(self, p_mission):
-        return p_mission
+        return []
 
 ################################################################################
 ############################ MISSION SIMULATION API ############################

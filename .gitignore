@@ -1,5 +1,6 @@
 *.sqlite3
 *.pyc
+*.bsp
 __pycache__/
 .DS_Store
 *lock*

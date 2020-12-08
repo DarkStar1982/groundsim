@@ -1,4 +1,6 @@
 import julian
+from sgp4.earth_gravity import wgs72, wgs84
+from sgp4.io import twoline2rv
 from math import fmod, pi, tan, atan, sqrt, sin, fabs, cos, atan2, trunc, acos
 
 ################################################################################
@@ -125,6 +127,7 @@ def convert_to_geodetic(tle_data, position, date):
     return geo_data
 
 # time since periapsis calculation is wrong - FIXME!
+# no longer in use atm
 def time_since_periapsis(position_object, mean_motion):
     radius = (position_object["alt"] + R_EARTH)*1000
     orbital_period = 86400/mean_motion
@@ -134,3 +137,32 @@ def time_since_periapsis(position_object, mean_motion):
     mean_anomaly = eccentric_anomaly - eccentricity*sin(eccentric_anomaly)
     time_since_periapsis = mean_anomaly/(2*pi) * orbital_period
     return time_since_periapsis
+
+def propagate_orbit(tle_data, mission_timer):
+    satellite_object = twoline2rv(tle_data["line_1"], tle_data["line_2"], wgs72)
+    position, velocity = satellite_object.propagate(
+        mission_timer["year"],
+        mission_timer["month"],
+        mission_timer["day"],
+        mission_timer["hour"],
+        mission_timer["min"],
+        mission_timer["sec"]
+    )
+    return {"orbit_position": position, "orbit_velocity":velocity}
+
+def get_ground_track(self, tle_data, orbital_vector, p_date):
+    current_date = datetime(
+        p_date["year"],
+        p_date["month"],
+        p_date["day"],
+        p_date["hour"],
+        p_date["min"],
+        p_date["sec"]
+    )
+    tle_object = parse_tle_lines(tle_data["line_1"], tle_data["line_2"])
+    ground_track = convert_to_geodetic(
+        tle_object,
+        orbital_vector["orbit_position"],
+        current_date
+    )
+    return ground_track
