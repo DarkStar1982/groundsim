@@ -228,7 +228,7 @@ class CMSE_Sat():
         position_object["e"] = p_mission["environment"]["elements"]["e"]
         position_object["i"] = p_mission["environment"]["elements"]["i"]
         position_object["ra"] = p_mission["environment"]["elements"]["ra"]
-        position_object["w"] = p_mission["environment"]["elements"]["w"],
+        position_object["w"] = p_mission["environment"]["elements"]["w"]
         position_object["tp"] = p_mission["environment"]["elements"]["tp"]
         position_object["status"] = "ok"
         return position_object
