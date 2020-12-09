@@ -309,7 +309,7 @@ class CMSE_SceEng():
     #   photo downloaded - 50%
     #   if 100% then mission completed, else continue
     def evaluate_progress(self, p_mission):
-        return []
+        return p_mission["scenario"]
 
 ################################################################################
 ############################ MISSION SIMULATION API ############################
