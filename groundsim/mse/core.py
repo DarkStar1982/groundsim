@@ -3,11 +3,11 @@
 import calendar
 import json
 from hashlib import sha256
-from math import pi, tan, atan, sqrt, sin, fabs, cos, atan2, trunc, acos
 from datetime import datetime, timezone, timedelta
 from groundsim.models import Satellite, SatelliteInstance, MissionInstance, UserInstance
-from groundsim.mse.utils import parse_tle_lines, calculate_degree_len
-from groundsim.mse.aux_astro import get_orbital_data
+from groundsim.mse.utils import parse_tle_lines
+from groundsim.mse.aux_astro import get_orbital_data, time_since_periapsis
+from groundsim.mse.sys_payload import get_imager_frame
 ################################################################################
 ########################## ENVIRONMENT SIMULATION CODE #########################
 ################################################################################
@@ -115,7 +115,7 @@ class CMSE_Env():
             "i": float(orbital_data["elements"].inclination.degrees),
             "ra":float(orbital_data["elements"].longitude_of_ascending_node.degrees),
             "w": float(orbital_data["elements"].argument_of_periapsis.degrees),
-            "tp": float(86400*orbital_data["elements"].period_in_days * orbital_data["elements"].true_anomaly.degrees/360)
+            "tp":time_since_periapsis(orbital_data["elements"]),
         }
         event_message = "Test mission event %s" % int(p_environment["elapsed_timer"]/p_seconds)
         p_environment = self.log_event(p_environment, event_message)
@@ -171,7 +171,7 @@ class CMSE_Sat():
     def initialize_satellite_instruments(self):
         instruments = {
             "imager": {
-                "fov":0.03874630939427412,
+                "fov":1.6, # degrees
                 "f":0.58,
                 "sensor":[4096,3072],
                 "pixel":5.5E-6
@@ -264,33 +264,16 @@ class CMSE_Sat():
         }
         return telemetry_object
 
-    # should move to sys_payload!
-    def get_imager_frame(self, p_mission):
-        fov_angle = p_mission["satellite"]["instruments"]["imager"]["fov"]
-        altitude = p_mission["environment"]["ground_track"]["alt"]
-        lat = pi*p_mission["environment"]["ground_track"]["lat"]/180
-        lon = pi*p_mission["environment"]["ground_track"]["lng"]/180
-        swath=2*altitude*tan(fov_angle/2.0)
-        deg_length = calculate_degree_len(lat)
-        swath_lat = swath/deg_length["length_lat"]
-        swath_lon = swath/deg_length["length_lon"]
-        a = p_mission["environment"]["ground_track"]["lat"] + swath_lat/2
-        b = p_mission["environment"]["ground_track"]["lat"] - swath_lat/2
-        c = p_mission["environment"]["ground_track"]["lng"] + swath_lon/2
-        d = p_mission["environment"]["ground_track"]["lng"] - swath_lon/2
-        result = {
-            "top": max(a,b),
-            "left": min(c,d),
-            "bottom": min(a,b),
-            "right":max(c,d)
-        }
-        return result
-
     # at 1 second resolution - input is Environment, output is new satellite
     def evolve_satellite(self, p_mission, p_seconds):
         p_mission["satellite"]["location"] = self.get_satellite_position(p_mission)
         p_mission["satellite"]["formatted_telemetry"] = self.get_satellite_telemetry(p_mission)
-        p_mission["satellite"]["instruments"]["imager"]["frame"] = self.get_imager_frame(p_mission)
+        p_mission["satellite"]["instruments"]["imager"]["frame"] = get_imager_frame(
+            p_mission["satellite"]["instruments"]["imager"]["fov"],
+            p_mission["environment"]["ground_track"]["alt"],
+            p_mission["environment"]["ground_track"]["lat"],
+            p_mission["environment"]["ground_track"]["lng"],
+        )
         return p_mission["satellite"]
 
 class CMSE_SceEng():

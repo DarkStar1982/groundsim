@@ -7,12 +7,8 @@ from math import fmod, pi, tan, atan, sqrt, sin, fabs, cos, atan2, trunc, acos
 ############################### GLOBAL CONSTANTS ###############################
 ################################################################################
 
-R_EARTH = 6378.137 # in km
 J2 = 1.08E-3 # second harmonic
 MU_EARTH = 3.986E14
-# day duration
-SIDEREAL_DAY = 86164.0905
-UTC_DAY = 86400
 
 ################################################################################
 ############################# HELPER FUNCTIONS CODE ############################
@@ -50,17 +46,6 @@ def f_equals(a,b,c):
 def calculate_camera_fov(d,f):
     alpha = 2*atan(d/(2*f))
     return alpha
-
-def calculate_resolution(ifov, alt):
-    d = 2*alt*tan(ifov/2)
-    return d
-
-# lat lon should be in radians
-def calculate_degree_len(lat):
-    # calculate latitude degree length
-    length_lat = (111132.954 - 559.822 * cos(2*lat)+1.175 * cos(4*lat))/1000.0
-    length_lon = (pi * R_EARTH * cos (lat))/180
-    return {"length_lon":length_lon, "length_lat":length_lat}
 
 def parse_tle_lines(tle_line_1, tle_line_2):
     tle_data = {}
@@ -109,7 +94,7 @@ def convert_to_geodetic(tle_data, position, date):
         geo_data["lng"] = lon
     # latitude calculation
     lat = atan(z/sqrt(x*x + y*y))
-    a = R_EARTH
+    a = 6378.137
     e = 0.081819190842622
     delta = 1.0
     while (delta>0.001):
@@ -125,18 +110,6 @@ def convert_to_geodetic(tle_data, position, date):
         alt = sqrt(x*x + y*y)/cos(lat) - a/sqrt(1.0 - e*e*sin(lat)*sin(lat))
     geo_data["alt"] = fabs(alt)
     return geo_data
-
-# time since periapsis calculation is wrong - FIXME!
-# no longer in use atm
-def time_since_periapsis(position_object, mean_motion):
-    radius = (position_object["alt"] + R_EARTH)*1000
-    orbital_period = 86400/mean_motion
-    eccentricity = position_object["e"]
-    semimajor_axis = ((pow(orbital_period,2)*MU_EARTH)/(4*pow(pi,2)))**(1.0/3.0)
-    eccentric_anomaly = acos((1 - radius/semimajor_axis)/eccentricity)
-    mean_anomaly = eccentric_anomaly - eccentricity*sin(eccentric_anomaly)
-    time_since_periapsis = mean_anomaly/(2*pi) * orbital_period
-    return time_since_periapsis
 
 def propagate_orbit(tle_data, mission_timer):
     satellite_object = twoline2rv(tle_data["line_1"], tle_data["line_2"], wgs72)
