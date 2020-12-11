@@ -9,7 +9,7 @@ from django.http import HttpResponse, HttpResponseNotFound
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from groundsim.models import Satellite, MissionScenario
-from groundsim.mse.core import (
+from groundsim.api import (
     create_mission_instance,
     simulate_mission_steps,
     get_satellite_list,
@@ -131,4 +131,15 @@ class SaveController(View):
         else:
             mission_instance = json.loads(mission_instance_str)
             result_data = save_mission(mission_instance, user, email)
+        return HttpResponse(json.dumps(result_data))
+
+class ActionController(View):
+    def post(self, request):
+        mission_instance_str = request.POST.get("mission_instance",None)
+        action_type = request.POST.get("action_type", None)
+        if mission_instance_str is None:
+            return HttpResponse(json.dumps("Satellite mission data not found"))
+        else:
+            mission_instance = json.loads(mission_instance_str)
+            result_data = save_mission(mission_instance, action_type)
         return HttpResponse(json.dumps(result_data))

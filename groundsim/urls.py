@@ -31,6 +31,7 @@ urlpatterns = [
     path('mse_step/', views.SimulationController.as_view()),
     path('mse_reset/', views.ResetController.as_view()),
     path('mse_save/', views.SaveController.as_view()),
+    path('mse_action/', views.ActionController.as_view()),
     # path('mse_log/', views.LogListHandler.as_view()),
 
     # satellite TT&C - locally computed

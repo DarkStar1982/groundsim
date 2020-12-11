@@ -1,4 +1,6 @@
 import julian
+import calendar
+from datetime import datetime
 from sgp4.earth_gravity import wgs72, wgs84
 from sgp4.io import twoline2rv
 from math import fmod, pi, tan, atan, sqrt, sin, fabs, cos, atan2, trunc, acos
@@ -13,6 +15,28 @@ MU_EARTH = 3.986E14
 ################################################################################
 ############################# HELPER FUNCTIONS CODE ############################
 ################################################################################
+def mission_timer_to_str(p_mission_timer):
+    str_timer = "%02i:%02i:%02i, %02i %s %s" % (
+        p_mission_timer["hour"],
+        p_mission_timer["min"],
+        p_mission_timer["sec"],
+        p_mission_timer["day"],
+        calendar.month_abbr[p_mission_timer["month"]],
+        p_mission_timer["year"],
+    )
+    return str_timer
+
+def mission_timer_to_datetime(p_mission_timer):
+    packed_date = datetime(
+        p_mission_timer["year"],
+        p_mission_timer["month"],
+        p_mission_timer["day"],
+        p_mission_timer["hour"],
+        p_mission_timer["min"],
+        p_mission_timer["sec"]
+    )
+    return packed_date
+
 def get_epoch_time(tle_string):
     year = int(tle_string[0:2])
     if year<57:

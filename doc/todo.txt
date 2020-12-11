@@ -26,3 +26,7 @@
 
 05/12/2020
 = Port code to use Skyfield libary
+
+10/12/2020
+= Add log recording
+= Add mission scenario functionality 
