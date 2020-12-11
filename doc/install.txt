@@ -1,0 +1,2 @@
+After code checkout and db migration, run "python3 manage.py init_db"
+It will delete all existing satellites and mission scenarios, if any exists and repopulate both tables wiht default data. 
