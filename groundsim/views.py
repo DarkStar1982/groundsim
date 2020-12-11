@@ -16,7 +16,8 @@ from groundsim.api import (
     update_satellite,
     save_mission,
     load_mission,
-    get_mission_logs
+    get_mission_logs,
+    execute_mission_action
 )
 
 def none_is_zero(obj):
@@ -141,5 +142,5 @@ class ActionController(View):
             return HttpResponse(json.dumps("Satellite mission data not found"))
         else:
             mission_instance = json.loads(mission_instance_str)
-            result_data = save_mission(mission_instance, action_type)
+            result_data = execute_mission_action(mission_instance, action_type)
         return HttpResponse(json.dumps(result_data))

@@ -8,9 +8,10 @@ from skyfield.elementslib import osculating_elements_of
 UTC_DAY = 86400
 SIDEREAL_DAY = 86164.0905
 R_EARTH = 6378137.0
+E_2 = 6.69437999014E-3
+
 # ephemeris are loaded on instantiation
 JPL_EPH = load('de421.bsp')
-E_2 = 6.69437999014E-3
 
 ################################################################################
 # calculate orbital vector and ground track from the following:

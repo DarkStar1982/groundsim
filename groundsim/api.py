@@ -2,11 +2,10 @@ import json
 from hashlib import sha256
 from groundsim.models import Satellite, SatelliteInstance, MissionInstance, UserInstance, MissionEventLog
 from groundsim.mse.core import CMSE_Env, CMSE_Sat, CMSE_SceEng
-################################################################################
-############################ MISSION SIMULATION API ############################
-################################################################################
 
-# update or insert new
+################################################################################
+############################# DATABASE I/O ACTIONS #############################
+################################################################################
 def update_satellite(p_data):
     tle_lines = p_data.splitlines()
     object_data = parse_tle_lines(tle_lines[1], tle_lines[2])
@@ -28,8 +27,10 @@ def get_satellite_list():
     satellites= Satellite.objects.all()
     for item in satellites:
         sat_list.append(
-            {"sat_name":item.satellite_name,
-            "norad_id":item.norad_id}
+            {
+            "sat_name":item.satellite_name,
+            "norad_id":item.norad_id
+            }
         )
     resp_sats["status"] = "ok"
     resp_sats["satelites"] = sat_list
@@ -42,15 +43,18 @@ def get_tle_data(norad_id):
         "line_2":satellite_record.satellite_tle2
     }
 
-def create_mission_instance(norad_id, scenario_id, start_date):
-    mission = {}
-    tle_data = get_tle_data(norad_id)
-    mission["environment"] = EnvironmentSimulator.create_mission_environment(norad_id, start_date, tle_data)
-    mission["satellite"] = SatelliteSimulator.create_mission_satellite()
-    mission["scenario"] = ScenarioEngine.create_mission_scenario(scenario_id)
-    return mission
+def get_scenario_data(p_scenario_id):
+    pass
 
-def write_logs(p_environment):
+def get_mission_logs(hash_id):
+    # load all messages for a given mission
+    json_data = {"status":"ok", "event_logs":[]}
+    db_records = MissionEventLog.objects.get(mission_hash=hash_id)
+    for item in db_records:
+        json_data["event_logs"].append([item.timestamp, item.message])
+    return json_data
+
+def write_mission_logs(p_environment):
     if p_environment["hash_id"] is not None:
         hash_id = p_environment["hash_id"]
         mission_record = MissionInstance.objects.get(mission_hash=hash_id)
@@ -63,23 +67,35 @@ def write_logs(p_environment):
         p_environment["event_logs"].pop(0)
     return p_environment
 
+def write_user(p_user, p_email):
+    record, created = UserInstance.objects.get_or_create(user=p_user, email = p_email)
+    return record
+
+################################################################################
+############################ MISSION SIMULATION API ############################
+################################################################################
+def create_mission_instance(norad_id, scenario_id, start_date):
+    mission = {}
+    tle_data = get_tle_data(norad_id)
+    scenario_data = get_scenario_data(scenario_id)
+    mission["environment"] = EnvironmentSimulator.create_mission_environment(norad_id, start_date, tle_data)
+    mission["satellite"] = SatelliteSimulator.create_mission_satellite()
+    mission["scenario"] = ScenarioEngine.create_mission_scenario(scenario_id, scenario_data)
+    return mission
+
 def simulate_mission_steps(p_mission, steps):
     p_mission["environment"] = EnvironmentSimulator.evolve_environment(p_mission["environment"], steps)
     p_mission["satellite"] = SatelliteSimulator.evolve_satellite(p_mission, steps)
     p_mission["scenario"] = ScenarioEngine.evaluate_progress(p_mission)
     # save mission log - TBD
-    p_mission["environment"] = write_logs(p_mission["environment"])
+    p_mission["environment"] = write_mission_logs(p_mission["environment"])
     return p_mission
-
-def save_user(p_user, p_email):
-    record, created = UserInstance.objects.get_or_create(user=p_user, email = p_email)
-    return record
 
 # check if mission record already exists before saving
 def save_mission(p_mission, p_user, p_email):
     if p_mission["environment"]["user"] is None and p_mission["environment"]["email"] is None:
         hash_id = sha256(json.dumps(p_mission).encode('utf-8')).hexdigest()
-        user_record = save_user(p_user, p_email)
+        user_record = write_user(p_user, p_email)
         user_record.save()
         mission_record = MissionInstance()
         satellite_record = SatelliteInstance()
@@ -120,16 +136,8 @@ def load_mission(hash_id):
     mission["scenario"] = ScenarioEngine.create_mission_scenario(mission_record.scenario_ref.scenario_id)
     return mission
 
-def get_mission_logs(hash_id):
-    # load all messages for a given mission
-    json_data = {"status":"ok", "event_logs":[]}
-    db_records = MissionEventLog.objects.get(mission_hash=hash_id)
-    for item in db_records:
-        json_data["event_logs"].append([item.timestamp, item.message])
-    return json_data
-
 def execute_mission_action(p_mission, p_action):
-    p_mission = ScenarioEngine.execute_mission_action(p_mission)
+    p_mission = ScenarioEngine.execute_mission_action(p_mission, p_action)
     return p_mission
 
 # Initialiaze on start

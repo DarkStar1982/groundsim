@@ -60,7 +60,7 @@ def convert_to_float(element):
     return float(value)
 
 # floating point comparison
-def f_equals(a,b,c):
+def fp_equals(a,b,c):
     if fabs(fabs(a)-fabs(c))<c:
         return True
     else:

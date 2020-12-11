@@ -1,6 +1,6 @@
 import json
 from datetime import datetime, timezone, timedelta
-from groundsim.mse.utils import parse_tle_lines, mission_timer_to_str, mission_timer_to_datetime
+from groundsim.mse.utils import parse_tle_lines, mission_timer_to_str, mission_timer_to_datetime, fp_equals
 from groundsim.mse.aux_astro import get_orbital_data, time_since_periapsis
 from groundsim.mse.sys_payload import get_imager_frame
 ################################################################################
@@ -132,10 +132,12 @@ class CMSE_Sat():
     def initialize_satellite_instruments(self):
         instruments = {
             "imager": {
-                "fov":1.6, # degrees
+                "fov":1.6, # in degrees
                 "f":0.58,
                 "sensor":[4096,3072],
-                "pixel":5.5E-6
+                "pixel":5.5E-6,
+                "counter":0,
+                "buffer":[]
             },
             "sdr": {}
         }
@@ -238,25 +240,41 @@ class CMSE_Sat():
         return p_mission["satellite"]
 
 class CMSE_SceEng():
-    # load db data
-    def create_mission_scenario(self,p_scenario_id):
+    def create_mission_scenario(self,p_scenario_id, p_scenario_data):
+        # load data from db record
         scenario_data = {
-            "scenario_id":p_scenario_id
+            "scenario_id":p_scenario_id,
+            "objectives":[],
+            "progress":0,
+            "fp_precision":0.001
         }
         return scenario_data
 
-    # check state of the mission vs expected result
-    # has to be exposed via api call
-    # check on mission objectives example:
-    #   photo taken - 25%
-    #   photo with correct bounding box - 25%
-    #   photo downloaded - 50%
-    #   if 100% then mission completed, else continue
+    def is_objective_completed(self, p_mission, p_objective):
+        fp_precision = p_mission["scenario"]["fp_precision"]
+        result = False
+        if p_objective["type"] == "take_photo":
+            for item in p_mission["satellite"]["instruments"]["imager"]["buffer"]:
+                result = f_equals(item["image_box"]["top"], p_objective["definition"]["top"], fp_precision)
+                result = result and f_equals(item["image_box"]["left"], p_objective["definition"]["left"], fp_precision)
+                result = result and f_equals(item["image_box"]["bottom"], p_objective["definition"]["bottom"], fp_precision)
+                result = result and f_equals(item["image_box"]["right"], p_objective["definition"]["right"], fp_precision)
+                if result:
+                    return result
+        return result
+
     def evaluate_progress(self, p_mission):
+        for item in p_mission["scenario"]["objectives"]:
+            if self.is_objective_completed(p_mission, item):
+                p_mission["scenario"]["progress"] += item["score_points"]
         return p_mission["scenario"]
 
     def execute_mission_action(self, p_mission, p_action):
         if action == "take_photo":
-            pass
-            # get imager frame
+            snapshot = {
+                "image_box":p_mission["satellite"]["instruments"]["imager"]["frame"],
+                "timestamp":p_mission["environment"]["current_date"]
+            }
+            p_mission["satellite"]["instruments"]["imager"]["buffer"].append(snapshot)
+            p_mission["satellite"]["instruments"]["imager"]["counter"]+=1
         return p_mission
