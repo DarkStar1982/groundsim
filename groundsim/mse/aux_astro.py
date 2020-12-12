@@ -56,6 +56,7 @@ def time_since_periapsis(p_orbital_elements):
     return t_since_periapsis
 
 ################################################################################
+# calculates length of one degree longitude/latidude across the globe
 # input should be in degrees, output is in km
 ################################################################################
 def calculate_degree_length(p_lat):

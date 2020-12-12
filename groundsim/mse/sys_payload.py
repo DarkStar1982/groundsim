@@ -1,7 +1,13 @@
 from math import pi, tan, radians
 from groundsim.mse.aux_astro import calculate_degree_length
 
-#camera 1D fov length
+# camera FOV calculation
+def calculate_camera_fov(d,f):
+    alpha = 2*atan(d/(2*f))
+    return alpha
+
+# camera 1D swath length
+# input in degrees, output in km
 def calculate_swath(p_ifov, p_alt):
     ifov = radians(p_ifov)
     d = 2*p_alt*tan(ifov/2)

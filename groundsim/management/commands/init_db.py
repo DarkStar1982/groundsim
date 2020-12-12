@@ -36,11 +36,13 @@ MISSION_SCENARIOS = [
 ]
 
 def flush_db():
+    self.stdout.write(self.style.SUCCESS('Clearing database...'))
     Satellite.objects.all().delete()
     MissionScenario.objects.all().delete()
 
 def repopulate_db():
     # add satellites
+    self.stdout.write(self.style.SUCCESS('Repopulating database...'))
     for item in SATELLITE_LIST:
         try:
             sat = Satellite.objects.get(norad_id=item["norad_id"])
@@ -69,8 +71,6 @@ class Command(BaseCommand):
     help = 'Clear database and repopulate it with default data'
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.SUCCESS('Clearing database...'))
         flush_db()
-        self.stdout.write(self.style.SUCCESS('Repopulating database...'))
         repopulate_db()
         self.stdout.write(self.style.SUCCESS('Successfully reinitialized database!'))

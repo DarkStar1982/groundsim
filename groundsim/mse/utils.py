@@ -6,15 +6,9 @@ from sgp4.io import twoline2rv
 from math import fmod, pi, tan, atan, sqrt, sin, fabs, cos, atan2, trunc, acos
 
 ################################################################################
-############################### GLOBAL CONSTANTS ###############################
+############################# DATETIME CONVERSIONS #############################
 ################################################################################
 
-J2 = 1.08E-3 # second harmonic
-MU_EARTH = 3.986E14
-
-################################################################################
-############################# HELPER FUNCTIONS CODE ############################
-################################################################################
 def mission_timer_to_str(p_mission_timer):
     str_timer = "%02i:%02i:%02i, %02i %s %s" % (
         p_mission_timer["hour"],
@@ -47,6 +41,9 @@ def get_epoch_time(tle_string):
     date_a = datetime(year, 1, 1,tzinfo=timezone.utc) + timedelta(days - 1)
     return date_a
 
+################################################################################
+############################ OTHER HELPER FUNCTIONS ############################
+################################################################################
 def convert_to_float(element):
     if element[0] == '-':
         sign = '-'
@@ -65,11 +62,6 @@ def fp_equals(a,b,c):
         return True
     else:
         return False
-
-# camera calculations
-def calculate_camera_fov(d,f):
-    alpha = 2*atan(d/(2*f))
-    return alpha
 
 def parse_tle_lines(tle_line_1, tle_line_2):
     tle_data = {}
@@ -96,6 +88,8 @@ def parse_tle_lines(tle_line_1, tle_line_2):
     tle_data["revolution_number"] = int(line_2[8][:-1])
     return tle_data
 
+# OLD code to manually calculate lat/lon from SGP4 output
+# unused - for cross-reference only
 def convert_to_geodetic(tle_data, position, date):
     geo_data = {}
     # copy the data from SGP4 output
@@ -134,32 +128,3 @@ def convert_to_geodetic(tle_data, position, date):
         alt = sqrt(x*x + y*y)/cos(lat) - a/sqrt(1.0 - e*e*sin(lat)*sin(lat))
     geo_data["alt"] = fabs(alt)
     return geo_data
-
-def propagate_orbit(tle_data, mission_timer):
-    satellite_object = twoline2rv(tle_data["line_1"], tle_data["line_2"], wgs72)
-    position, velocity = satellite_object.propagate(
-        mission_timer["year"],
-        mission_timer["month"],
-        mission_timer["day"],
-        mission_timer["hour"],
-        mission_timer["min"],
-        mission_timer["sec"]
-    )
-    return {"orbit_position": position, "orbit_velocity":velocity}
-
-def get_ground_track(self, tle_data, orbital_vector, p_date):
-    current_date = datetime(
-        p_date["year"],
-        p_date["month"],
-        p_date["day"],
-        p_date["hour"],
-        p_date["min"],
-        p_date["sec"]
-    )
-    tle_object = parse_tle_lines(tle_data["line_1"], tle_data["line_2"])
-    ground_track = convert_to_geodetic(
-        tle_object,
-        orbital_vector["orbit_position"],
-        current_date
-    )
-    return ground_track
