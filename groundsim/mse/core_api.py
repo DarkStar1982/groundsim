@@ -54,26 +54,29 @@ def get_tle_data(norad_id):
 def get_scenario_data(p_scenario_id):
     try:
         scenario_obj = MissionScenario.objects.get(scenario_id=p_scenario_id)
+        scenario_data = {
+            "scenario_id":scenario_obj.scenario_id,
+            "objectives":[],
+            "progress":0,
+            "fp_precision":0.001,
+            "start_date":{
+                "year":scenario_obj.start_date.year,
+                "month":scenario_obj.start_date.month,
+                "day":scenario_obj.start_date.day,
+                "hour":scenario_obj.start_date.hour,
+                "min":scenario_obj.start_date.minute,
+                "sec": scenario_obj.start_date.second
+            },
+            "mission_name": scenario_obj.mission_name,
+            "description": scenario_obj.description,
+            "initial_setup": json.loads(scenario_obj.initial_setup),
+            "objectives": json.loads(scenario_obj.objectives)
+        }
     except MissionScenario.DoesNotExist:
-        return None
-    scenario_data = {
-        "scenario_id":p_scenario_id,
-        "objectives":[],
-        "progress":0,
-        "fp_precision":0.001,
-        "start_date":{
-            "year":scenario_obj.start_date.year,
-            "month":scenario_obj.start_date.month,
-            "day":scenario_obj.start_date.day,
-            "hour":scenario_obj.start_date.hour,
-            "min":scenario_obj.start_date.minute,
-            "sec": scenario_obj.start_date.second
-        },
-        "mission_name": scenario_obj.mission_name,
-        "description": scenario_obj.description,
-        "initial_setup": json.loads(scenario_obj.initial_setup),
-        "objectives": json.loads(scenario_obj.objectives)
-    }
+        scenario_data =  {
+            "scenario_id":-1,
+            "objectives":[],
+        }
     return scenario_data
 
 def get_mission_logs(hash_id):
@@ -107,7 +110,7 @@ def write_user(p_user, p_email):
 def create_mission_instance(p_norad_id, p_scenario_id, p_start_date):
     mission = {}
     scenario_data = get_scenario_data(p_scenario_id)
-    if scenario_data is None:
+    if scenario_data["scenario_id"] == -1:
         norad_id = p_norad_id
         start_date = datetime_to_mission_timer(p_start_date)
         tle_data = get_tle_data(norad_id)

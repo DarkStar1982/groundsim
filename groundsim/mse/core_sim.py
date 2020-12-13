@@ -225,13 +225,8 @@ class CMSE_Sat():
 ################################################################################
 class CMSE_SceEng():
     def initialize_scenario(self, p_mission, p_scenario_data):
-        if p_scenario_data is None:
-            p_mission["scenario"] = {}
-            p_mission["scenario"]["objectives"] = []
-            return p_mission["scenario"]
-        else:
-            p_mission["scenario"] = p_scenario_data
-            p_mission["scenario"]["progress"] = 0
+        p_mission["scenario"] = p_scenario_data
+        p_mission["scenario"]["progress"] = 0
         return p_mission["scenario"]
 
     def is_objective_completed(self, p_mission, p_objective):

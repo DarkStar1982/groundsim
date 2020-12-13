@@ -5,12 +5,6 @@ from groundsim.mse.utils import mission_timer_to_datetime
 
 SATELLITE_LIST = [
     {
-        "satellite_name": "ISS (ZARYA)",
-        "norad_id": 25544,
-        "tle_line1": "1 25544U 98067A   20346.69133963  .00001710  00000-0  38948-4 0  9990",
-        "tle_line2": "2 25544  51.6436 190.1749 0002049 117.8257 357.3518 15.49178451259535"
-    },
-    {
         "satellite_name": "OPS_SAT",
         "norad_id": 44878,
         "tle_line1": "1 44878U 19092F   20347.75591930  .00001861  00000-0  10031-3 0  9991",
