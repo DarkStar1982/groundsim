@@ -5,16 +5,16 @@ from groundsim.mse.utils import mission_timer_to_datetime
 
 SATELLITE_LIST = [
     {
-        "satellite_name":"USA224",
-        "norad_id":37348,
-        "tle_line1":"1 37348U 11002A   20053.50800700  .00010600  00000-0  95354-4 0 9",
-        "tle_line2":"2 37348 097.9000 166.7120 0540467 271.5258 235.8003 14.76330431000000"
+        "satellite_name": "ISS (ZARYA)",
+        "norad_id": 25544,
+        "tle_line1": "1 25544U 98067A   20346.69133963  .00001710  00000-0  38948-4 0  9990",
+        "tle_line2": "2 25544  51.6436 190.1749 0002049 117.8257 357.3518 15.49178451259535"
     },
     {
-        "satellite_name":"ISS (ZARYA)",
-        "norad_id":25544,
-        "tle_line1":"1 25544U 98067A   20346.69133963  .00001710  00000-0  38948-4 0  9990",
-        "tle_line2":"2 25544  51.6436 190.1749 0002049 117.8257 357.3518 15.49178451259535"
+        "satellite_name": "OPS_SAT",
+        "norad_id": 44878,
+        "tle_line1": "1 44878U 19092F   20347.75591930  .00001861  00000-0  10031-3 0  9991",
+        "tle_line2": "2 44878  97.4680 168.0928 0015493  97.4582 262.8412 15.15936042 54547"
     }
 ]
 
@@ -86,7 +86,7 @@ class Command(BaseCommand):
     help = 'Clear database and repopulate it with default data'
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.SUCCESS('Started reinitiliazing database with...'))
+        self.stdout.write(self.style.SUCCESS('Started reinitiliazing database...'))
         flush_db()
         repopulate_db()
         self.stdout.write(self.style.SUCCESS('Successfully reinitialized database!'))
