@@ -31,6 +31,16 @@ def mission_timer_to_datetime(p_mission_timer):
     )
     return packed_date
 
+def datetime_to_mission_timer(p_datetime):
+    mission_timer = {}
+    mission_timer["year"] = p_datetime.year
+    mission_timer["month"] = p_datetime.month
+    mission_timer["day"] = p_datetime.day
+    mission_timer["hour"] = p_datetime.hour
+    mission_timer["min"] = p_datetime.minute
+    mission_timer["sec"] = p_datetime.second
+    return mission_timer
+
 def get_epoch_time(tle_string):
     year = int(tle_string[0:2])
     if year<57:

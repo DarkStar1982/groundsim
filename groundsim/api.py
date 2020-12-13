@@ -1,6 +1,13 @@
 import json
 from hashlib import sha256
-from groundsim.models import Satellite, SatelliteInstance, MissionInstance, UserInstance, MissionEventLog
+from groundsim.models import (
+    Satellite,
+    SatelliteInstance,
+    MissionInstance,
+    MissionEventLog,
+    MissionScenario,
+    UserInstance
+)
 from groundsim.mse.core import CMSE_Env, CMSE_Sat, CMSE_SceEng
 
 ################################################################################
@@ -44,7 +51,26 @@ def get_tle_data(norad_id):
     }
 
 def get_scenario_data(p_scenario_id):
-    pass
+    scenario_obj = MissionScenario.objects.get(scenario_id=p_scenario_id)
+    scenario_data = {
+        "scenario_id":p_scenario_id,
+        "objectives":[],
+        "progress":0,
+        "fp_precision":0.001,
+        "start_date":{
+            "year":scenario_obj.start_date.year,
+            "month":scenario_obj.start_date.month,
+            "day":scenario_obj.start_date.day,
+            "hour":scenario_obj.start_date.hour,
+            "min":scenario_obj.start_date.minute,
+            "sec": scenario_obj.start_date.second
+        },
+        "mission_name": scenario_obj.mission_name,
+        "description": scenario_obj.description,
+        "initial_setup": json.loads(scenario_obj.initial_setup),
+        "objectives": json.loads(scenario_obj.objectives)
+    }
+    return scenario_data
 
 def get_mission_logs(hash_id):
     # load all messages for a given mission
@@ -80,7 +106,7 @@ def create_mission_instance(norad_id, scenario_id, start_date):
     scenario_data = get_scenario_data(scenario_id)
     mission["environment"] = EnvironmentSimulator.create_mission_environment(norad_id, start_date, tle_data)
     mission["satellite"] = SatelliteSimulator.create_mission_satellite()
-    mission["scenario"] = ScenarioEngine.create_mission_scenario(scenario_id, scenario_data)
+    mission["scenario"] = ScenarioEngine.initialize_scenario(mission, scenario_data)
     return mission
 
 def simulate_mission_steps(p_mission, steps):
@@ -131,9 +157,10 @@ def load_mission(hash_id):
     mission = {}
     mission_record = MissionInstance.objects.get(mission_hash=hash_id)
     tle_data = get_tle_data(mission_record.norad_id)
+    scenario_data = get_scenario_data(mission_record.scenario_ref.scenario_id)
     mission["environment"] = EnvironmentSimulator.create_mission_environment(mission_record.norad_id, mission_record.start_date, tle_data)
     mission["satellite"] = SatelliteSimulator.load_mission_satellite(mission_record.satellite_ref)
-    mission["scenario"] = ScenarioEngine.create_mission_scenario(mission_record.scenario_ref.scenario_id)
+    mission["scenario"] = ScenarioEngine.initialize_scenario(mission, scenario_data)
     return mission
 
 def execute_mission_action(p_mission, p_action):

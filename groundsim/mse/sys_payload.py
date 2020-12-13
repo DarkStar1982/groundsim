@@ -25,3 +25,27 @@ def get_imager_frame(p_ifov, p_alt, p_lat, p_lon):
         "right":max(p_lon + swath_lon/2,p_lon - swath_lon/2)
     }
     return result
+
+def take_imager_snapshot(p_mission):
+    snapshot = {
+        "image_box":p_mission["satellite"]["instruments"]["imager"]["frame"],
+        "timestamp":p_mission["environment"]["current_date"]
+    }
+    p_mission["satellite"]["instruments"]["imager"]["buffer"].append(snapshot)
+    p_mission["satellite"]["instruments"]["imager"]["counter"]+=1
+    return p_mission
+
+
+def initialize_payload_instruments():
+    instruments = {
+        "imager": {
+            "fov":1.6, # in degrees
+            "f":0.58,
+            "sensor":[4096,3072],
+            "pixel":5.5E-6,
+            "counter":0,
+            "buffer":[]
+        },
+        "sdr": {}
+    }
+    return instruments

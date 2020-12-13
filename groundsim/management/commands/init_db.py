@@ -1,3 +1,4 @@
+import json
 from django.core.management.base import BaseCommand, CommandError
 from groundsim.models import Satellite, MissionScenario
 from groundsim.mse.utils import mission_timer_to_datetime
@@ -30,19 +31,31 @@ MISSION_SCENARIOS = [
         },
         "mission_name": "eo_basic",
         "description": "A basic Earth Observation mission",
-        "initial_setup":"json object here", # TBD!
-        "objectives":"json object here" # TBD!
+        "initial_setup":{
+            "satellite_id":25544,
+            "fp_precision":0.001
+        },
+        "objectives":[
+            {
+                "type":"take_photo",
+                "definition":{
+                    "top": 46.255,
+                    "left": 30.243,
+                    "bottom":46.129,
+                    "right":30.423,
+                    "target":"Earth"
+                }
+            }
+        ]
     }
 ]
 
 def flush_db():
-    self.stdout.write(self.style.SUCCESS('Clearing database...'))
     Satellite.objects.all().delete()
     MissionScenario.objects.all().delete()
 
 def repopulate_db():
     # add satellites
-    self.stdout.write(self.style.SUCCESS('Repopulating database...'))
     for item in SATELLITE_LIST:
         try:
             sat = Satellite.objects.get(norad_id=item["norad_id"])
@@ -62,8 +75,8 @@ def repopulate_db():
         scenario.start_date = mission_timer_to_datetime(item["start_date"])
         scenario.mission_name = item["mission_name"]
         scenario.description = item["description"]
-        scenario.initial_setup = item["initial_setup"]
-        scenario.objectives = item["objectives"]
+        scenario.initial_setup = json.dumps(item["initial_setup"])
+        scenario.objectives = json.dumps(item["objectives"])
         scenario.save()
 
 
@@ -71,6 +84,7 @@ class Command(BaseCommand):
     help = 'Clear database and repopulate it with default data'
 
     def handle(self, *args, **options):
+        self.stdout.write(self.style.SUCCESS('Started reinitiliazing database with...'))
         flush_db()
         repopulate_db()
         self.stdout.write(self.style.SUCCESS('Successfully reinitialized database!'))

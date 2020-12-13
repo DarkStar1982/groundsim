@@ -1,8 +1,14 @@
 import json
 from datetime import datetime, timezone, timedelta
-from groundsim.mse.utils import parse_tle_lines, mission_timer_to_str, mission_timer_to_datetime, fp_equals
+from groundsim.mse.utils import (
+    parse_tle_lines,
+    mission_timer_to_str,
+    mission_timer_to_datetime,
+    datetime_to_mission_timer,
+    fp_equals
+)
 from groundsim.mse.aux_astro import get_orbital_data, time_since_periapsis
-from groundsim.mse.sys_payload import get_imager_frame
+from groundsim.mse.sys_payload import get_imager_frame, take_imager_snapshot, initialize_payload_instruments
 ################################################################################
 ########################## ENVIRONMENT SIMULATION CODE #########################
 ################################################################################
@@ -11,14 +17,7 @@ class CMSE_Env():
     def create_mission_environment(self, p_norad_id, p_start_date, tle_data):
         environment = {}
         environment["norad_id"] = p_norad_id
-        environment["current_date"] = {
-            "year": p_start_date.year,
-            "month":p_start_date.month,
-            "day":  p_start_date.day,
-            "hour": p_start_date.hour,
-            "min":  p_start_date.minute,
-            "sec":  p_start_date.second
-        }
+        environment["current_date"] = datetime_to_mission_timer(p_start_date)
         environment["start_date"] = environment["current_date"]
         environment["tle_data"] = tle_data
         environment["elapsed_timer"] = 0
@@ -38,12 +37,7 @@ class CMSE_Env():
         current_date = mission_timer_to_datetime(p_mission_timer)
         delta = timedelta(seconds=p_seconds)
         new_date = current_date + delta
-        p_mission_timer["year"] = new_date.year
-        p_mission_timer["month"] = new_date.month
-        p_mission_timer["day"] = new_date.day
-        p_mission_timer["hour"] = new_date.hour
-        p_mission_timer["min"] = new_date.minute
-        p_mission_timer["sec"] = new_date.second
+        p_mission_timer = datetime_to_mission_timer(new_date)
         return p_mission_timer
 
     def log_event(self, p_environment, p_event_string):
@@ -97,14 +91,15 @@ class CMSE_Sat():
         satellite = {
             "geometry":self.initialize_satellite_geometry(),
             "subsystems":self.initialize_satellite_subsystems(),
-            "instruments":self.initialize_satellite_instruments(),
+            "instruments":initialize_payload_instruments(),
             "telemetry":self.initialize_satellite_telemetry(),
         }
         return satellite
 
+    # should be loadable from DB data
     def initialize_satellite_subsystems(self):
         sat_components = {
-            "power": {
+            "power_subsystem": {
                 "solar_panels": {},
                 "battery":{},
                 "pdu":{},
@@ -128,20 +123,6 @@ class CMSE_Sat():
             }
         }
         return sat_components
-
-    def initialize_satellite_instruments(self):
-        instruments = {
-            "imager": {
-                "fov":1.6, # in degrees
-                "f":0.58,
-                "sensor":[4096,3072],
-                "pixel":5.5E-6,
-                "counter":0,
-                "buffer":[]
-            },
-            "sdr": {}
-        }
-        return instruments
 
     def initialize_satellite_telemetry(self):
         telemetry = {
@@ -239,19 +220,17 @@ class CMSE_Sat():
         )
         return p_mission["satellite"]
 
+################################################################################
+########################### MISSION SCENARIO ENGINE ############################
+################################################################################
 class CMSE_SceEng():
-    def create_mission_scenario(self,p_scenario_id, p_scenario_data):
-        # load data from db record
-        scenario_data = {
-            "scenario_id":p_scenario_id,
-            "objectives":[],
-            "progress":0,
-            "fp_precision":0.001
-        }
-        return scenario_data
+    def initialize_scenario(self, p_mission, p_scenario_data):
+        p_mission["scenario"] = p_scenario_data
+        p_mission["scenario"]["progress"] = 0
+        return p_mission["scenario"]
 
     def is_objective_completed(self, p_mission, p_objective):
-        fp_precision = p_mission["scenario"]["fp_precision"]
+        fp_precision = p_mission["scenario"]["initial_setup"]["fp_precision"]
         result = False
         if p_objective["type"] == "take_photo":
             for item in p_mission["satellite"]["instruments"]["imager"]["buffer"]:
@@ -271,10 +250,5 @@ class CMSE_SceEng():
 
     def execute_mission_action(self, p_mission, p_action):
         if action == "take_photo":
-            snapshot = {
-                "image_box":p_mission["satellite"]["instruments"]["imager"]["frame"],
-                "timestamp":p_mission["environment"]["current_date"]
-            }
-            p_mission["satellite"]["instruments"]["imager"]["buffer"].append(snapshot)
-            p_mission["satellite"]["instruments"]["imager"]["counter"]+=1
+            p_mission = take_imager_snapshot(p_mission)
         return p_mission

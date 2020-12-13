@@ -1,12 +1,15 @@
 from django.db import models
 from django.contrib import admin
 
-# satellite TLE record + other data
+# satellite TLE record + system definition data
 class Satellite(models.Model):
     satellite_name = models.CharField(max_length=24)
     satellite_tle1 = models.CharField(max_length=70)
     satellite_tle2 = models.CharField(max_length=70)
     norad_id = models.IntegerField(default=0, primary_key=True)
+    system_definition = models.CharField(blank=True, max_length=4096)
+    geometry_definition = models.CharField(blank=True, max_length=4096)
+    instrument_definition = models.CharField(blank=True, max_length=4096)
 
 class SatelliteInstance(models.Model):
     satellite_id = models.IntegerField(default=0) # should be a primary key?
