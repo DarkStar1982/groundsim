@@ -74,7 +74,7 @@ def get_scenario_data(p_scenario_id):
         }
     except MissionScenario.DoesNotExist:
         scenario_data =  {
-            "scenario_id":-1,
+            "scenario_id":0,
             "objectives":[],
         }
     return scenario_data
@@ -109,12 +109,13 @@ def write_user(p_user, p_email):
 ################################################################################
 def create_mission_instance(p_norad_id, p_scenario_id, p_start_date):
     mission = {}
-    scenario_data = get_scenario_data(p_scenario_id)
-    if scenario_data["scenario_id"] == -1:
+    if p_scenario_id == 0:
         norad_id = p_norad_id
         start_date = datetime_to_mission_timer(p_start_date)
         tle_data = get_tle_data(norad_id)
+        scenario_data = { "scenario_id":0, "objectives":[] }
     else:
+        scenario_data = get_scenario_data(p_scenario_id)
         norad_id = scenario_data["initial_setup"]["norad_id"]
         start_date = scenario_data["start_date"]
         tle_data = get_tle_data(norad_id)

@@ -29,4 +29,12 @@
 
 10/12/2020
 = Add log recording
-= Add mission scenario functionality 
+= Add mission scenario functionality
+
+13/12/2020
+- Simulation order
+= geometry
+-> power
+-> thermal
+-> adcs
+- > obdh
