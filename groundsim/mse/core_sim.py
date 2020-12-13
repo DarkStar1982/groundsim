@@ -7,7 +7,7 @@ from groundsim.mse.utils import (
     datetime_to_mission_timer,
     fp_equals
 )
-from groundsim.mse.aux_astro import get_orbital_data, time_since_periapsis
+from groundsim.mse.lib_astro import get_orbital_data, time_since_periapsis
 from groundsim.mse.sys_payload import get_imager_frame, take_imager_snapshot, initialize_payload_instruments
 ################################################################################
 ########################## ENVIRONMENT SIMULATION CODE #########################
@@ -17,7 +17,7 @@ class CMSE_Env():
     def create_mission_environment(self, p_norad_id, p_start_date, tle_data):
         environment = {}
         environment["norad_id"] = p_norad_id
-        environment["current_date"] = datetime_to_mission_timer(p_start_date)
+        environment["current_date"] = p_start_date
         environment["start_date"] = environment["current_date"]
         environment["tle_data"] = tle_data
         environment["elapsed_timer"] = 0
@@ -225,8 +225,13 @@ class CMSE_Sat():
 ################################################################################
 class CMSE_SceEng():
     def initialize_scenario(self, p_mission, p_scenario_data):
-        p_mission["scenario"] = p_scenario_data
-        p_mission["scenario"]["progress"] = 0
+        if p_scenario_data is None:
+            p_mission["scenario"] = {}
+            p_mission["scenario"]["objectives"] = []
+            return p_mission["scenario"]
+        else:
+            p_mission["scenario"] = p_scenario_data
+            p_mission["scenario"]["progress"] = 0
         return p_mission["scenario"]
 
     def is_objective_completed(self, p_mission, p_objective):

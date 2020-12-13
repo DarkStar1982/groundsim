@@ -20,7 +20,7 @@ SATELLITE_LIST = [
 
 MISSION_SCENARIOS = [
     {
-        "scenario_id":0,
+        "scenario_id":1,
         "start_date":{
             "year":2020,
             "month":11,
@@ -32,12 +32,13 @@ MISSION_SCENARIOS = [
         "mission_name": "eo_basic",
         "description": "A basic Earth Observation mission",
         "initial_setup":{
-            "satellite_id":25544,
+            "norad_id":25544,
             "fp_precision":0.001
         },
         "objectives":[
             {
                 "type":"take_photo",
+                "score_points":100,
                 "definition":{
                     "top": 46.255,
                     "left": 30.243,
@@ -72,6 +73,7 @@ def repopulate_db():
             scenario = MissionScenario.objects.get(scenario_id=item["scenario_id"])
         except MissionScenario.DoesNotExist:
             scenario = MissionScenario()
+        scenario.scenario_id =item["scenario_id"]
         scenario.start_date = mission_timer_to_datetime(item["start_date"])
         scenario.mission_name = item["mission_name"]
         scenario.description = item["description"]

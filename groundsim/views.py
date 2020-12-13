@@ -9,7 +9,7 @@ from django.http import HttpResponse, HttpResponseNotFound
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from groundsim.models import Satellite, MissionScenario
-from groundsim.api import (
+from groundsim.mse.core_api import (
     create_mission_instance,
     simulate_mission_steps,
     get_satellite_list,

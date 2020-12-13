@@ -8,7 +8,8 @@ from groundsim.models import (
     MissionScenario,
     UserInstance
 )
-from groundsim.mse.core import CMSE_Env, CMSE_Sat, CMSE_SceEng
+from groundsim.mse.core_sim import CMSE_Env, CMSE_Sat, CMSE_SceEng
+from groundsim.mse.utils import datetime_to_mission_timer
 
 ################################################################################
 ############################# DATABASE I/O ACTIONS #############################
@@ -51,7 +52,10 @@ def get_tle_data(norad_id):
     }
 
 def get_scenario_data(p_scenario_id):
-    scenario_obj = MissionScenario.objects.get(scenario_id=p_scenario_id)
+    try:
+        scenario_obj = MissionScenario.objects.get(scenario_id=p_scenario_id)
+    except MissionScenario.DoesNotExist:
+        return None
     scenario_data = {
         "scenario_id":p_scenario_id,
         "objectives":[],
@@ -100,10 +104,17 @@ def write_user(p_user, p_email):
 ################################################################################
 ############################ MISSION SIMULATION API ############################
 ################################################################################
-def create_mission_instance(norad_id, scenario_id, start_date):
+def create_mission_instance(p_norad_id, p_scenario_id, p_start_date):
     mission = {}
-    tle_data = get_tle_data(norad_id)
-    scenario_data = get_scenario_data(scenario_id)
+    scenario_data = get_scenario_data(p_scenario_id)
+    if scenario_data is None:
+        norad_id = p_norad_id
+        start_date = datetime_to_mission_timer(p_start_date)
+        tle_data = get_tle_data(norad_id)
+    else:
+        norad_id = scenario_data["initial_setup"]["norad_id"]
+        start_date = scenario_data["start_date"]
+        tle_data = get_tle_data(norad_id)
     mission["environment"] = EnvironmentSimulator.create_mission_environment(norad_id, start_date, tle_data)
     mission["satellite"] = SatelliteSimulator.create_mission_satellite()
     mission["scenario"] = ScenarioEngine.initialize_scenario(mission, scenario_data)

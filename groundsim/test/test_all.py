@@ -1,6 +1,6 @@
 from django.test import TestCase
 from math import radians, isclose
-from groundsim.mse.aux_astro import get_orbital_data, time_since_periapsis, calculate_degree_length
+from groundsim.mse.lib_astro import get_orbital_data, time_since_periapsis, calculate_degree_length
 from groundsim.mse.sys_payload import calculate_swath, get_imager_frame
 
 from skyfield.api import EarthSatellite, load

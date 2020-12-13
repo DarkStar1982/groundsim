@@ -1,5 +1,5 @@
 from math import pi, tan, radians
-from groundsim.mse.aux_astro import calculate_degree_length
+from groundsim.mse.lib_astro import calculate_degree_length
 
 # camera FOV calculation
 def calculate_camera_fov(d,f):
@@ -35,7 +35,7 @@ def take_imager_snapshot(p_mission):
     p_mission["satellite"]["instruments"]["imager"]["counter"]+=1
     return p_mission
 
-
+# should be loaded from external source
 def initialize_payload_instruments():
     instruments = {
         "imager": {
