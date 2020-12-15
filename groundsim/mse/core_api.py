@@ -79,6 +79,16 @@ def get_scenario_data(p_scenario_id):
         }
     return scenario_data
 
+def get_satellite_config(p_norad_id):
+    try:
+        satellite_record = Satellite.objects.get(norad_id=p_norad_id)
+        satellite_obj = {
+            "config_instruments":json.loads(satellite_record.config_instrument)
+        }
+    except Satellite.DoesNotExist:
+        satellite_obj = None
+    return satellite_obj
+
 def get_mission_logs(hash_id):
     # load all messages for a given mission
     json_data = {"status":"ok", "event_logs":[]}
@@ -119,8 +129,9 @@ def create_mission_instance(p_norad_id, p_scenario_id, p_start_date):
         norad_id = scenario_data["initial_setup"]["norad_id"]
         start_date = scenario_data["start_date"]
         tle_data = get_tle_data(norad_id)
+    satellite_config = get_satellite_config(norad_id)
     mission["environment"] = EnvironmentSimulator.create_mission_environment(norad_id, start_date, tle_data)
-    mission["satellite"] = SatelliteSimulator.create_mission_satellite()
+    mission["satellite"] = SatelliteSimulator.create_mission_satellite(satellite_config)
     mission["scenario"] = ScenarioEngine.initialize_scenario(mission, scenario_data)
     return mission
 
@@ -128,9 +139,9 @@ def simulate_mission_steps(p_mission, steps):
     p_mission["environment"] = EnvironmentSimulator.evolve_environment(p_mission["environment"], steps)
     p_mission["satellite"] = SatelliteSimulator.evolve_satellite(p_mission, steps)
     p_mission["scenario"] = ScenarioEngine.evaluate_progress(p_mission)
-    # save mission log - TBD
     p_mission["environment"] = write_mission_logs(p_mission["environment"])
     return p_mission
+
 
 # check if mission record already exists before saving
 def save_mission(p_mission, p_user, p_email):

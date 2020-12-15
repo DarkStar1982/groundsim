@@ -87,11 +87,11 @@ class CMSE_Sat():
         return sat_geometry
 
     # should be configurable or loadable from DB
-    def create_mission_satellite(self):
+    def create_mission_satellite(self, satellite_config):
         satellite = {
             "geometry":self.initialize_satellite_geometry(),
             "subsystems":self.initialize_satellite_subsystems(),
-            "instruments":initialize_payload_instruments(),
+            "instruments":initialize_payload_instruments(satellite_config["config_instruments"]),
             "telemetry":self.initialize_satellite_telemetry(),
         }
         return satellite
@@ -227,6 +227,11 @@ class CMSE_SceEng():
     def initialize_scenario(self, p_mission, p_scenario_data):
         p_mission["scenario"] = p_scenario_data
         p_mission["scenario"]["progress"] = 0
+        points_to_win = 0
+        for item in p_mission["scenario"]["objectives"]:
+            points_to_win += item["score_points"]
+        # once acculumated points reach or exceed this value, the scenario is considered completed
+        p_mission["scenario"]["points_to_win"] = points_to_win
         return p_mission["scenario"]
 
     def is_objective_completed(self, p_mission, p_objective):

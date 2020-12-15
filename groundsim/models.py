@@ -7,9 +7,9 @@ class Satellite(models.Model):
     satellite_tle1 = models.CharField(max_length=70)
     satellite_tle2 = models.CharField(max_length=70)
     norad_id = models.IntegerField(default=0, primary_key=True)
-    system_definition = models.CharField(blank=True, max_length=4096)
-    geometry_definition = models.CharField(blank=True, max_length=4096)
-    instrument_definition = models.CharField(blank=True, max_length=4096)
+    config_subsystems = models.CharField(blank=True, max_length=4096)
+    config_geometry = models.CharField(blank=True, max_length=4096)
+    config_instrument = models.CharField(blank=True, max_length=4096)
 
 class SatelliteInstance(models.Model):
     satellite_id = models.IntegerField(default=0) # should be a primary key?

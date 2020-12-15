@@ -45,16 +45,16 @@ def take_imager_snapshot(p_mission):
     return p_mission
 
 # should be loaded from external source
-def initialize_payload_instruments():
+def initialize_payload_instruments(instrument_data):
     instruments = {
         "imager": {
-            "fov":1.6, # in degrees
-            "f":0.58,
-            "sensor":[4096,3072],
-            "pixel":5.5E-6,
+            "fov":instrument_data["imager"]["fov"],
+            "d":instrument_data["imager"]["d"],
+            "f":instrument_data["imager"]["f"],
+            "sensor":instrument_data["imager"]["sensor"],
+            "pixel":instrument_data["imager"]["pixel"],
             "counter":0,
             "buffer":[]
         },
-        "sdr": {}
     }
     return instruments

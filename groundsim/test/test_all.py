@@ -65,7 +65,7 @@ class PayloadTestCases(TestBaseClass):
     def setUp(self):
         self.test_data = {
             "imager": {
-                "theta":2.22,
+                "fov":2.22,
                 "d":0.0225,
                 "f":0.58,
                 "sensor":[4096,4096],
@@ -78,7 +78,7 @@ class PayloadTestCases(TestBaseClass):
         self.fp_epsilon = 0.001
 
     def test_calculate_swath(self):
-        result = calculate_swath(self.test_data["imager"]["theta"], self.test_data["test_alt"])
+        result = calculate_swath(self.test_data["imager"]["fov"], self.test_data["test_alt"])
         assert(self.fp_eq(result,19.375)==True)
 
     def test_calculate_fov(self):
@@ -96,7 +96,7 @@ class PayloadTestCases(TestBaseClass):
 
     def test_get_imager_frame(self):
         result = get_imager_frame(
-            self.test_data["imager"]["theta"],
+            self.test_data["imager"]["fov"],
             self.test_data["test_alt"],
             self.test_data["test_lat"],
             self.test_data["test_lon"]
@@ -105,3 +105,8 @@ class PayloadTestCases(TestBaseClass):
         assert(self.fp_eq(result["left"], 30.207) == True)
         assert(self.fp_eq(result["bottom"], 46.105) == True)
         assert(self.fp_eq(result["right"], 30.458) == True)
+
+# TBD - test entire mission scenario
+class MissionScenarioTest(TestCase):
+    def setUp(self):
+        pass

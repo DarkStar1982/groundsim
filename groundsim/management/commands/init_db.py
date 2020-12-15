@@ -8,13 +8,31 @@ SATELLITE_LIST = [
         "satellite_name": "OPS_SAT",
         "norad_id": 44878,
         "tle_line1": "1 44878U 19092F   20347.75591930  .00001861  00000-0  10031-3 0  9991",
-        "tle_line2": "2 44878  97.4680 168.0928 0015493  97.4582 262.8412 15.15936042 54547"
+        "tle_line2": "2 44878  97.4680 168.0928 0015493  97.4582 262.8412 15.15936042 54547",
+        "config_instrument": {
+            "imager": {
+                "fov":2.22,
+                "d":0.0225,
+                "f":0.58,
+                "sensor":[4096,4096],
+                "pixel":5.5E-6
+            },
+        }
     },
     {
         "satellite_name": "COSMOS_2545",
         "norad_id": 45358,
         "tle_line1": "1 45358U 20018A   20347.66636832 -.00000045  00000-0  00000+0 0  9991",
-        "tle_line2": "2 45358  64.8695  22.4196 0011468 249.4798 186.1892  2.13102640  577"
+        "tle_line2": "2 45358  64.8695  22.4196 0011468 249.4798 186.1892  2.13102640  577",
+        "config_instrument": {
+            "imager": {
+                "fov":1.6,
+                "d":0.01,
+                "f":0.5,
+                "sensor":[4096,3072],
+                "pixel":3.2E-6
+            },
+        }
     }
 ]
 
@@ -47,7 +65,7 @@ MISSION_SCENARIOS = [
                     "target":"Earth"
                 }
             }
-        ]
+        ],
     }
 ]
 
@@ -66,6 +84,7 @@ def repopulate_db():
         sat.satellite_name = item["satellite_name"]
         sat.satellite_tle1 = item["tle_line1"]
         sat.satellite_tle2 = item["tle_line2"]
+        sat.config_instrument = json.dumps(item["config_instrument"])
         sat.save()
     # add missions
     for item in MISSION_SCENARIOS:
