@@ -33,8 +33,12 @@
 
 13/12/2020
 - Simulation order
+= payload
 = geometry
 -> power
 -> thermal
 -> adcs
 - > obdh
+
+15/12/2020
+- Do full mission simulation test
