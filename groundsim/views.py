@@ -79,7 +79,7 @@ class UpdateSatellite(View):
 class InitializeHandler(View):
     def get(self, request):
         hash_id = request.GET.get("hash_id", None)
-        scenario_id = int(request.GET.get("scenario_id", none_is_zero(None)))
+        scenario_id = int(request.GET.get("mission_id", none_is_zero(None)))
         if hash_id is not None:
             mission_instance = load_mission(hash_id)
         else:
