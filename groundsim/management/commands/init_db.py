@@ -7,8 +7,8 @@ SATELLITE_LIST = [
     {
         "satellite_name": "OPS_SAT",
         "norad_id": 44878,
-        "tle_line1": "1 44878U 19092F   20347.75591930  .00001861  00000-0  10031-3 0  9991",
-        "tle_line2": "2 44878  97.4680 168.0928 0015493  97.4582 262.8412 15.15936042 54547",
+        "tle_line1": "1 44878U 19092F   20351.51834954  .00001625  00000-0  87961-4 0  9991",
+        "tle_line2": "2 44878  97.4685 171.7951 0015492  85.6297 274.6705 15.15948331 55114",
         "config_instrument": {
             "imager": {
                 "fov":2.22,
@@ -42,15 +42,15 @@ MISSION_SCENARIOS = [
         "start_date":{
             "year":2020,
             "month":11,
-            "day":4,
-            "hour":18,
-            "min":40,
-            "sec": 37
+            "day": 28,
+            "hour":20,
+            "min": 26,
+            "sec": 16
         },
         "mission_name": "eo_basic",
         "description": "A basic Earth Observation mission",
         "initial_setup":{
-            "norad_id":25544,
+            "norad_id":44878,
             "fp_precision":0.001
         },
         "objectives":[
@@ -58,10 +58,10 @@ MISSION_SCENARIOS = [
                 "type":"take_photo",
                 "score_points":100,
                 "definition":{
-                    "top": 46.255,
-                    "left": 30.243,
-                    "bottom":46.129,
-                    "right":30.423,
+                    "top": 26.327,
+                    "left": -38.374,
+                    "bottom":26.198,
+                    "right":-38.231,
                     "target":"Earth"
                 }
             }

@@ -177,7 +177,7 @@ class CMSE_Sat():
         position_object["status"] = "ok"
         return position_object
 
-    # REMOVE ME - TBD
+    # refactor ME - TBD
     def get_satellite_telemetry(self, p_mission):
         telemetry_object =  {
             "status":"ok",
@@ -239,10 +239,10 @@ class CMSE_SceEng():
         result = False
         if p_objective["type"] == "take_photo":
             for item in p_mission["satellite"]["instruments"]["imager"]["buffer"]:
-                result = f_equals(item["image_box"]["top"], p_objective["definition"]["top"], fp_precision)
-                result = result and f_equals(item["image_box"]["left"], p_objective["definition"]["left"], fp_precision)
-                result = result and f_equals(item["image_box"]["bottom"], p_objective["definition"]["bottom"], fp_precision)
-                result = result and f_equals(item["image_box"]["right"], p_objective["definition"]["right"], fp_precision)
+                result = fp_equals(item["image_box"]["top"], p_objective["definition"]["top"], fp_precision)
+                result = result and fp_equals(item["image_box"]["left"], p_objective["definition"]["left"], fp_precision)
+                result = result and fp_equals(item["image_box"]["bottom"], p_objective["definition"]["bottom"], fp_precision)
+                result = result and fp_equals(item["image_box"]["right"], p_objective["definition"]["right"], fp_precision)
                 if result:
                     return result
         return result
@@ -254,6 +254,6 @@ class CMSE_SceEng():
         return p_mission["scenario"]
 
     def execute_mission_action(self, p_mission, p_action):
-        if action == "take_photo":
+        if p_action == "take_photo":
             p_mission = take_imager_snapshot(p_mission)
         return p_mission

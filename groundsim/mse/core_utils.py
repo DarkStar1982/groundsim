@@ -68,7 +68,7 @@ def convert_to_float(element):
 
 # floating point comparison
 def fp_equals(a,b,c):
-    if fabs(fabs(a)-fabs(c))<c:
+    if fabs(fabs(a)-fabs(b))<c:
         return True
     else:
         return False
