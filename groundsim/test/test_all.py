@@ -10,6 +10,17 @@ class TestBaseClass(TestCase):
     def fp_eq(self, a, b):
         return isclose(a, b , abs_tol=self.fp_epsilon)
 
+class UtilitiesTestCases(TestBaseClass):
+    def setUp(self):
+        self.a = 1.0001
+        self.b = 1.0002
+        self.fp_epsilon = 0.001
+
+    def test_fp_equals(self):
+        result_1 = fp_equals(self.a, self.b, self.fp_epsilon)
+        result_2 = self.fp_eq(self.a, self.b)
+        assert(result_1==result_2)
+
 class AstroTestCases(TestBaseClass):
     def setUp(self):
         self.tle_data = {
@@ -187,13 +198,3 @@ class MissionScenarioTest(TestCase):
                 self.mission = sce_sim.execute_mission_action(self.mission,"take_photo")
             i = i + self.step_time
         assert(self.mission["scenario"]["progress"] == self.mission["scenario"]["points_to_win"])
-
-class UtilitiesTestCases(TestBaseClass):
-    def setUp(self):
-        self.a = 1.0001
-        self.b = 1.0002
-        self.c = 0.001
-
-    def test_fp_equals(self):
-        result = fp_equals(self.a,self.b,self.c)
-        assert(result, True)
