@@ -4,6 +4,7 @@ from skyfield.api import EarthSatellite, load
 from groundsim.mse.lib_astro import get_orbital_data, time_since_periapsis, calculate_degree_length
 from groundsim.mse.sys_payload import calculate_camera_gsd, calculate_camera_fov, calculate_swath, get_imager_frame
 from groundsim.mse.core_sim import CMSE_Env, CMSE_Sat, CMSE_SceEng
+from groundsim.mse.core_utils import fp_equals
 
 class TestBaseClass(TestCase):
     def fp_eq(self, a, b):
@@ -164,6 +165,8 @@ class MissionScenarioTest(TestCase):
             ]
         }
         self.win_time = 390
+        self.total_time = 400
+        self.step_time = 5
 
     def test_sample_scenario(self):
         env_sim = CMSE_Env()
@@ -175,13 +178,22 @@ class MissionScenarioTest(TestCase):
         self.mission["satellite"] = sat_sim.create_mission_satellite(self.satellite_config)
         self.mission["scenario"] = sce_sim.initialize_scenario(self.mission, self.scenario_data)
         # run scenario
-        steps = 5
         i = 0
-        while i<400:
-            self.mission["environment"] = env_sim.evolve_environment(self.mission["environment"], steps)
-            self.mission["satellite"] = sat_sim.evolve_satellite(self.mission, steps)
+        while i<self.total_time:
+            self.mission["environment"] = env_sim.evolve_environment(self.mission["environment"], self.step_time)
+            self.mission["satellite"] = sat_sim.evolve_satellite(self.mission, self.step_time)
             self.mission["scenario"] = sce_sim.evaluate_progress(self.mission)
             if i == self.win_time:
                 self.mission = sce_sim.execute_mission_action(self.mission,"take_photo")
-            i = i + steps
+            i = i + self.step_time
         assert(self.mission["scenario"]["progress"] == self.mission["scenario"]["points_to_win"])
+
+class UtilitiesTestCases(TestBaseClass):
+    def setUp(self):
+        self.a = 1.0001
+        self.b = 1.0002
+        self.c = 0.001
+
+    def test_fp_equals(self):
+        result = fp_equals(self.a,self.b,self.c)
+        assert(result, True)
