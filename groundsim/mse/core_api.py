@@ -9,7 +9,7 @@ from groundsim.models import (
     UserInstance
 )
 from groundsim.mse.core_sim import CMSE_Env, CMSE_Sat, CMSE_SceEng
-from groundsim.mse.utils import datetime_to_mission_timer
+from groundsim.mse.core_utils import datetime_to_mission_timer
 
 ################################################################################
 ############################# DATABASE I/O ACTIONS #############################
