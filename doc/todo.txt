@@ -42,3 +42,6 @@
 
 15/12/2020
 - Do full mission simulation test
+
+19/12/2020
+- Add "update TLE" command

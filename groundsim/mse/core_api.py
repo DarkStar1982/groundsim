@@ -9,7 +9,7 @@ from groundsim.models import (
     UserInstance
 )
 from groundsim.mse.core_sim import CMSE_Env, CMSE_Sat, CMSE_SceEng
-from groundsim.mse.core_utils import datetime_to_mission_timer
+from groundsim.mse.core_utils import datetime_to_mission_timer, mission_timer_to_datetime
 
 ################################################################################
 ############################# DATABASE I/O ACTIONS #############################
@@ -170,7 +170,7 @@ def save_mission(p_mission, p_user, p_email):
     satellite_record.instruments = json.dumps(p_mission["satellite"]["instruments"])
     satellite_record.save()
     mission_record.norad_id = p_mission["environment"]["norad_id"]
-    mission_record.start_date = EnvironmentSimulator.mission_timer_to_datetime(p_mission["environment"]["start_date"])
+    mission_record.start_date = mission_timer_to_datetime(p_mission["environment"]["start_date"])
     mission_record.mission_timer = p_mission["environment"]["elapsed_timer"]
     mission_record.tle_line_1 = p_mission["environment"]["tle_data"]["line_1"]
     mission_record.tle_line_2 = p_mission["environment"]["tle_data"]["line_2"]
