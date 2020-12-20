@@ -1,0 +1,26 @@
+*** TODO ***
+- Fix save behaviour
+- Add complete eventlog functionality
+- Add uplink/downlink functions (later)
+- ground station related features (later)
+- Add simulation features, as following:
+= sun vector, beta angle?
+= satellite geometry
+= inbound thermal balance calculation
+= inbound solar power calculation
+= electrical power subsystem
+= total thermal balance calculation
+= attitude determination and control
+= onboard computer with SPLICE interpreter
+- Add "update TLE" command
+
+*** DONE ***
+20/12/2020
+- Add example mission with objectives
+- Add mission scenario functionality
+- Add eventlog table
+- Improve accuracy of mission simulation
+- Add simulation features, as following:
+= payload instruments, day/night cycle
+- Port code to use Skyfield library
+- Do full mission simulation test
