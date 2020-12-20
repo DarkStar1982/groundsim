@@ -2,6 +2,57 @@
 ################################# VM DEFINITIONS ###############################
 ################################################################################
 
+# Registers - ALU
+IREG_A = 0x00
+IREG_B = 0x01
+IREG_C = 0x02
+IREG_D = 0x03
+IREG_E = 0x04
+IREG_F = 0x05
+IREG_G = 0x06
+IREG_H = 0x07
+IREG_I = 0x08
+IREG_J = 0x09
+IREG_K = 0x0A
+IREG_L = 0x0B
+IREG_M = 0x0C
+IREG_N = 0x0D
+IREG_P = 0x0E
+IREG_U = 0x0F
+
+# Registers - FPU
+FREG_A = 0x10
+FREG_B = 0x11
+FREG_C = 0x12
+FREG_D = 0x13
+FREG_E = 0x14
+FREG_F = 0x15
+FREG_G = 0x16
+FREG_H = 0x17
+FREG_I = 0x18
+FREG_J = 0x19
+FREG_K = 0x1A
+FREG_L = 0x1B
+FREG_M = 0x1C
+FREG_N = 0x1D
+FREG_P = 0x1E
+FREG_U = 0x1F
+
+# ADCS vectors - stored in read-only FPU registers
+ADC_SX = 0x00
+ADC_SY = 0x01
+ADC_SZ = 0x02
+ADC_AX = 0x03
+ADC_AY = 0x04
+ADC_AZ = 0x05
+ADC_QA = 0x06
+ADC_QB = 0x07
+ADC_QC = 0x08
+ADC_QD = 0x09
+ADC_MX = 0x0A
+ADC_MY = 0x0B
+ADC_MZ = 0x0C
+
 # Opcodes
 OP_NOP = 0x00 # No action
 OP_MOV = 0x01 # OPCODE|  PREFIX|  REG_A|   DEST|
@@ -60,14 +111,17 @@ EX_CHECK_FALSE = 0x02 #CMP opcode execution result is FALSE
 EX_ACTION_FAIL = 0x03 #Opcode ok, but instrument response is not
 EX_BAD_OPERAND = 0x04 #Mismatched opcode and operand
 EX_OPC_UNKNOWN = 0x05 #Not able to decode opcode
+
 # Instrument Definitions
 INST_ADC = 0x01
 INST_GPS = 0x02
 INST_IMG = 0x03
 INST_FPU = 0x04
-#public static final byte INST_SDR = 0x05  not supported
+# INST_SDR = 0x05  not supported
+
 INST_NMF = 0x06
 INST_VXM = 0x07 #set or get internal VM parameter
+
 # ADCS parameter definitions
 P_ADC_MODE = 0x01
 P_ADC_MAGX = 0x02
@@ -86,12 +140,14 @@ P_ADC_QTND = 0x0E
 P_ADC_MTQX = 0x0F
 P_ADC_MTQY = 0x10
 P_ADC_MTQZ = 0x11
+
 # ADCS Action definitions
 A_ADC_NADIR = 0x05
 A_ADC_TOSUN = 0x06
 A_ADC_BDOTT = 0x07
 A_ADC_TRACK = 0x08
 A_ADC_UNSET = 0x09
+
 # Camera Parameter Definitions
 P_IMG_GAIN_R = 0x01
 P_IMG_GAIN_G = 0x02
@@ -99,28 +155,34 @@ P_IMG_GAIN_B = 0x03
 P_IMG_EXPOSE = 0x04
 P_IMG_STATUS = 0x05 #not to be used?
 P_IMG_NUMBER = 0x06
+
 # Camera Actions commands
 A_IMG_DO_JPG = 0x07
 A_IMG_DO_RAW = 0x08
 A_IMG_DO_BMP = 0x09
 A_IMG_DO_PNG = 0x0A
+
 # GPS Parameter Definitions
 P_GPS_LATT = 0x01
 P_GPS_LONG = 0x02
 P_GPS_ALTT = 0x03
 P_GPS_TIME = 0x04
+
 # NMF parameters definitions
 P_NMF_TIME = 0x01
+
 # VM editable parameters
 P_VXM_TIME = 0x01
 P_VXM_PRSN = 0x02
 P_VXM_TLSC = 0x03
 P_VXM_DBUG = 0x04
+
 # FPU constants
 P_FPU_NIL = 0x00
 P_FPU_ONE = 0x01
 P_FPU_EXP = 0x02
 P_FPU_PIE = 0x03
+
 # VM task frequency constants
 FREQ_ONCE = 0x00
 FREQ_1MIN = 0x3C #60
@@ -129,39 +191,99 @@ FREQ_TMAX = 0x7F #127
 VM_TASK_IS_READY = 0x01
 VM_TASK_NOTREADY = 0x02
 VM_TASK_FINISHED = 0x03
+
 # Task status definitions
 TASK_COMPLETED = 0x000000FF # completed ok
 TASK_CON_UNMET = 0x0000007F # task condition not met, either prerequisites or frequency-wise
 TASK_ERROR_OPC = 0x0000003F # bad opcode or operand
 TASK_LOADED_OK = 0x0000001F # loaded, but not executed yet
 TASK_NOTLOADED = 0x00000000 # no task in memory
+
 # Initial timestamp
 TASK_TIME_ZERO = 0x00000000 # no task in memory
 # byte manipulation mask
 BYTE_MASK_GET = 0x000000FF
 
 ################################################################################
-############################## INSTRUCTION DECODER #############################
+############################## DECODE DICTIONARIES #############################
+################################################################################
+
+PREFIXES = {
+    "PRE_MOV_REG": PRE_MOV_REG,
+    "PRE_MOV_RAM": PRE_MOV_RAM,
+    "PRE_MOV_IND": PRE_MOV_IND,
+    "PRE_STR_ALU": PRE_STR_ALU,
+    "PRE_STR_FPU": PRE_STR_FPU,
+    "PRE_STR_BIN": PRE_STR_BIN,
+    "PRE_NORMAL" : PRE_NORMAL,
+    "PRE_INVERT" : PRE_INVERT,
+}
+
+OPERATORS = {
+    "ALU_EQ": ALU_EQ,
+    "ALU_NE": ALU_NE,
+    "ALU_GT": ALU_GT,
+    "ALU_LT": ALU_LT,
+    "ALU_GE": ALU_GE,
+    "ALU_LE": ALU_LE,
+    "FPU_EQ": FPU_EQ,
+    "FPU_NE": FPU_NE,
+    "FPU_GT": FPU_GT,
+    "FPU_LT": FPU_LT,
+    "TSX_EQ": TSX_EQ,
+    "TSX_NE": TSX_NE,
+}
+
+ACTIONS = {
+    "A_IMG_DO_JPG":A_IMG_DO_JPG,
+    "A_IMG_DO_RAW":A_IMG_DO_RAW,
+    "A_IMG_DO_BMP":A_IMG_DO_BMP,
+    "A_IMG_DO_PNG":A_IMG_DO_PNG,
+    "A_ADC_NADIR":A_ADC_NADIR,
+    "A_ADC_TOSUN":A_ADC_TOSUN,
+    "A_ADC_BDOTT":A_ADC_BDOTT,
+    "A_ADC_TRACK":A_ADC_TRACK,
+    "A_ADC_UNSET":A_ADC_UNSET,
+}
+
+INSTRUMENTS = {
+    "INST_ADC":INST_ADC,
+    "INST_GPS":INST_GPS,
+    "INST_IMG":INST_IMG,
+    "INST_FPU":INST_FPU,
+    "INST_SDR":INST_SDR,
+    "INST_NMF":INST_NMF,
+    "INST_VXM":INST_VXM,
+}
+
+################################################################################
+############################# INSTRUCTION DECODERS #############################
 ################################################################################
 
 def pack4x8to32(a, b, c, d):
-    result = (a<<24)|(b<<16)|(c<<8)|d;
+    result = (a<<24)|(b<<16)|(c<<8)|d
     return result
 
-def decode_prefix(p_pref):
-    return 8
+def decode_symbol(p_dict, p_data):
+    try:
+        return p_dict[p_data]
+    except KeyError:
+        return -1
 
 def decode_address(p_addr):
-    return 8
+    return int(p_addr)
+
+def decode_prefix(p_pref):
+    return decode_symbol(PREFIXES, p_pref)
 
 def decode_operator(p_oper):
-    return 8
+    return decode_symbol(OPERATORS, p_oper)
 
 def decode_action(p_action):
-    return 8
+    return decode_symbol(ACTIONS, p_action)
 
 def decode_instrument(p_inst):
-    return 8
+    return decode_symbol(INSTRUMENTS, p_inst)
 
 def decode_parameter(p_param):
     return 8
