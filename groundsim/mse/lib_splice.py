@@ -117,7 +117,7 @@ INST_ADC = 0x01
 INST_GPS = 0x02
 INST_IMG = 0x03
 INST_FPU = 0x04
-# INST_SDR = 0x05  not supported
+INST_SDR = 0x05 # not supported!
 
 INST_NMF = 0x06
 INST_VXM = 0x07 #set or get internal VM parameter
