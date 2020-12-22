@@ -1,3 +1,4 @@
+import struct
 ################################################################################
 ################################# VM DEFINITIONS ###############################
 ################################################################################
@@ -340,6 +341,7 @@ def pack4x8to32(a, b, c, d):
 
 def decode_symbol(p_dict, p_data):
     try:
+        p_data = p_data.strip()
         return p_dict[p_data]
     except KeyError:
         return -1
@@ -365,8 +367,140 @@ def decode_parameter(p_param):
 def decode_register(p_rreg):
     return decode_symbol(REGISTERS, p_rreg)
 
+################################################################################
+############################## SOURCE LINE DECODER #############################
+################################################################################
 def process_code_line(p_str, p_mode):
-    return 32
+    line_values = p_str.split(",")
+    if p_mode == 0:
+        group_id = int(line_values[0])
+        task_id = int(line_values[1])
+        freq = int(line_values[2])
+        length = int(line_values[3])
+        bytecode = pack4x8to32(group_id, task_id, freq, length)
+        p_mode = p_mode + 1
+        return [p_mode, bytecode]
+    if p_mode == 1:
+        opcode = line_values[0]
+        if opcode == "OP_NOP":
+            bytecode = pack4x8to32(OP_NOP, OP_NOP, OP_NOP, OP_NOP)
+            return [p_mode, bytecode]
+        if opcode == "OP_HLT":
+            bytecode = pack4x8to32(OP_HLT, OP_NOP, OP_NOP, OP_NOP)
+            p_mode = p_mode + 1
+            return [p_mode, bytecode]
+        if opcode == "OP_LEA":
+            op_a = decode_register(line_values[1])
+            op_b = decode_address(line_values[2])
+            op_c = decode_address(line_values[3])
+            bytecode = pack4x8to32(OP_LEA, op_a, op_b, op_c)
+            return [p_mode, bytecode]
+        if opcode == "OP_MOV":
+            op_a = decode_prefix(line_values[1])
+            op_b = decode_register(line_values[2])
+            op_c =0
+            if op_a == PRE_MOV_REG:
+                op_c = decode_register(line_values[3])
+            elif op_a == PRE_MOV_RAM:
+                op_c= decode_address(line_values[3])
+            bytecode = pack4x8to32(OP_MOV, op_a, op_b, op_c)
+            return [p_mode, bytecode]
+        if opcode == "OP_CMP":
+            op_a = decode_operator(line_values[1])
+            op_c = decode_register(line_values[3])
+            if (op_a == TSX_EQ) | (op_a == TSX_NE):
+                op_b = decode_address(line_values[2])
+            else:
+                op_b = decode_register(line_values[2])
+            bytecode = pack4x8to32(OP_CMP, op_a, op_b, op_c);
+            return [p_mode, bytecode]
+        if opcode == "OP_GET":
+            op_a = decode_instrument(line_values[1])
+            op_b = decode_parameter(line_values[2])
+            op_c = decode_register(line_values[3])
+            bytecode = pack4x8to32(OP_GET, op_a, op_b, op_c)
+            return [p_mode, bytecode]
+        if opcode == "OP_SET":
+            op_a = decode_instrument(line_values[1])
+            op_b = decode_parameter(line_values[2])
+            op_c = decode_register(line_values[3])
+            bytecode = pack4x8to32(OP_SET, op_a, op_b, op_c);
+            return [p_mode, bytecode]
+        if opcode == "OP_ACT":
+            op_a = decode_instrument(line_values[1])
+            op_b = decode_action(line_values[2])
+            op_c = decode_register(line_values[3])
+            bytecode = pack4x8to32(OP_ACT, op_a, op_b, op_c);
+            return [p_mode, bytecode]
+        if opcode == "OP_STR":
+            op_a = decode_prefix(line_values[1])
+            op_c = decode_register(line_values[2])
+            bytecode = pack4x8to32(OP_STR, op_a, OP_NOP, op_c)
+            return [p_mode, bytecode]
+        if opcode == "OP_FMA":
+            op_a = decode_register(line_values[1])
+            op_b = decode_register(line_values[2])
+            op_c = decode_register(line_values[3])
+            bytecode = pack4x8to32(OP_FMA, op_a, op_b, op_c)
+            return [p_mode, bytecode]
+        if opcode == "OP_FSD":
+            op_a = decode_register(line_values[1])
+            op_b = decode_register(line_values[2])
+            op_c = decode_register(line_values[3])
+            bytecode = pack4x8to32(OP_FSD, op_a, op_b, op_c)
+            return [p_mode, bytecode]
+        if opcode == "OP_SIN":
+            op_a = decode_prefix(line_values[1])
+            op_b = decode_register(line_values[2])
+            op_c = decode_register(line_values[3])
+            bytecode = pack4x8to32(OP_SIN, op_a, op_b, op_c)
+            return [p_mode, bytecode]
+        if opcode == "OP_COS":
+            op_a = decode_prefix(line_values[1])
+            op_b = decode_register(line_values[2])
+            op_c = decode_register(line_values[3])
+            bytecode = pack4x8to32(OP_COS, op_a, op_b, op_c)
+            return [p_mode, bytecode]
+        if opcode == "OP_TAN":
+            op_a = decode_prefix(line_values[1])
+            op_b = decode_register(line_values[2])
+            op_c = decode_register(line_values[3])
+            bytecode = pack4x8to32(OP_TAN, op_a, op_b, op_c)
+            return [p_mode, bytecode]
+        if opcode == "OP_POW":
+            op_a = decode_prefix(line_values[1])
+            op_b = decode_register(line_values[2])
+            op_c = decode_register(line_values[3])
+            bytecode = pack4x8to32(OP_POW, op_a, op_b, op_c)
+            return [p_mode, bytecode]
+        if opcode == "OP_NOR":
+            op_a = decode_register(line_values[1])
+            op_b = decode_register(line_values[2])
+            op_c = decode_register(line_values[3])
+            bytecode = pack4x8to32(OP_NOR, op_a, op_b, op_c)
+            return [p_mode, bytecode]
+        # if unable to decode
+        raise Exception("Unrecognized instruction")
+    if p_mode == 2:
+        tail = p_str[-1]
+        head = p_str[:-1]
+        if tail == 'f':
+            head = float(head)
+            str_bytes = hex(struct.unpack('<I', struct.pack('<f', head))[0])
+            bytecode = int(str_bytes[2:], 16)
+        if tail == 'i':
+            bytecode = int(head)
+        return [p_mode, bytecode]
 
+################################################################################
+############################## SOURCE FILE DECODER #############################
+################################################################################
 def process_program_code(p_str_list):
-    return []
+    output = []
+    mode = 0
+    for item in p_str_list:
+        line_output = process_code_line(item, mode)
+        mode = line_output[0]
+        bytecode_str = line_output[1]
+        output.append("{:x}".format(bytecode_str))
+    return output

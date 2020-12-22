@@ -8,6 +8,8 @@ from groundsim.mse.lib_splice import (
     decode_address,
     decode_parameter,
     decode_register,
+    process_code_line,
+    process_program_code,
     PREFIXES,
     PARAMETERS,
     REGISTERS
@@ -100,6 +102,32 @@ class SpliceTestCases(TestCase):
         self.test_param = ["P_ADC_MODE", PARAMETERS["P_ADC_MODE"]]
         self.test_register = ["FREG_U", REGISTERS["FREG_U"]]
         self.test_prefix = ["PRE_MOV_RAM", PREFIXES["PRE_MOV_RAM"]]
+        self.test_program_source = [
+            "1,1,10,7",
+            "OP_LEA, FREG_A, 1, 1",
+            "OP_LEA, FREG_B, 1, 2",
+            "OP_LEA, FREG_C, 1, 3",
+            "OP_FMA, FREG_A, FREG_B, FREG_C",
+            "OP_MOV, PRE_MOV_RAM, FREG_C, 3",
+            "OP_STR, PRE_STR_FPU, FREG_C",
+            "OP_HLT",
+            "1.0f",
+            "2.0f",
+            "1.0f"
+        ]
+        self.test_program_code = [
+            "1010a07",
+            "2100101",
+            "2110102",
+            "2120103",
+            "9101112",
+            "1021203",
+            "8020012",
+            "7000000",
+            "3f800000",
+            "40000000",
+            "3f800000"
+        ]
 
     def test_pack8to32(self):
         i = 0
@@ -120,3 +148,20 @@ class SpliceTestCases(TestCase):
     def test_decode_address(self):
         for item in self.test_addresses:
             assert(decode_address(item[0])==item[1])
+
+    def test_process_line(self):
+        p_mode = 0
+        i = 0
+        while i<len(self.test_program_source):
+            result = process_code_line(self.test_program_source[i],p_mode)
+            p_mode = result[0]
+            output = "{:x}".format(result[1])
+            assert(output == self.test_program_code[i])
+            i = i + 1
+
+    def test_process_program(self):
+        result = process_program_code(self.test_program_source)
+        i = 0
+        while i<len(self.test_program_source):
+            assert(self.test_program_code[i]==result[i])
+            i = i + 1
