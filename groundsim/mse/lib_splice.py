@@ -235,25 +235,99 @@ OPERATORS = {
 }
 
 ACTIONS = {
-    "A_IMG_DO_JPG":A_IMG_DO_JPG,
-    "A_IMG_DO_RAW":A_IMG_DO_RAW,
-    "A_IMG_DO_BMP":A_IMG_DO_BMP,
-    "A_IMG_DO_PNG":A_IMG_DO_PNG,
-    "A_ADC_NADIR":A_ADC_NADIR,
-    "A_ADC_TOSUN":A_ADC_TOSUN,
-    "A_ADC_BDOTT":A_ADC_BDOTT,
-    "A_ADC_TRACK":A_ADC_TRACK,
-    "A_ADC_UNSET":A_ADC_UNSET,
+    "A_IMG_DO_JPG": A_IMG_DO_JPG,
+    "A_IMG_DO_RAW": A_IMG_DO_RAW,
+    "A_IMG_DO_BMP": A_IMG_DO_BMP,
+    "A_IMG_DO_PNG": A_IMG_DO_PNG,
+    "A_ADC_NADIR": A_ADC_NADIR,
+    "A_ADC_TOSUN": A_ADC_TOSUN,
+    "A_ADC_BDOTT": A_ADC_BDOTT,
+    "A_ADC_TRACK": A_ADC_TRACK,
+    "A_ADC_UNSET": A_ADC_UNSET,
 }
 
 INSTRUMENTS = {
-    "INST_ADC":INST_ADC,
-    "INST_GPS":INST_GPS,
-    "INST_IMG":INST_IMG,
-    "INST_FPU":INST_FPU,
-    "INST_SDR":INST_SDR,
-    "INST_NMF":INST_NMF,
-    "INST_VXM":INST_VXM,
+    "INST_ADC": INST_ADC,
+    "INST_GPS": INST_GPS,
+    "INST_IMG": INST_IMG,
+    "INST_FPU": INST_FPU,
+    "INST_SDR": INST_SDR,
+    "INST_NMF": INST_NMF,
+    "INST_VXM": INST_VXM,
+}
+
+PARAMETERS = {
+    "P_ADC_MODE": P_ADC_MODE,
+    "P_ADC_MAGX": P_ADC_MAGX,
+    "P_ADC_MAGY": P_ADC_MAGY,
+    "P_ADC_MAGZ": P_ADC_MAGZ,
+    "P_ADC_SUNX": P_ADC_SUNX,
+    "P_ADC_SUNY": P_ADC_SUNY,
+    "P_ADC_SUNZ": P_ADC_SUNZ,
+    "P_ADC_ANGX": P_ADC_ANGX,
+    "P_ADC_ANGY": P_ADC_ANGY,
+    "P_ADC_ANGZ": P_ADC_ANGZ,
+    "P_ADC_QTNA": P_ADC_QTNA,
+    "P_ADC_QTNB": P_ADC_QTNB,
+    "P_ADC_QTNC": P_ADC_QTNC,
+    "P_ADC_QTND": P_ADC_QTND,
+    "P_ADC_MTQX": P_ADC_MTQX,
+    "P_ADC_MTQY": P_ADC_MTQY,
+    "P_ADC_MTQZ": P_ADC_MTQZ,
+    "P_IMG_GAIN_R": P_IMG_GAIN_R,
+    "P_IMG_GAIN_G": P_IMG_GAIN_G,
+    "P_IMG_GAIN_B": P_IMG_GAIN_B,
+    "P_IMG_EXPOSE": P_IMG_EXPOSE,
+    "P_IMG_STATUS": P_IMG_STATUS,   # not in use?
+    "P_IMG_NUMBER": P_IMG_NUMBER,
+    "P_GPS_LATT": P_GPS_LATT,
+    "P_GPS_LONG": P_GPS_LONG,
+    "P_GPS_ALTT": P_GPS_ALTT,
+    "P_GPS_TIME": P_GPS_TIME,
+    "P_NMF_TIME": P_NMF_TIME,
+    "P_VXM_TIME": P_VXM_TIME,
+    "P_VXM_PRSN": P_VXM_PRSN,
+    "P_VXM_TLSC": P_VXM_TLSC,
+    "P_VXM_DBUG": P_VXM_DBUG,
+    "P_FPU_NIL": P_FPU_NIL,
+    "P_FPU_ONE": P_FPU_ONE,
+    "P_FPU_EXP": P_FPU_EXP,
+    "P_FPU_PIE": P_FPU_PIE
+}
+
+REGISTERS = {
+    "IREG_A": IREG_A,
+    "IREG_B": IREG_B,
+    "IREG_C": IREG_C,
+    "IREG_D": IREG_D,
+    "IREG_E": IREG_E,
+    "IREG_F": IREG_F,
+    "IREG_G": IREG_G,
+    "IREG_H": IREG_H,
+    "IREG_I": IREG_I,
+    "IREG_J": IREG_J,
+    "IREG_K": IREG_K,
+    "IREG_L": IREG_L,
+    "IREG_M": IREG_M,
+    "IREG_N": IREG_N,
+    "IREG_P": IREG_P,
+    "IREG_U": IREG_U,
+    "FREG_A": FREG_A,
+    "FREG_B": FREG_B,
+    "FREG_C": FREG_C,
+    "FREG_D": FREG_D,
+    "FREG_E": FREG_E,
+    "FREG_F": FREG_F,
+    "FREG_G": FREG_G,
+    "FREG_H": FREG_H,
+    "FREG_I": FREG_I,
+    "FREG_J": FREG_J,
+    "FREG_K": FREG_K,
+    "FREG_L": FREG_L,
+    "FREG_M": FREG_M,
+    "FREG_N": FREG_N,
+    "FREG_P": FREG_P,
+    "FREG_U": FREG_U
 }
 
 ################################################################################
@@ -286,10 +360,10 @@ def decode_instrument(p_inst):
     return decode_symbol(INSTRUMENTS, p_inst)
 
 def decode_parameter(p_param):
-    return 8
+    return decode_symbol(PARAMETERS, p_param)
 
-def decode_register(p_param):
-    return 8
+def decode_register(p_rreg):
+    return decode_symbol(REGISTERS, p_rreg)
 
 def process_code_line(p_str, p_mode):
     return 32

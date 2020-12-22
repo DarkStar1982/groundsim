@@ -3,9 +3,14 @@ from django.test import TestCase
 from groundsim.tests.test_core import TestBaseClass
 from groundsim.mse.lib_splice import (
     pack4x8to32,
+    decode_symbol,
     decode_prefix,
     decode_address,
-    PRE_MOV_RAM
+    decode_parameter,
+    decode_register,
+    PREFIXES,
+    PARAMETERS,
+    REGISTERS
 )
 from groundsim.mse.lib_astro import get_orbital_data, time_since_periapsis, calculate_degree_length
 
@@ -92,6 +97,9 @@ class SpliceTestCases(TestCase):
             0xFFFFFFFF
         ]
         self.test_addresses = [["0",0], ["100",100], ["255",255]]
+        self.test_param = ["P_ADC_MODE", PARAMETERS["P_ADC_MODE"]]
+        self.test_register = ["FREG_U", REGISTERS["FREG_U"]]
+        self.test_prefix = ["PRE_MOV_RAM", PREFIXES["PRE_MOV_RAM"]]
 
     def test_pack8to32(self):
         i = 0
@@ -101,11 +109,12 @@ class SpliceTestCases(TestCase):
             i = i + 1
 
     def test_valid_decoding(self):
-        result = decode_prefix("PRE_MOV_RAM")
-        assert(PRE_MOV_RAM==result)
+        assert(decode_parameter(self.test_param[0])==self.test_param[1])
+        assert(decode_prefix(self.test_prefix[0])==self.test_prefix[1])
+        assert(decode_register(self.test_register[0])==self.test_register[1])
 
     def test_invalid_decoding(self):
-        result = decode_prefix("INVALID_DATA")
+        result = decode_symbol(PREFIXES, "INVALID_DATA")
         assert(-1==result)
 
     def test_decode_address(self):
