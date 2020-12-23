@@ -13,6 +13,8 @@
 = attitude determination and control
 = onboard computer with SPLICE interpreter
 - Add "update TLE" command
+- Implement GPS simulation
+- Implement SDR simulation
 
 *** DONE ***
 20/12/2020

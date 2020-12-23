@@ -56,5 +56,7 @@ def initialize_payload_instruments(instrument_data):
             "counter":0,
             "buffer":[]
         },
+        # sdr:{}, TBD
+        # gps:{}, TBD
     }
     return instruments
