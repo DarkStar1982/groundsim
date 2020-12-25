@@ -1,6 +1,6 @@
 from groundsim.tests.test_core import TestBaseClass
 from groundsim.mse.sys_payload import calculate_camera_gsd, calculate_camera_fov, calculate_swath, get_imager_frame
-from groundsim.mse.sys_obdh import create_vm, init_vm
+from groundsim.mse.sys_obdh import create_vm, init_vm, load_user_task
 from math import radians, isclose
 
 class PayloadTestCases(TestBaseClass):
@@ -51,6 +51,20 @@ class PayloadTestCases(TestBaseClass):
 class OBDHTestCases(TestBaseClass):
     def setUp(self):
         self.test_vm = create_vm()
+        self.test_program = [
+            "1,1,10,7",
+            "OP_LEA, FREG_A, 1, 1",
+            "OP_LEA, FREG_B, 1, 2",
+            "OP_LEA, FREG_C, 1, 3",
+            "OP_FMA, FREG_A, FREG_B, FREG_C",
+            "OP_MOV, PRE_MOV_RAM, FREG_C, 3",
+            "OP_STR, PRE_STR_FPU, FREG_C",
+            "OP_HLT",
+            "1.0f",
+            "2.0f",
+            "1.0f"
+        ]
 
     def test_init_vm(self):
         self.test_vm = init_vm(self.test_vm)
+        self.test_vm = load_user_task(self.test_vm, self.test_program)

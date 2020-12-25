@@ -45,6 +45,8 @@ def start_vm(p_splice_vm):
 ######################## SPLICE VM - EXECUTION CONTROL #########################
 ################################################################################
 def load_user_task(p_splice_vm, p_task_code):
+    program_bytecode = process_program_code(p_task_code)
+    print(program_bytecode)
     return p_splice_vm
 
 def clear_task_list(p_splice_vm):
