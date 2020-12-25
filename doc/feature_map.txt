@@ -4,14 +4,17 @@
 - Add uplink/downlink functions (later)
 - ground station related features (later)
 - Add simulation features, as following:
-= sun vector, beta angle?
-= satellite geometry
-= inbound thermal balance calculation
-= inbound solar power calculation
-= electrical power subsystem
-= total thermal balance calculation
-= attitude determination and control
-= onboard computer with SPLICE interpreter
+  = sun vector, beta angle?
+  = satellite geometry
+  = inbound thermal balance calculation
+  = inbound solar power calculation
+  = electrical power subsystem
+  = total thermal balance calculation
+  = attitude determination and control
+- onboard computer with SPLICE interpreter, note:
+  = Switch execution from continous to step mode
+  = Find more efficient data structure for program memory
+  = Implement NMF pass-through functionality equivalent
 - Add "update TLE" command
 - Implement GPS simulation
 - Implement SDR simulation

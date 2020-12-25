@@ -1,4 +1,7 @@
-import roundsim.mse.lib_splice
+from groundsim.mse.lib_splice import process_program_code
+
+ALU_REG_COUNT = 16
+FPU_REG_COUNT = 32
 
 ################################################################################
 ########################## SPLICE VM - INITIALIZATION ##########################
@@ -12,7 +15,7 @@ def create_vm():
             "FPU_PRCSN":0.001,
             "VXM_CLOCK":0,
             "NMF_CLOCK":0,
-            "ADCS_MODE":0"
+            "ADCS_MODE":0
         },
         "VRAM": {
             "TASK_CONTEXT_STATUS":[],
@@ -29,6 +32,10 @@ def create_vm():
     return splice_vm
 
 def init_vm(p_splice_vm):
+    for i in range(0, ALU_REG_COUNT):
+        p_splice_vm["VCPU"]["ALU_REGISTERS"].append(0)
+    for i in range(0, FPU_REG_COUNT):
+        p_splice_vm["VCPU"]["FPU_REGISTERS"].append(0.0)
     return p_splice_vm
 
 def start_vm(p_splice_vm):
@@ -37,13 +44,7 @@ def start_vm(p_splice_vm):
 ################################################################################
 ######################## SPLICE VM - EXECUTION CONTROL #########################
 ################################################################################
-def reset_vm(p_splice_vm):
-    return p_splice_vm
-
-def halt_vm(p_splice_vm):
-    return p_splice_vm
-
-def load_user_task(p_splice_vm):
+def load_user_task(p_splice_vm, p_task_code):
     return p_splice_vm
 
 def clear_task_list(p_splice_vm):
@@ -52,11 +53,27 @@ def clear_task_list(p_splice_vm):
 def run_sheduled_tasks(p_splice_vm):
     return p_splice_vm
 
+def reset_vm(p_splice_vm):
+    return p_splice_vm
+
+def halt_vm(p_splice_vm):
+    return p_splice_vm
+
 ################################################################################
 #################$####### SPLICE VM - OPCODE EXECUTION #########################
 ################################################################################
-def vm_execute(p_splice_vm):
-    return p_splice_vm
+
+def set_adc_register(p_reg, p_value):
+    r_value = 0
+    return [p_reg, r_value]
+
+def set_fpu_register(p_reg, p_value):
+    r_value = 0
+    return [p_reg, r_value]
+
+def set_alu_register(p_reg, p_value):
+    r_value = 0
+    return [p_reg, r_value]
 
 def opcode_mov(p_splice_vm):
     return p_splice_vm
@@ -94,6 +111,8 @@ def opcode_pow(p_splice_vm):
 def opcode_nor(p_splice_vm):
     return p_splice_vm
 
+def vm_execute(p_splice_vm):
+    return p_splice_vm
 ################################################################################
 ############################# SATELLITE MESSAGE BUS ############################
 ################################################################################
@@ -103,7 +122,8 @@ def create_bus():
         "adcs":[],
         "comm":[],
         "inst":[],
-        "gps":[]
+        "gps":[],
+        "log":[]
     }
     return bus
 

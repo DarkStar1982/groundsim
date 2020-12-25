@@ -208,6 +208,24 @@ BYTE_MASK_GET = 0x000000FF
 ################################################################################
 ############################## DECODE DICTIONARIES #############################
 ################################################################################
+OPCODES = {
+    "OP_NOP":OP_NOP,
+    "OP_MOV":OP_MOV,
+    "OP_LEA":OP_LEA,
+    "OP_CMP":OP_CMP,
+    "OP_SET":OP_SET,
+    "OP_GET":OP_GET,
+    "OP_ACT":OP_ACT,
+    "OP_HLT":OP_HLT,
+    "OP_STR":OP_STR,
+    "OP_FMA":OP_FMA,
+    "OP_FSD":OP_FSD,
+    "OP_SIN":OP_SIN,
+    "OP_COS":OP_COS,
+    "OP_TAN":OP_TAN,
+    "OP_POW":OP_POW,
+    "OP_NOR":OP_NOR
+}
 
 PREFIXES = {
     "PRE_MOV_REG": PRE_MOV_REG,
@@ -332,13 +350,23 @@ REGISTERS = {
 }
 
 ################################################################################
-############################# INSTRUCTION DECODERS #############################
+############################### HELPER FUNCTIONS ###############################
 ################################################################################
 
 def pack4x8to32(a, b, c, d):
     result = (a<<24)|(b<<16)|(c<<8)|d
     return result
 
+def unpack32to4x8(p_input):
+    a = (p_input>>24) & BYTE_MASK_GET
+    b = (p_input>>16) & BYTE_MASK_GET
+    c = (p_input>>8) & BYTE_MASK_GET
+    d = p_input & BYTE_MASK_GET
+    return [a, b, c, d]
+
+################################################################################
+############################# INSTRUCTION DECODERS #############################
+################################################################################
 def decode_symbol(p_dict, p_data):
     try:
         p_data = p_data.strip()

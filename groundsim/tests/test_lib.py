@@ -3,6 +3,7 @@ from django.test import TestCase
 from groundsim.tests.test_core import TestBaseClass
 from groundsim.mse.lib_splice import (
     pack4x8to32,
+    unpack32to4x8,
     decode_symbol,
     decode_prefix,
     decode_address,
@@ -12,7 +13,8 @@ from groundsim.mse.lib_splice import (
     process_program_code,
     PREFIXES,
     PARAMETERS,
-    REGISTERS
+    REGISTERS,
+    OPCODES
 )
 from groundsim.mse.lib_astro import get_orbital_data, time_since_periapsis, calculate_degree_length
 
@@ -128,12 +130,41 @@ class SpliceTestCases(TestCase):
             "40000000",
             "3f800000"
         ]
+        self.test_opcodes = [
+            0x01010a07,
+            0x02100101,
+            0x02110102,
+            0x02120103,
+            0x09101112,
+            0x01021203,
+            0x08020012,
+            0x07000000,
+        ]
+        self.test_decoded = [
+            [1,1,10,7],
+            [OPCODES["OP_LEA"], REGISTERS["FREG_A"], 1, 1],
+            [OPCODES["OP_LEA"], REGISTERS["FREG_B"], 1, 2],
+            [OPCODES["OP_LEA"], REGISTERS["FREG_C"], 1, 3],
+            [OPCODES["OP_FMA"], REGISTERS["FREG_A"], REGISTERS["FREG_B"], REGISTERS["FREG_C"]],
+            [OPCODES["OP_MOV"], PREFIXES["PRE_MOV_RAM"], REGISTERS["FREG_C"], 3],
+            [OPCODES["OP_STR"], PREFIXES["PRE_STR_FPU"], OPCODES["OP_NOP"], REGISTERS["FREG_C"]],
+            [OPCODES["OP_HLT"], OPCODES["OP_NOP"], OPCODES["OP_NOP"], OPCODES["OP_NOP"]],
+        ]
 
     def test_pack8to32(self):
         i = 0
         for item in self.test_byte_values:
             result = pack4x8to32(item[0], item[1], item[2],item[3])
             assert (result==self.test_byte_results[i])
+            i = i + 1
+
+    def test_unpack32to8(self):
+        i = 0
+        while i<len(self.test_opcodes):
+            item = self.test_opcodes[i]
+            result = unpack32to4x8(item)
+            # print(result)
+            assert (result == self.test_decoded[i])
             i = i + 1
 
     def test_valid_decoding(self):
