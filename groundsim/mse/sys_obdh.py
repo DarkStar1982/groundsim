@@ -1,7 +1,20 @@
-from groundsim.mse.lib_splice import process_program_code
+from groundsim.mse.lib_splice import process_program_code, unpack32to4x8
 
+################################################################################
+############################ SPLICE VM - DEFINITIONS ###########################
+################################################################################
 ALU_REG_COUNT = 16
 FPU_REG_COUNT = 32
+
+# Task status definitions
+TASK_COMPLETED = 0x000000FF # completed ok
+TASK_CON_UNMET = 0x0000007F # task condition not met, either prerequisites or frequency-wise
+TASK_ERROR_OPC = 0x0000003F # bad opcode or operand
+TASK_LOADED_OK = 0x0000001F # loaded, but not executed yet
+TASK_NOTLOADED = 0x00000000 # no task in memory
+
+# Initial timestamp
+TASK_TIME_ZERO = 0x00000000 # no task in memory
 
 ################################################################################
 ########################## SPLICE VM - INITIALIZATION ##########################
@@ -18,8 +31,8 @@ def create_vm():
             "ADCS_MODE":0
         },
         "VRAM": {
-            "TASK_CONTEXT_STATUS":[],
-            "TASK_CONTEXT_WASRUN":[],
+            "TASK_CONTEXT_STATUS":{},
+            "TASK_CONTEXT_WASRUN":{},
             "PROGRAM_CODE_MEMORY":[]
         },
         "VBUS":
@@ -44,9 +57,30 @@ def start_vm(p_splice_vm):
 ################################################################################
 ######################## SPLICE VM - EXECUTION CONTROL #########################
 ################################################################################
+def set_task_context_status(p_splice_vm, group_id, task_id, p_task_status):
+    if group_id not in p_splice_vm["VRAM"]["TASK_CONTEXT_STATUS"]:
+        p_splice_vm["VRAM"]["TASK_CONTEXT_STATUS"][group_id] = {}
+    if task_id not in p_splice_vm["VRAM"]["TASK_CONTEXT_STATUS"][group_id]:
+        p_splice_vm["VRAM"]["TASK_CONTEXT_STATUS"][group_id][task_id] = {}
+    p_splice_vm["VRAM"]["TASK_CONTEXT_STATUS"][group_id][task_id] = p_task_status
+    return p_splice_vm
+
+def set_task_context_wasrun(p_splice_vm, group_id, task_id, p_task_wasrun):
+    if group_id not in p_splice_vm["VRAM"]["TASK_CONTEXT_WASRUN"]:
+        p_splice_vm["VRAM"]["TASK_CONTEXT_WASRUN"][group_id] = {}
+    if task_id not in p_splice_vm["VRAM"]["TASK_CONTEXT_WASRUN"][group_id]:
+        p_splice_vm["VRAM"]["TASK_CONTEXT_WASRUN"][group_id][task_id] = {}
+    p_splice_vm["VRAM"]["TASK_CONTEXT_WASRUN"][group_id][task_id] = p_task_wasrun
+    return p_splice_vm
+
 def load_user_task(p_splice_vm, p_task_code):
-    program_bytecode = process_program_code(p_task_code)
-    print(program_bytecode)
+    program_bytecode = process_program_code(p_task_code, False)
+    header = unpack32to4x8(program_bytecode[0])
+    group_id = header[0]
+    task_id = header[1]
+    p_splice_vm = set_task_context_status(p_splice_vm, group_id, task_id, TASK_LOADED_OK)
+    p_splice_vm = set_task_context_wasrun(p_splice_vm, group_id, task_id, TASK_TIME_ZERO)
+    p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"].append(program_bytecode)
     return p_splice_vm
 
 def clear_task_list(p_splice_vm):

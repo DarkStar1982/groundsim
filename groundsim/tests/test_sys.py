@@ -3,6 +3,10 @@ from groundsim.mse.sys_payload import calculate_camera_gsd, calculate_camera_fov
 from groundsim.mse.sys_obdh import create_vm, init_vm, load_user_task
 from math import radians, isclose
 
+def core_dump(vm_memory):
+    for item in vm_memory:
+        print(["{:x}".format(x) for x in item])
+
 class PayloadTestCases(TestBaseClass):
     def setUp(self):
         self.test_data = {
@@ -68,3 +72,5 @@ class OBDHTestCases(TestBaseClass):
     def test_init_vm(self):
         self.test_vm = init_vm(self.test_vm)
         self.test_vm = load_user_task(self.test_vm, self.test_program)
+        # core_dump(self.test_vm["VRAM"]["PROGRAM_CODE_MEMORY"])
+        print(self.test_vm)

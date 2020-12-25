@@ -193,15 +193,6 @@ VM_TASK_IS_READY = 0x01
 VM_TASK_NOTREADY = 0x02
 VM_TASK_FINISHED = 0x03
 
-# Task status definitions
-TASK_COMPLETED = 0x000000FF # completed ok
-TASK_CON_UNMET = 0x0000007F # task condition not met, either prerequisites or frequency-wise
-TASK_ERROR_OPC = 0x0000003F # bad opcode or operand
-TASK_LOADED_OK = 0x0000001F # loaded, but not executed yet
-TASK_NOTLOADED = 0x00000000 # no task in memory
-
-# Initial timestamp
-TASK_TIME_ZERO = 0x00000000 # no task in memory
 # byte manipulation mask
 BYTE_MASK_GET = 0x000000FF
 
@@ -523,12 +514,15 @@ def process_code_line(p_str, p_mode):
 ################################################################################
 ############################## SOURCE FILE DECODER #############################
 ################################################################################
-def process_program_code(p_str_list):
+def process_program_code(p_str_list, to_hex_str=True):
     output = []
     mode = 0
     for item in p_str_list:
         line_output = process_code_line(item, mode)
         mode = line_output[0]
         bytecode_str = line_output[1]
-        output.append("{:x}".format(bytecode_str))
+        if to_hex_str:
+            output.append("{:x}".format(bytecode_str))
+        else:
+            output.append(bytecode_str)
     return output
