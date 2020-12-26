@@ -184,15 +184,6 @@ P_FPU_ONE = 0x01
 P_FPU_EXP = 0x02
 P_FPU_PIE = 0x03
 
-# VM task frequency constants
-FREQ_ONCE = 0x00
-FREQ_1MIN = 0x3C #60
-FREQ_HOUR = 0x77 #119
-FREQ_TMAX = 0x7F #127
-VM_TASK_IS_READY = 0x01
-VM_TASK_NOTREADY = 0x02
-VM_TASK_FINISHED = 0x03
-
 # byte manipulation mask
 BYTE_MASK_GET = 0x000000FF
 
