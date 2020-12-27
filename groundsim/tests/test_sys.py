@@ -1,6 +1,14 @@
 from groundsim.tests.test_core import TestBaseClass
 from groundsim.mse.sys_payload import calculate_camera_gsd, calculate_camera_fov, calculate_swath, get_imager_frame
-from groundsim.mse.sys_obdh import create_vm, init_vm, load_user_task, clear_task_list, run_sheduled_tasks, vm_execute
+from groundsim.mse.sys_obdh import (
+    create_vm,
+    init_vm,
+    load_user_task,
+    clear_task_list,
+    run_sheduled_tasks,
+    vm_execute,
+    DEFAULT_VM_LOG_LEVEL
+)
 from math import radians, isclose
 
 def core_dump(vm_memory):
@@ -85,6 +93,9 @@ class OBDHTestCases(TestBaseClass):
             'VBUS': {
                 'CHANNEL_OUT': [],
                 'CHANNEL_INP': []
+            },
+            "VFLAGS":{
+                "VM_LOG_LEVEL":DEFAULT_VM_LOG_LEVEL
             }
         }
 
@@ -102,6 +113,7 @@ class OBDHTestCases(TestBaseClass):
 
     def test_run_vm_task(self):
         self.test_vm = init_vm(self.test_vm)
+        self.test_vm["VFLAGS"]["VM_LOG_LEVEL"] = 0
         print()
         self.test_vm = load_user_task(self.test_vm, self.test_program)
         for item in self.test_vm["VRAM"]["PROGRAM_CODE_MEMORY"].items():

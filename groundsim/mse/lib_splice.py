@@ -343,6 +343,10 @@ def unpack_float_from_int(p_i):
     f = struct.unpack('>f', packed_v)[0]
     return f
 
+def pack_float_to_int(p_f):
+    packed_v = struct.pack('<f', p_f)
+    i = struct.unpack('<I', packed_v)[0]
+    return i
 ################################################################################
 ############################# INSTRUCTION DECODERS #############################
 ################################################################################

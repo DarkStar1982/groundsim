@@ -1,4 +1,4 @@
-from groundsim.mse.lib_splice import process_program_code, unpack32to4x8, unpack_float_from_int
+from groundsim.mse.lib_splice import process_program_code, unpack32to4x8, unpack_float_from_int, pack_float_to_int
 
 ################################################################################
 ############################ SPLICE VM - DEFINITIONS ###########################
@@ -21,6 +21,16 @@ OP_COS = 0x0C # OPCODE|  PREFIX|  REG_A|  REG_B| cosine: REG_B = cos(REG_A) ...a
 OP_TAN = 0x0D # OPCODE|  PREFIX|  REG_A|  REG_B| tan/atan: REG_B = tan(REG_A)
 OP_POW = 0x0E # OPCODE|  PREFIX|  REG_A|  REG_B| power: log and roots can be done as well
 OP_NOR = 0x0F # OPCODE|   REG_A|  REG_B|  REG_C| REG_C = REG_A NOR NEG_B
+
+# Prefixes - MOV instruction addressing modes
+PRE_MOV_REG = 0x01
+PRE_MOV_RAM = 0x02
+PRE_MOV_IND = 0x03
+
+# Prefixes -  STR instruction display modes
+PRE_STR_ALU = 0x01
+PRE_STR_FPU = 0x02
+PRE_STR_BIN = 0x03
 
 # registers
 ALU_REG_COUNT = 16
@@ -53,6 +63,11 @@ VM_TASK_IS_READY = 0x01
 VM_TASK_NOTREADY = 0x02
 VM_TASK_FINISHED = 0x03
 
+LOG_LEVEL_DEBUG = 0
+LOG_LEVEL_INFO = 1
+LOG_LEVEL_ERROR = 2
+
+DEFAULT_VM_LOG_LEVEL = 1 # 0, 1 or 2
 ################################################################################
 ########################## SPLICE VM - INITIALIZATION ##########################
 ################################################################################
@@ -76,6 +91,9 @@ def create_vm():
         {
             "CHANNEL_OUT":[],
             "CHANNEL_INP":[]
+        },
+        "VFLAGS":{
+            "VM_LOG_LEVEL":DEFAULT_VM_LOG_LEVEL
         }
 
     }
@@ -90,6 +108,10 @@ def init_vm(p_splice_vm):
 
 def start_vm(p_splice_vm):
     return p_splice_vm
+
+def log_message(p_splice_vm, p_str, p_error_level):
+    if p_error_level>=p_splice_vm["VFLAGS"]["VM_LOG_LEVEL"]:
+        print(p_str)
 
 ################################################################################
 ########################## SPLICE VM - OPCODE DECODING #########################
@@ -110,8 +132,28 @@ def set_alu_register(p_reg, p_value):
 def get_vm_time(p_splice_vm):
     return p_splice_vm
 
-def opcode_mov(p_splice_vm):
-    return p_splice_vm
+def opcode_mov(p_splice_vm, p_prefix, p_reg_id, p_addr, p_group_id, p_task_id, p_offset):
+    if p_prefix == PRE_MOV_REG:
+        if  (p_reg_id<0x10) and (p_addr<0x10):
+            p_splice_vm["VCPU"]["ALU_REGISTERS"][p_addr] = p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_id]
+            return p_splice_vm, EX_OPCODE_FINE
+        elif (p_reg_id>0x0F) and (p_addr>0x0F):
+            p_splice_vm["VCPU"]["FPU_REGISTERS"][p_addr] = p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_id]
+            return p_splice_vm, EX_OPCODE_FINE
+        else:
+            return p_splice_vm, EX_BAD_OPERAND
+    if p_prefix == PRE_MOV_RAM:
+        if (p_reg_id<0x10):
+            data = p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_id]
+            p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"][p_group_id][p_task_id][p_addr+p_offset] = data
+            return p_splice_vm, EX_OPCODE_FINE
+        elif (p_reg_id>0x0F):
+            data = pack_float_to_int(p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_id])
+            p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"][p_group_id][p_task_id][p_addr+p_offset] = data
+            return p_splice_vm, EX_OPCODE_FINE
+        else:
+            return p_splice_vm, EX_BAD_OPERAND
+    return p_splice_vm, EX_OPC_UNKNOWN
 
 def opcode_lea(p_splice_vm, p_reg_id, p_source_id, p_addr, p_group_id, p_task_id, p_offset):
     # determine global data location
@@ -130,8 +172,21 @@ def opcode_lea(p_splice_vm, p_reg_id, p_source_id, p_addr, p_group_id, p_task_id
         p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_id] = data_float
         return p_splice_vm, EX_OPCODE_FINE;
 
-def opcode_str(p_splice_vm):
-    return p_splice_vm
+def opcode_str(p_splice_vm, p_prefix, p_reg_id, p_task_info):
+    if p_prefix == PRE_STR_ALU:
+        message_string = "%s%s" % (p_task_info, p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_id])
+        log_message(p_splice_vm, message_string, LOG_LEVEL_INFO)
+        return p_splice_vm, EX_OPCODE_FINE
+    if p_prefix == PRE_STR_FPU:
+        message_string = "%s%s" % (p_task_info, p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_id])
+        log_message(p_splice_vm, message_string, LOG_LEVEL_INFO)
+        return p_splice_vm, EX_OPCODE_FINE
+    if p_prefix == PRE_STR_BIN:
+        message_string = "%s%s" % (p_task_info, "{0:b}".format(p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_id]))
+        log_message(p_splice_vm, message_string, LOG_LEVEL_INFO)
+        return p_splice_vm, EX_OPCODE_FINE
+
+    return p_splice_vm, EX_BAD_OPERAND
 
 def opcode_cmp(p_splice_vm):
     return p_splice_vm
@@ -195,7 +250,6 @@ def check_frequency(p_header):
     return VM_TASK_IS_READY
 
 def vm_execute(p_splice_vm, p_task):
-    # print(p_task)
     decoded_header = unpack32to4x8(p_task[0])
     group_id = decoded_header[0]
     task_id = decoded_header[1]
@@ -205,7 +259,7 @@ def vm_execute(p_splice_vm, p_task):
     task_info = "%s:%s:" % (group_id, task_id)
     while (next_opcode!=OP_HLT) and (ip<len(p_task)):
         word = unpack32to4x8(p_task[ip])
-        print ("%s%s" %(task_info, "{:x}".format(p_task[ip])))
+        log_message(p_splice_vm, "%s%s" %(task_info, "{:x}".format(p_task[ip])), LOG_LEVEL_DEBUG)
         next_opcode = word[0]
         op_a = word[1]
         op_b = word[2]
@@ -216,8 +270,12 @@ def vm_execute(p_splice_vm, p_task):
         if next_opcode == OP_HLT:
             p_splice_vm = set_vram_content(p_splice_vm, "TASK_CONTEXT_STATUS", p_task[0], TASK_COMPLETED)
             return p_splice_vm
+        if next_opcode == OP_MOV:
+            p_splice_vm, opcode_result = opcode_mov(p_splice_vm, op_a, op_b, op_c, group_id, task_id, offset)
         if next_opcode == OP_LEA:
             p_splice_vm, opcode_result = opcode_lea(p_splice_vm, op_a, op_b, op_c, group_id, task_id, offset)
+        if next_opcode == OP_STR:
+            p_splice_vm, opcode_result = opcode_str(p_splice_vm, op_a, op_c, task_info)
         if next_opcode == OP_FMA:
             p_splice_vm, opcode_result = opcode_fma(p_splice_vm, op_a, op_b, op_c)
         ip = ip + 1
