@@ -105,14 +105,6 @@ FPU_LT = 0x0A
 TSX_EQ = 0x0D #task result is equal ...
 TSX_NE = 0x0E #task result is not equal to ...
 
-# opcode execution results
-EX_OPCODE_FINE = 0x00 #VM opcode executed OK
-EX_CHECK_TRUTH = 0x01 #CMP opcode execution result is TRUE
-EX_CHECK_FALSE = 0x02 #CMP opcode execution result is FALSE
-EX_ACTION_FAIL = 0x03 #Opcode ok, but instrument response is not
-EX_BAD_OPERAND = 0x04 #Mismatched opcode and operand
-EX_OPC_UNKNOWN = 0x05 #Not able to decode opcode
-
 # Instrument Definitions
 INST_ADC = 0x01
 INST_GPS = 0x02
@@ -345,6 +337,11 @@ def unpack32to4x8(p_input):
     c = (p_input>>8) & BYTE_MASK_GET
     d = p_input & BYTE_MASK_GET
     return [a, b, c, d]
+
+def unpack_float_from_int(p_i):
+    packed_v = struct.pack('>l', p_i)
+    f = struct.unpack('>f', packed_v)[0]
+    return f
 
 ################################################################################
 ############################# INSTRUCTION DECODERS #############################
