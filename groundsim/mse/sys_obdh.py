@@ -1,3 +1,4 @@
+import time
 from groundsim.mse.lib_splice import process_program_code, unpack32to4x8, unpack_float_from_int, pack_float_to_int
 
 ################################################################################
@@ -68,6 +69,8 @@ LOG_LEVEL_INFO = 1
 LOG_LEVEL_ERROR = 2
 
 DEFAULT_VM_LOG_LEVEL = 1 # 0, 1 or 2
+DEFAULT_VM_TIMESLICE = 1
+
 ################################################################################
 ########################## SPLICE VM - INITIALIZATION ##########################
 ################################################################################
@@ -77,9 +80,8 @@ def create_vm():
         "VCPU": {
             "ALU_REGISTERS":[],
             "FPU_REGISTERS":[],
-            "FPU_PRCSN":0.001,
-            "VXM_CLOCK":0,
-            "NMF_CLOCK":0,
+            "VXM_CLOCK":0, # INTERNAL CLOCK
+            "NMF_CLOCK":0, # EXTERNAL CLOCK
             "ADCS_MODE":0
         },
         "VRAM": {
@@ -93,13 +95,16 @@ def create_vm():
             "QUEUE_INP":[]
         },
         "VFLAGS":{
-            "VM_LOG_LEVEL":DEFAULT_VM_LOG_LEVEL
+            "VM_LOG_LEVEL": DEFAULT_VM_LOG_LEVEL,
+            "VM_TIMESLICE": DEFAULT_VM_TIMESLICE,
+            "FP_PRECISION": 1.0E-07,
         }
 
     }
     return splice_vm
 
 def init_vm(p_splice_vm):
+    # init external clock
     for i in range(0, ALU_REG_COUNT):
         p_splice_vm["VCPU"]["ALU_REGISTERS"].append(0)
     for i in range(0, FPU_REG_COUNT):
@@ -107,7 +112,19 @@ def init_vm(p_splice_vm):
     return p_splice_vm
 
 def start_vm(p_splice_vm):
+    millis = int(round(time.time() * 1000))
+    p_splice_vm["VCPU"]["NMF_CLOCK"] = millis # EXTERNAL CLOCK
     return p_splice_vm
+
+def reset_vm(p_splice_vm):
+    return p_splice_vm
+
+def halt_vm(p_splice_vm):
+    return p_splice_vm
+
+################################################################################
+############################## SPLICE VM - BUS I/O #############################
+################################################################################
 
 def log_message(p_splice_vm, p_str, p_error_level):
     if p_error_level>=p_splice_vm["VFLAGS"]["VM_LOG_LEVEL"]:
@@ -129,9 +146,6 @@ def set_fpu_register(p_reg, p_value):
 def set_alu_register(p_reg, p_value):
     r_value = 0
     return [p_reg, r_value]
-
-def get_vm_time(p_splice_vm):
-    return p_splice_vm
 
 def opcode_mov(p_splice_vm, p_prefix, p_reg_id, p_addr, p_group_id, p_task_id, p_offset):
     if p_prefix == PRE_MOV_REG:
@@ -213,11 +227,25 @@ def opcode_fma(p_splice_vm, p_reg_a, p_reg_b, p_reg_c):
     else:
         return p_splice_vm, EX_BAD_OPERAND;
 
-def opcode_fsd(p_splice_vm):
-    return p_splice_vm
+def opcode_fsd(p_splice_vm, p_reg_a, p_reg_b, p_reg_c):
+    if  (p_reg_a<0x10) and (p_reg_b<0x10) and (p_reg_c<0x10):
+        if (p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_a] == 0):# <<<ASTRA BUG HERE, LEFT FOR COMPATIBILITY, SHOULD BE "p_reg_b"!
+            return EX_BAD_OPERAND
+        p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_c] = p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_c] / p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_b]
+        p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_c] = p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_c] - p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_a]
+        return p_splice_vm, EX_OPCODE_FINE
+    elif ((p_reg_a>0x0F) and (p_reg_a<0x20)) and ((p_reg_b>0x0F) and (p_reg_b<0x20)) and ((p_reg_c>0x0F) and (p_reg_c<0x20)):
+        if (p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_b] <= p_splice_vm["VFLAGS"]["FP_PRECISION"]):
+            return EX_BAD_OPERAND
+        p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_c] = p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_c] / p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_b]
+        p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_c] = p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_c] - p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_a]
+        return p_splice_vm, EX_OPCODE_FINE
+    else:
+        return p_splice_vm, EX_BAD_OPERAND;
+    return p_splice_vm, EX_BAD_OPERAND
 
-def opcode_trg(p_splice_vm):
-    return p_splice_vm
+def opcode_trg(p_splice_vm, p_opcode, p_prefix, p_reg_a, p_reg_b):
+    return p_splice_vm, EX_OPCODE_FINE
 
 def opcode_pow(p_splice_vm):
     return p_splice_vm
@@ -225,11 +253,9 @@ def opcode_pow(p_splice_vm):
 def opcode_nor(p_splice_vm):
     return p_splice_vm
 
-
 ################################################################################
-######################## SPLICE VM - EXECUTION CONTROL #########################
+######################### SPLICE VM - MEMORY OPERATIONS ########################
 ################################################################################
-
 def get_task_header_ids(p_header):
     header = unpack32to4x8(p_header)
     return header[0], header[1]
@@ -247,8 +273,23 @@ def get_vram_content(p_splice_vm, p_dict_name, p_header):
     group_id, task_id = get_task_header_ids(p_header)
     return p_splice_vm["VRAM"][p_dict_name][group_id][task_id]
 
+################################################################################
+######################## SPLICE VM - TIMING CONTROL #########################
+################################################################################
+
+def advance_vm_clocks(p_splice_vm, p_seconds):
+    p_splice_vm["VCPU"]["VXM_CLOCK"] = p_splice_vm["VCPU"]["VXM_CLOCK"] + p_seconds*1000
+    return p_splice_vm
+
 def check_frequency(p_header):
     return VM_TASK_IS_READY
+
+def get_vm_time(p_splice_vm):
+    return p_splice_vm["VCPU"]["VXM_CLOCK"]/1000
+
+################################################################################
+######################## SPLICE VM - EXECUTION CONTROL #########################
+################################################################################
 
 def vm_execute(p_splice_vm, p_task):
     decoded_header = unpack32to4x8(p_task[0])
@@ -279,6 +320,10 @@ def vm_execute(p_splice_vm, p_task):
             p_splice_vm, opcode_result = opcode_str(p_splice_vm, op_a, op_c, task_info)
         if next_opcode == OP_FMA:
             p_splice_vm, opcode_result = opcode_fma(p_splice_vm, op_a, op_b, op_c)
+        if next_opcode == OP_FSD:
+            p_splice_vm, opcode_result = opcode_fsd(p_splice_vm, op_a, op_b, op_c)
+        if next_opcode in [OP_SIN, OP_COS, OP_TAN]:
+            p_splice_vm, opcode_result = opcode_trg(p_splice_vm, next_opcode, op_a, op_b, op_c)
         ip = ip + 1
     return p_splice_vm
 
@@ -299,7 +344,8 @@ def clear_task_list(p_splice_vm):
 # add run loop and timing controls?
 # REDO!
 def run_sheduled_tasks(p_splice_vm):
-    # advance VM clocks - TODO
+    # advance vm clocks
+    p_splice_vm = advance_vm_clocks(p_splice_vm, p_splice_vm["VFLAGS"]["VM_TIMESLICE"])
     # run loaded tasks
     for item in p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"].items():
         for i in item[1].items():
@@ -310,13 +356,8 @@ def run_sheduled_tasks(p_splice_vm):
                     p_splice_vm = set_vram_content(p_splice_vm, "TASK_CONTEXT_STATUS", task_header, TASK_CON_UNMET)
                 elif freq == VM_TASK_IS_READY:
                     p_splice_vm = vm_execute(p_splice_vm, i[1])
-                    p_splice_vm = set_vram_content(p_splice_vm, "TASK_CONTEXT_WASRUN", task_header, get_vm_time(p_splice_vm))
-    return p_splice_vm
-
-def reset_vm(p_splice_vm):
-    return p_splice_vm
-
-def halt_vm(p_splice_vm):
+                    vm_time = get_vm_time(p_splice_vm)
+                    p_splice_vm = set_vram_content(p_splice_vm, "TASK_CONTEXT_WASRUN", task_header, vm_time)
     return p_splice_vm
 
 ################################################################################
@@ -355,7 +396,7 @@ def load_command_script(p_obdh_subsystem, p_script):
     return p_obdh_subsystem
 
 def obdh_step_forward(p_obdh_subsystem, p_seconds):
-    # run for the number of seconds provided
+    # run forward for the number of seconds provided
     for i in range(0, p_seconds):
         p_obdh_subsystem["splice_vm"] = run_sheduled_tasks(p_obdh_subsystem["splice_vm"])
         p_obdh_subsystem["splice_vm"] = pull_bus_messages(p_obdh_subsystem["splice_vm"], p_obdh_subsystem["data_bus"])

@@ -3,11 +3,13 @@ from groundsim.mse.sys_payload import calculate_camera_gsd, calculate_camera_fov
 from groundsim.mse.sys_obdh import (
     create_vm,
     init_vm,
+    start_vm,
     load_user_task,
     clear_task_list,
     run_sheduled_tasks,
     vm_execute,
-    DEFAULT_VM_LOG_LEVEL
+    DEFAULT_VM_LOG_LEVEL,
+    DEFAULT_VM_TIMESLICE
 )
 from math import radians, isclose
 
@@ -76,11 +78,32 @@ class OBDHTestCases(TestBaseClass):
             "2.0f",
             "1.0f"
         ]
+        self.test_program2 = [
+            "1,2,10,11",
+            "OP_LEA, FREG_A, 2, 1",
+            "OP_LEA, FREG_B, 2, 2",
+            "OP_LEA, FREG_C, 2, 3",
+            "OP_FSD, FREG_A, FREG_B, FREG_C",
+            "OP_MOV, PRE_MOV_RAM, FREG_C, 3",
+            "OP_SIN, PRE_NORMAL, FREG_C, FREG_D",
+            "OP_COS, PRE_NORMAL, FREG_C, FREG_E",
+            "OP_STR, PRE_STR_FPU, FREG_C",
+            "OP_STR, PRE_STR_FPU, FREG_D",
+            "OP_STR, PRE_STR_FPU, FREG_E",
+            "OP_HLT",
+            "1.0f",
+            "1.0f",
+            "100.0f"
+        ]
         self.test_snapshot_blank = {
             'VCPU': {
                 'ALU_REGISTERS': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                'FPU_REGISTERS': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                'FPU_PRCSN': 0.001,
+                'FPU_REGISTERS': [
+                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+                ],
                 'VXM_CLOCK': 0,
                 'NMF_CLOCK': 0,
                 'ADCS_MODE': 0
@@ -95,7 +118,9 @@ class OBDHTestCases(TestBaseClass):
                 'QUEUE_INP': []
             },
             "VFLAGS":{
-                "VM_LOG_LEVEL":DEFAULT_VM_LOG_LEVEL
+                "VM_LOG_LEVEL": DEFAULT_VM_LOG_LEVEL,
+                "VM_TIMESLICE": DEFAULT_VM_TIMESLICE,
+                "FP_PRECISION": 1.0E-07
             }
         }
 
@@ -122,7 +147,20 @@ class OBDHTestCases(TestBaseClass):
 
     def test_vm_scheduler(self):
         self.test_vm = init_vm(self.test_vm)
+        self.test_vm = start_vm(self.test_vm)
         self.test_vm = load_user_task(self.test_vm, self.test_program)
         self.test_vm = run_sheduled_tasks(self.test_vm)
         assert(self.test_vm["VBUS"]["QUEUE_OUT"][0]=="1:1:3.0")
         self.test_vm = {}
+
+    def test_multiple_tasks(self):
+        self.test_vm = init_vm(self.test_vm)
+        self.test_vm = start_vm(self.test_vm)
+        self.test_vm = load_user_task(self.test_vm, self.test_program)
+        self.test_vm = load_user_task(self.test_vm, self.test_program2)
+        print(self.test_vm)
+        for i in range (0,10):
+            self.test_vm = run_sheduled_tasks(self.test_vm)
+        print(self.test_vm)
+
+        #print(self.test_vm)
