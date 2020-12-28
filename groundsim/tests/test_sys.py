@@ -91,8 +91,8 @@ class OBDHTestCases(TestBaseClass):
                 'PROGRAM_CODE_MEMORY': {}
             },
             'VBUS': {
-                'CHANNEL_OUT': [],
-                'CHANNEL_INP': []
+                'QUEUE_OUT': [],
+                'QUEUE_INP': []
             },
             "VFLAGS":{
                 "VM_LOG_LEVEL":DEFAULT_VM_LOG_LEVEL
@@ -113,17 +113,16 @@ class OBDHTestCases(TestBaseClass):
 
     def test_run_vm_task(self):
         self.test_vm = init_vm(self.test_vm)
-        self.test_vm["VFLAGS"]["VM_LOG_LEVEL"] = 0
-        print()
         self.test_vm = load_user_task(self.test_vm, self.test_program)
         for item in self.test_vm["VRAM"]["PROGRAM_CODE_MEMORY"].items():
             for i in item[1].items():
                 self.test_vm = vm_execute(self.test_vm, i[1])
+        assert(self.test_vm["VBUS"]["QUEUE_OUT"][0]=="1:1:3.0")
         self.test_vm = {}
 
     def test_vm_scheduler(self):
-        pass
-        #self.test_vm = init_vm(self.test_vm)
-        #self.test_vm = load_user_task(self.test_vm, self.test_program)
-        #self.test_vm = run_sheduled_tasks(self.test_vm)
-        #self.test_vm = {}
+        self.test_vm = init_vm(self.test_vm)
+        self.test_vm = load_user_task(self.test_vm, self.test_program)
+        self.test_vm = run_sheduled_tasks(self.test_vm)
+        assert(self.test_vm["VBUS"]["QUEUE_OUT"][0]=="1:1:3.0")
+        self.test_vm = {}

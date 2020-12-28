@@ -89,8 +89,8 @@ def create_vm():
         },
         "VBUS":
         {
-            "CHANNEL_OUT":[],
-            "CHANNEL_INP":[]
+            "QUEUE_OUT":[],
+            "QUEUE_INP":[]
         },
         "VFLAGS":{
             "VM_LOG_LEVEL":DEFAULT_VM_LOG_LEVEL
@@ -111,7 +111,8 @@ def start_vm(p_splice_vm):
 
 def log_message(p_splice_vm, p_str, p_error_level):
     if p_error_level>=p_splice_vm["VFLAGS"]["VM_LOG_LEVEL"]:
-        print(p_str)
+        p_splice_vm["VBUS"]["QUEUE_OUT"].append(p_str)
+    return p_splice_vm
 
 ################################################################################
 ########################## SPLICE VM - OPCODE DECODING #########################
@@ -175,15 +176,15 @@ def opcode_lea(p_splice_vm, p_reg_id, p_source_id, p_addr, p_group_id, p_task_id
 def opcode_str(p_splice_vm, p_prefix, p_reg_id, p_task_info):
     if p_prefix == PRE_STR_ALU:
         message_string = "%s%s" % (p_task_info, p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_id])
-        log_message(p_splice_vm, message_string, LOG_LEVEL_INFO)
+        p_splice_vm = log_message(p_splice_vm, message_string, LOG_LEVEL_INFO)
         return p_splice_vm, EX_OPCODE_FINE
     if p_prefix == PRE_STR_FPU:
         message_string = "%s%s" % (p_task_info, p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_id])
-        log_message(p_splice_vm, message_string, LOG_LEVEL_INFO)
+        p_splice_vm = log_message(p_splice_vm, message_string, LOG_LEVEL_INFO)
         return p_splice_vm, EX_OPCODE_FINE
     if p_prefix == PRE_STR_BIN:
         message_string = "%s%s" % (p_task_info, "{0:b}".format(p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_id]))
-        log_message(p_splice_vm, message_string, LOG_LEVEL_INFO)
+        p_splice_vm = log_message(p_splice_vm, message_string, LOG_LEVEL_INFO)
         return p_splice_vm, EX_OPCODE_FINE
 
     return p_splice_vm, EX_BAD_OPERAND
@@ -298,17 +299,18 @@ def clear_task_list(p_splice_vm):
 # add run loop and timing controls?
 # REDO!
 def run_sheduled_tasks(p_splice_vm):
-    # advance VM clocks
+    # advance VM clocks - TODO
     # run loaded tasks
-    # for key, item in p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"]:
-    #    for k, v in item:
-    #        if get_vram_content(p_splice_vm, "TASK_CONTEXT_STATUS", v[0]) > TASK_NOTLOADED:
-    #            freq = check_frequency(v[0])
-    #            if freq == VM_TASK_NOTREADY:
-    #                p_splice_vm = set_vram_content(p_splice_vm, "TASK_CONTEXT_STATUS", v[0], TASK_CON_UNMET)
-    #            elif freq == VM_TASK_IS_READY:
-    #                p_splice_vm = vm_execute(p_splice_vm, item)
-    #                p_splice_vm = set_vram_content(p_splice_vm, "TASK_CONTEXT_WASRUN", v[0], get_vm_time(p_splice_vm))
+    for item in p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"].items():
+        for i in item[1].items():
+            task_header = i[1][0]
+            if get_vram_content(p_splice_vm, "TASK_CONTEXT_STATUS", task_header) > TASK_NOTLOADED:
+                freq = check_frequency(task_header)
+                if freq == VM_TASK_NOTREADY:
+                    p_splice_vm = set_vram_content(p_splice_vm, "TASK_CONTEXT_STATUS", task_header, TASK_CON_UNMET)
+                elif freq == VM_TASK_IS_READY:
+                    p_splice_vm = vm_execute(p_splice_vm, i[1])
+                    p_splice_vm = set_vram_content(p_splice_vm, "TASK_CONTEXT_WASRUN", task_header, get_vm_time(p_splice_vm))
     return p_splice_vm
 
 def reset_vm(p_splice_vm):
