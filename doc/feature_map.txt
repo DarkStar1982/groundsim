@@ -12,8 +12,7 @@
   = total thermal balance calculation
   = attitude determination and control
 - onboard computer with SPLICE interpreter, note:
-  = Switch execution from continous to step mode
-  = Find more efficient data structure for program memory
+  = Implement all opcodes and correct scheduler behaviour
   = Implement NMF pass-through functionality equivalent
 - Add "update TLE" command
 - Implement GPS simulation
@@ -29,3 +28,5 @@
 = payload instruments, day/night cycle
 - Port code to use Skyfield library
 - Do full mission simulation test
+= Foundd more efficient data structure for SpliceVM program memory
+= Switched execution from continous to step mode
