@@ -14,6 +14,8 @@ from groundsim.mse.sys_obdh import (
 )
 from math import radians, isclose
 
+SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
+
 def core_dump(vm_memory):
     for item in vm_memory:
         print(["{:x}".format(x) for x in item])
@@ -165,7 +167,12 @@ class OBDHTestCases(TestBaseClass):
         assert(self.test_vm["VBUS"]["QUEUE_STDOUT"][1]=="1:2:99.0")
 
     def test_load_from_file(self):
-        SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
-        f = open (SITE_ROOT + "/data/test_a1.splc", "r")
-        data = f.read()
-        print(data)
+        f = open (SITE_ROOT + "/data/test_a3.splc", "r")
+        data = f.read().split("\n")
+        line_data = data[:-1]
+        self.test_vm = init_vm(self.test_vm)
+        self.test_vm = start_vm(self.test_vm)
+        self.test_vm = load_user_task(self.test_vm, line_data)
+        for i in range (0,10):
+            self.test_vm = run_sheduled_tasks(self.test_vm)
+        assert(self.test_vm["VBUS"]["QUEUE_STDOUT"] == ['1:3:0.7853975296020508', '1:3:0.9999987324100084'])
