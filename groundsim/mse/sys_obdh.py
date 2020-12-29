@@ -1,4 +1,5 @@
 import time
+from math import sin, cos, tan, asin, acos, atan
 from groundsim.mse.lib_splice import process_program_code, unpack32to4x8, unpack_float_from_int, pack_float_to_int
 
 ################################################################################
@@ -33,6 +34,10 @@ PRE_STR_ALU = 0x01
 PRE_STR_FPU = 0x02
 PRE_STR_BIN = 0x03
 
+# Prefixes -  trigonometry and power functions
+PRE_NORMAL = 0x01
+PRE_INVERT = 0x02
+
 # registers
 ALU_REG_COUNT = 16
 FPU_REG_COUNT = 32
@@ -60,6 +65,8 @@ FREQ_ONCE = 0x00
 FREQ_1MIN = 0x3C #60
 FREQ_HOUR = 0x77 #119
 FREQ_TMAX = 0x7F #127
+
+# VM execution task states
 VM_TASK_IS_READY = 0x01
 VM_TASK_NOTREADY = 0x02
 VM_TASK_FINISHED = 0x03
@@ -91,10 +98,9 @@ def create_vm():
         },
         "VBUS":
         {
-            "QUEUE_OUT":[],
-            "QUEUE_INP":[]
+            "QUEUE_STDOUT":[]
         },
-        "VFLAGS":{
+        "VFLAGS": {
             "VM_LOG_LEVEL": DEFAULT_VM_LOG_LEVEL,
             "VM_TIMESLICE": DEFAULT_VM_TIMESLICE,
             "FP_PRECISION": 1.0E-07,
@@ -128,7 +134,7 @@ def halt_vm(p_splice_vm):
 
 def log_message(p_splice_vm, p_str, p_error_level):
     if p_error_level>=p_splice_vm["VFLAGS"]["VM_LOG_LEVEL"]:
-        p_splice_vm["VBUS"]["QUEUE_OUT"].append(p_str)
+        p_splice_vm["VBUS"]["QUEUE_STDOUT"].append(p_str)
     return p_splice_vm
 
 ################################################################################
@@ -245,7 +251,31 @@ def opcode_fsd(p_splice_vm, p_reg_a, p_reg_b, p_reg_c):
     return p_splice_vm, EX_BAD_OPERAND
 
 def opcode_trg(p_splice_vm, p_opcode, p_prefix, p_reg_a, p_reg_b):
-    return p_splice_vm, EX_OPCODE_FINE
+    if ((p_reg_a>0x0F) and (p_reg_a<0x20)) and ((p_reg_b>0x0F) and (p_reg_b<0x20)):
+        if p_prefix == PRE_NORMAL:
+            if p_opcode == OP_SIN:
+                p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_b] = sin(p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_a])
+                return p_splice_vm, EX_OPCODE_FINE
+            if p_opcode == OP_COS:
+                p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_b] = cos(p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_a])
+                return p_splice_vm, EX_OPCODE_FINE
+            if p_opcode == OP_TAN:
+                p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_b] = tan(p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_a])
+                return p_splice_vm, EX_OPCODE_FINE
+        elif prefix == PRE_INVERT:
+            if p_opcode == OP_SIN:
+                p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_b] = asin(p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_a])
+                return p_splice_vm, EX_OPCODE_FINE
+            if p_opcode == OP_COS:
+                p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_b] = acos(p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_a])
+                return p_splice_vm, EX_OPCODE_FINE
+            if p_opcode == OP_TAN:
+                p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_b] = atan(p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_a])
+                return p_splice_vm, EX_OPCODE_FINE
+        else:
+            return p_splice_vm, EX_OPC_UNKNOWN
+    else:
+        return p_splice_vm, EX_BAD_OPERAND;
 
 def opcode_pow(p_splice_vm):
     return p_splice_vm
@@ -274,7 +304,7 @@ def get_vram_content(p_splice_vm, p_dict_name, p_header):
     return p_splice_vm["VRAM"][p_dict_name][group_id][task_id]
 
 ################################################################################
-######################## SPLICE VM - TIMING CONTROL #########################
+########################## SPLICE VM - TIMING CONTROL ##########################
 ################################################################################
 
 def advance_vm_clocks(p_splice_vm, p_seconds):
@@ -341,8 +371,6 @@ def clear_task_list(p_splice_vm):
     p_splice_vm["VRAM"]["TASK_CONTEXT_WASRUN"].clear()
     return p_splice_vm
 
-# add run loop and timing controls?
-# REDO!
 def run_sheduled_tasks(p_splice_vm):
     # advance vm clocks
     p_splice_vm = advance_vm_clocks(p_splice_vm, p_splice_vm["VFLAGS"]["VM_TIMESLICE"])

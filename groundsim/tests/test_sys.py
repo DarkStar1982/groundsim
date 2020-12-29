@@ -114,8 +114,7 @@ class OBDHTestCases(TestBaseClass):
                 'PROGRAM_CODE_MEMORY': {}
             },
             'VBUS': {
-                'QUEUE_OUT': [],
-                'QUEUE_INP': []
+                'QUEUE_STDOUT': []
             },
             "VFLAGS":{
                 "VM_LOG_LEVEL": DEFAULT_VM_LOG_LEVEL,
@@ -142,7 +141,7 @@ class OBDHTestCases(TestBaseClass):
         for item in self.test_vm["VRAM"]["PROGRAM_CODE_MEMORY"].items():
             for i in item[1].items():
                 self.test_vm = vm_execute(self.test_vm, i[1])
-        assert(self.test_vm["VBUS"]["QUEUE_OUT"][0]=="1:1:3.0")
+        assert(self.test_vm["VBUS"]["QUEUE_STDOUT"][0]=="1:1:3.0")
         self.test_vm = {}
 
     def test_vm_scheduler(self):
@@ -150,7 +149,7 @@ class OBDHTestCases(TestBaseClass):
         self.test_vm = start_vm(self.test_vm)
         self.test_vm = load_user_task(self.test_vm, self.test_program)
         self.test_vm = run_sheduled_tasks(self.test_vm)
-        assert(self.test_vm["VBUS"]["QUEUE_OUT"][0]=="1:1:3.0")
+        assert(self.test_vm["VBUS"]["QUEUE_STDOUT"][0]=="1:1:3.0")
         self.test_vm = {}
 
     def test_multiple_tasks(self):
@@ -158,9 +157,7 @@ class OBDHTestCases(TestBaseClass):
         self.test_vm = start_vm(self.test_vm)
         self.test_vm = load_user_task(self.test_vm, self.test_program)
         self.test_vm = load_user_task(self.test_vm, self.test_program2)
-        print(self.test_vm)
         for i in range (0,10):
             self.test_vm = run_sheduled_tasks(self.test_vm)
-        print(self.test_vm)
-
-        #print(self.test_vm)
+        for item in (self.test_vm["VBUS"]["QUEUE_STDOUT"]):
+            pass # print(item)
