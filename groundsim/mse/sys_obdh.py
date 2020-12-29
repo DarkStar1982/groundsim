@@ -311,8 +311,34 @@ def advance_vm_clocks(p_splice_vm, p_seconds):
     p_splice_vm["VCPU"]["VXM_CLOCK"] = p_splice_vm["VCPU"]["VXM_CLOCK"] + p_seconds*1000
     return p_splice_vm
 
-def check_frequency(p_header):
-    return VM_TASK_IS_READY
+def check_frequency(p_splice_vm, p_header):
+    header = unpack32to4x8(p_header)
+    group_id = header[0]
+    task_id = header[1]
+    interval_code = header[2]
+    interval_value = 0
+    if interval_code == FREQ_TMAX:
+        return VM_TASK_IS_READY
+    # check if we have at least attempted to run the task
+    if interval_code == FREQ_ONCE:
+        task_status = get_vram_content(p_splice_vm, "TASK_CONTEXT_STATUS", p_header)
+        if task_status == TASK_COMPLETED:
+            return VM_TASK_FINISHED
+        else:
+            return VM_TASK_IS_READY
+    else:
+       if interval_code < FREQ_1MIN:
+           interval_value = interval_code;
+       if (interval_code >=FREQ_1MIN) and (interval_code <FREQ_HOUR):
+           interval_value = (interval_code-59)*60
+       if (interval_code >=FREQ_HOUR) and (interval_code <FREQ_TMAX):
+           interval_value = (interval_code-118)*3600
+       last_run_time = get_vram_content(p_splice_vm, "TASK_CONTEXT_WASRUN", p_header)
+       time_delta = get_vm_time(p_splice_vm) - last_run_time
+       if time_delta>=interval_value:
+           return VM_TASK_IS_READY
+       else:
+           return VM_TASK_NOTREADY
 
 def get_vm_time(p_splice_vm):
     return p_splice_vm["VCPU"]["VXM_CLOCK"]/1000
@@ -379,7 +405,7 @@ def run_sheduled_tasks(p_splice_vm):
         for i in item[1].items():
             task_header = i[1][0]
             if get_vram_content(p_splice_vm, "TASK_CONTEXT_STATUS", task_header) > TASK_NOTLOADED:
-                freq = check_frequency(task_header)
+                freq = check_frequency(p_splice_vm, task_header)
                 if freq == VM_TASK_NOTREADY:
                     p_splice_vm = set_vram_content(p_splice_vm, "TASK_CONTEXT_STATUS", task_header, TASK_CON_UNMET)
                 elif freq == VM_TASK_IS_READY:

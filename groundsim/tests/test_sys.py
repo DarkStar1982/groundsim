@@ -148,7 +148,8 @@ class OBDHTestCases(TestBaseClass):
         self.test_vm = init_vm(self.test_vm)
         self.test_vm = start_vm(self.test_vm)
         self.test_vm = load_user_task(self.test_vm, self.test_program)
-        self.test_vm = run_sheduled_tasks(self.test_vm)
+        for i in range (0,10):
+            self.test_vm = run_sheduled_tasks(self.test_vm)
         assert(self.test_vm["VBUS"]["QUEUE_STDOUT"][0]=="1:1:3.0")
         self.test_vm = {}
 
@@ -157,7 +158,7 @@ class OBDHTestCases(TestBaseClass):
         self.test_vm = start_vm(self.test_vm)
         self.test_vm = load_user_task(self.test_vm, self.test_program)
         self.test_vm = load_user_task(self.test_vm, self.test_program2)
-        for i in range (0,10):
+        for i in range (0,30):
             self.test_vm = run_sheduled_tasks(self.test_vm)
         for item in (self.test_vm["VBUS"]["QUEUE_STDOUT"]):
-            pass # print(item)
+            print(item)
