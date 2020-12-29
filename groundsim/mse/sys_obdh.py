@@ -1,5 +1,5 @@
 import time
-from math import sin, cos, tan, asin, acos, atan
+from math import sin, cos, tan, asin, acos, atan, pow, log
 from groundsim.mse.lib_splice import process_program_code, unpack32to4x8, unpack_float_from_int, pack_float_to_int
 
 ################################################################################
@@ -277,11 +277,27 @@ def opcode_trg(p_splice_vm, p_opcode, p_prefix, p_reg_a, p_reg_b):
     else:
         return p_splice_vm, EX_BAD_OPERAND;
 
-def opcode_pow(p_splice_vm):
-    return p_splice_vm
+def opcode_pow(p_splice_vm, p_prefix, p_reg_a, p_reg_b):
+    if ((p_reg_a>0x0F) and (p_reg_a<0x20)) and ((p_reg_b>0x0F) and (p_reg_b<0x20)):
+        if p_prefix == PRE_NORMAL:
+            result = pow(p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_b], p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_a])
+            p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_b] = result
+            return p_splice_vm, EX_OPCODE_FINE
+        elif p_prefix == PRE_INVERT:
+            p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_b] = log(p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_a])
+            return p_splice_vm, EX_OPCODE_FINE
+        else:
+            return p_splice_vm, EX_OPC_UNKNOWN
+    else:
+          return p_splice_vm, EX_BAD_OPERAND
 
-def opcode_nor(p_splice_vm):
-    return p_splice_vm
+
+def opcode_nor(p_splice_vm, p_reg_a, p_reg_b, p_reg_c):
+    if (p_reg_a<0x10) and (p_reg_b<0x10) and (p_reg_c<0x10):
+        p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_c] = ~(p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_a] | p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_b]);
+        return p_splice_vm, EX_OPCODE_FINE
+    else:
+        return p_splice_vm, EX_BAD_OPERAND;
 
 ################################################################################
 ######################### SPLICE VM - MEMORY OPERATIONS ########################

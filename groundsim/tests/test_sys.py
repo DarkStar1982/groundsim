@@ -1,3 +1,4 @@
+import os.path
 from groundsim.tests.test_core import TestBaseClass
 from groundsim.mse.sys_payload import calculate_camera_gsd, calculate_camera_fov, calculate_swath, get_imager_frame
 from groundsim.mse.sys_obdh import (
@@ -160,5 +161,11 @@ class OBDHTestCases(TestBaseClass):
         self.test_vm = load_user_task(self.test_vm, self.test_program2)
         for i in range (0,30):
             self.test_vm = run_sheduled_tasks(self.test_vm)
-        for item in (self.test_vm["VBUS"]["QUEUE_STDOUT"]):
-            print(item)
+        assert(self.test_vm["VBUS"]["QUEUE_STDOUT"][0]=="1:1:3.0")
+        assert(self.test_vm["VBUS"]["QUEUE_STDOUT"][1]=="1:2:99.0")
+
+    def test_load_from_file(self):
+        SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
+        f = open (SITE_ROOT + "/data/test_a1.splc", "r")
+        data = f.read()
+        print(data)

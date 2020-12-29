@@ -1,7 +1,6 @@
 def initialize_adcs_subsystem(p_adcs_definition):
     p_adcs_subsystem = {
-        "ADCS_MODE": None
-        # TBD
+        "ADCS_MODE": "UNDEFINED"
     }
     return p_adcs_subsystem
 
