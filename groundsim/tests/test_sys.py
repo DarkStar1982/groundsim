@@ -125,6 +125,10 @@ class OBDHTestCases(TestBaseClass):
                 "FP_PRECISION": 1.0E-07
             }
         }
+        self.test_filenames = [
+            "/data/test_a4.splc",
+            "/data/test_a5.splc",
+        ]
 
     def test_init_vm(self):
         self.test_vm = init_vm(self.test_vm)
@@ -176,3 +180,17 @@ class OBDHTestCases(TestBaseClass):
         for i in range (0,10):
             self.test_vm = run_sheduled_tasks(self.test_vm)
         assert(self.test_vm["VBUS"]["QUEUE_STDOUT"] == ['1:3:0.7853975296020508', '1:3:0.9999987324100084'])
+
+    def test_load_multiple_files(self):
+        self.test_vm = init_vm(self.test_vm)
+        self.test_vm = start_vm(self.test_vm)
+        for item in self.test_filenames:
+            f = open (SITE_ROOT + item, "r")
+            data = f.read().split("\n")
+            line_data = data[:-1]
+            self.test_vm = load_user_task(self.test_vm, line_data)
+        for i in range (0,13):
+            self.test_vm = run_sheduled_tasks(self.test_vm)
+        test_result = ['1:5:1', '1:5:0', '1:5:-10', '1:5:-10', '1:5:-10', '1:5:-1', '1:4:2.0', '1:4:10.0', '1:4:100.0', '1:4:4.605170185988092']
+        #print(self.test_vm["VBUS"]["QUEUE_STDOUT"])
+        assert(self.test_vm["VBUS"]["QUEUE_STDOUT"] == test_result)

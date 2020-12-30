@@ -24,6 +24,22 @@ OP_TAN = 0x0D # OPCODE|  PREFIX|  REG_A|  REG_B| tan/atan: REG_B = tan(REG_A)
 OP_POW = 0x0E # OPCODE|  PREFIX|  REG_A|  REG_B| power: log and roots can be done as well
 OP_NOR = 0x0F # OPCODE|   REG_A|  REG_B|  REG_C| REG_C = REG_A NOR NEG_B
 
+# Comparison - integer values
+ALU_EQ = 0x01 # equal
+ALU_NE = 0x02 # not equal
+ALU_GT = 0x03 # greater
+ALU_LT = 0x04 # lesser
+ALU_GE = 0x05 # greater or equal
+ALU_LE = 0x06 # lesser or equal
+# Comparison - floating point values
+FPU_EQ = 0x07 #same but for FPU
+FPU_NE = 0x08
+FPU_GT = 0x09
+FPU_LT = 0x0A
+# Comparison - task execution results
+TSX_EQ = 0x0D #task result is equal ...
+TSX_NE = 0x0E #task result is not equal to ...
+
 # Prefixes - MOV instruction addressing modes
 PRE_MOV_REG = 0x01
 PRE_MOV_RAM = 0x02
@@ -209,8 +225,74 @@ def opcode_str(p_splice_vm, p_prefix, p_reg_id, p_task_info):
 
     return p_splice_vm, EX_BAD_OPERAND
 
-def opcode_cmp(p_splice_vm):
-    return p_splice_vm
+def opcode_cmp(p_splice_vm, p_oper, p_reg_a, p_reg_b, p_group_id):
+    source_id = p_reg_a
+    if p_oper == FPU_EQ:
+        delta = abs(p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_a]) - abs(p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_b])
+        if abs(delta) < p_splice_vm["VFLAGS"]["FP_PRECISION"]:
+            return EX_CHECK_TRUTH
+        else:
+            return EX_CHECK_FALSE
+    if p_oper == FPU_NE:
+        delta = abs(p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_a]) - abs(p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_b])
+        if abs(delta) > p_splice_vm["VFLAGS"]["FP_PRECISION"]:
+            return EX_CHECK_TRUTH
+        else:
+            return EX_CHECK_FALSE
+        pass
+    if p_oper == FPU_GT:
+        if p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_a] > p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_b]:
+            return EX_CHECK_TRUTH
+        else:
+            return EX_CHECK_FALSE
+    if p_oper == FPU_LT:
+        if p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_a] < p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_b]:
+            return EX_CHECK_TRUTH
+        else:
+            return EX_CHECK_FALSE
+    if p_oper == ALU_EQ:
+        if (p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_a] == p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_b]):
+            return EX_CHECK_TRUTH
+        else:
+            return EX_CHECK_FALSE
+    if p_oper == ALU_NE: #<---BUG BELOW, LEFT FOR COMPATIBILITY PURPOSES ONLY!!!
+        if (p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_a] == p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_b]):
+            return EX_CHECK_TRUTH
+        else:
+            return EX_CHECK_FALSE
+    if p_oper == ALU_GT:
+        if (p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_a] > p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_b]):
+            return EX_CHECK_TRUTH
+        else:
+            return EX_CHECK_FALSE
+    if p_oper == ALU_LT:
+        if (p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_a] < p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_b]):
+            return EX_CHECK_TRUTH
+        else:
+            return EX_CHECK_FALSE
+    if p_oper == ALU_GE:
+        if (p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_a] >= p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_b]):
+            return EX_CHECK_TRUTH
+        else:
+            return EX_CHECK_FALSE
+    if p_oper == ALU_LE:
+        if (p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_a] <= p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_b]):
+            return EX_CHECK_TRUTH
+        else:
+            return EX_CHECK_FALSE
+    if p_oper == TSX_EQ:
+        task_status = p_splice_vm["VRAM"]["TASK_CONTEXT_STATUS"][group_id][source_id]
+        if task_status == p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_b]:
+            return EX_CHECK_TRUTH
+        else:
+            return EX_CHECK_FALSE
+    if p_oper == TSX_NE:
+        task_status = p_splice_vm["VRAM"]["TASK_CONTEXT_STATUS"][group_id][source_id]
+        if task_status != p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_b]:
+            return EX_CHECK_TRUTH
+        else:
+            return EX_CHECK_FALSE
+    return EX_BAD_OPERAND
 
 def opcode_get(p_splice_vm):
     return p_splice_vm
@@ -290,7 +372,6 @@ def opcode_pow(p_splice_vm, p_prefix, p_reg_a, p_reg_b):
             return p_splice_vm, EX_OPC_UNKNOWN
     else:
           return p_splice_vm, EX_BAD_OPERAND
-
 
 def opcode_nor(p_splice_vm, p_reg_a, p_reg_b, p_reg_c):
     if (p_reg_a<0x10) and (p_reg_b<0x10) and (p_reg_c<0x10):
@@ -396,6 +477,10 @@ def vm_execute(p_splice_vm, p_task):
             p_splice_vm, opcode_result = opcode_fsd(p_splice_vm, op_a, op_b, op_c)
         if next_opcode in [OP_SIN, OP_COS, OP_TAN]:
             p_splice_vm, opcode_result = opcode_trg(p_splice_vm, next_opcode, op_a, op_b, op_c)
+        if next_opcode == OP_POW:
+            p_splice_vm, opcode_result = opcode_pow(p_splice_vm, op_a, op_b, op_c)
+        if next_opcode == OP_NOR:
+            p_splice_vm, opcode_result = opcode_nor(p_splice_vm, op_a, op_b, op_c)
         ip = ip + 1
     return p_splice_vm
 
