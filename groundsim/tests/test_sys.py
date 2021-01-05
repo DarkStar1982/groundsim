@@ -117,7 +117,12 @@ class OBDHTestCases(TestBaseClass):
                 'PROGRAM_CODE_MEMORY': {}
             },
             'VBUS': {
-                'QUEUE_STDOUT': []
+                "INST_LOGS":{
+                    "OUT":[]
+                },
+                "INST_ADCS":{},
+                "INST_GNSS":{},
+                "INST_IMGR":{},
             },
             "VFLAGS":{
                 "VM_LOG_LEVEL": DEFAULT_VM_LOG_LEVEL,
@@ -148,7 +153,7 @@ class OBDHTestCases(TestBaseClass):
         for item in self.test_vm["VRAM"]["PROGRAM_CODE_MEMORY"].items():
             for i in item[1].items():
                 self.test_vm = vm_execute(self.test_vm, i[1])
-        assert(self.test_vm["VBUS"]["QUEUE_STDOUT"][0]=="1:1:3.0")
+        assert(self.test_vm["VBUS"]["INST_LOGS"]["OUT"][0]=="1:1:3.0")
         self.test_vm = {}
 
     def test_vm_scheduler(self):
@@ -157,7 +162,7 @@ class OBDHTestCases(TestBaseClass):
         self.test_vm = load_user_task(self.test_vm, self.test_program)
         for i in range (0,10):
             self.test_vm = run_sheduled_tasks(self.test_vm)
-        assert(self.test_vm["VBUS"]["QUEUE_STDOUT"][0]=="1:1:3.0")
+        assert(self.test_vm["VBUS"]["INST_LOGS"]["OUT"][0]=="1:1:3.0")
         self.test_vm = {}
 
     def test_multiple_tasks(self):
@@ -167,8 +172,8 @@ class OBDHTestCases(TestBaseClass):
         self.test_vm = load_user_task(self.test_vm, self.test_program2)
         for i in range (0,30):
             self.test_vm = run_sheduled_tasks(self.test_vm)
-        assert(self.test_vm["VBUS"]["QUEUE_STDOUT"][0]=="1:1:3.0")
-        assert(self.test_vm["VBUS"]["QUEUE_STDOUT"][1]=="1:2:99.0")
+        assert(self.test_vm["VBUS"]["INST_LOGS"]["OUT"][0]=="1:1:3.0")
+        assert(self.test_vm["VBUS"]["INST_LOGS"]["OUT"][1]=="1:2:99.0")
 
     def test_load_from_file(self):
         f = open (SITE_ROOT + "/data/test_a3.splc", "r")
@@ -179,7 +184,7 @@ class OBDHTestCases(TestBaseClass):
         self.test_vm = load_user_task(self.test_vm, line_data)
         for i in range (0,10):
             self.test_vm = run_sheduled_tasks(self.test_vm)
-        assert(self.test_vm["VBUS"]["QUEUE_STDOUT"] == ['1:3:0.7853975296020508', '1:3:0.9999987324100084'])
+        assert(self.test_vm["VBUS"]["INST_LOGS"]["OUT"] == ['1:3:0.7853975296020508', '1:3:0.9999987324100084'])
 
     def test_load_multiple_files(self):
         self.test_vm = init_vm(self.test_vm)
@@ -192,5 +197,4 @@ class OBDHTestCases(TestBaseClass):
         for i in range (0,13):
             self.test_vm = run_sheduled_tasks(self.test_vm)
         test_result = ['1:5:1', '1:5:0', '1:5:-10', '1:5:-10', '1:5:-10', '1:5:-1', '1:4:2.0', '1:4:10.0', '1:4:100.0', '1:4:4.605170185988092']
-        #print(self.test_vm["VBUS"]["QUEUE_STDOUT"])
-        assert(self.test_vm["VBUS"]["QUEUE_STDOUT"] == test_result)
+        assert(self.test_vm["VBUS"]["INST_LOGS"]["OUT"] == test_result)

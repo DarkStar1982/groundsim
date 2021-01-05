@@ -114,7 +114,10 @@ def create_vm():
         },
         "VBUS":
         {
-            "QUEUE_STDOUT":[]
+            "INST_LOGS":{},
+            "INST_ADCS":{},
+            "INST_GNSS":{},
+            "INST_IMGR":{},
         },
         "VFLAGS": {
             "VM_LOG_LEVEL": DEFAULT_VM_LOG_LEVEL,
@@ -126,11 +129,12 @@ def create_vm():
     return splice_vm
 
 def init_vm(p_splice_vm):
-    # init external clock
+    # init external clock?
     for i in range(0, ALU_REG_COUNT):
         p_splice_vm["VCPU"]["ALU_REGISTERS"].append(0)
     for i in range(0, FPU_REG_COUNT):
         p_splice_vm["VCPU"]["FPU_REGISTERS"].append(0.0)
+    p_splice_vm["VBUS"]["INST_LOGS"]["OUT"] = []
     return p_splice_vm
 
 def start_vm(p_splice_vm):
@@ -150,7 +154,7 @@ def halt_vm(p_splice_vm):
 
 def log_message(p_splice_vm, p_str, p_error_level):
     if p_error_level>=p_splice_vm["VFLAGS"]["VM_LOG_LEVEL"]:
-        p_splice_vm["VBUS"]["QUEUE_STDOUT"].append(p_str)
+        p_splice_vm["VBUS"]["INST_LOGS"]["OUT"].append(p_str)
     return p_splice_vm
 
 ################################################################################
@@ -529,10 +533,10 @@ def create_bus():
     }
     return bus
 
-def pull_bus_messages(p_splice_vm, p_data_bus):
+def pull_bus_messages(p_splice_vm, p_satellite):
     return p_data_bus
 
-def push_bus_messages(p_splice_vm, p_data_bus):
+def push_bus_messages(p_splice_vm, p_satellite):
     return p_data_bus
 
 ################################################################################
@@ -553,7 +557,7 @@ def load_command_script(p_obdh_subsystem, p_script):
 def obdh_step_forward(p_obdh_subsystem, p_seconds):
     # run forward for the number of seconds provided
     for i in range(0, p_seconds):
-        p_obdh_subsystem["splice_vm"] = run_sheduled_tasks(p_obdh_subsystem["splice_vm"])
         p_obdh_subsystem["splice_vm"] = pull_bus_messages(p_obdh_subsystem["splice_vm"], p_obdh_subsystem["data_bus"])
+        p_obdh_subsystem["splice_vm"] = run_sheduled_tasks(p_obdh_subsystem["splice_vm"])
         p_obdh_subsystem["data_bus"] = push_bus_messages(p_obdh_subsystem["splice_vm"], p_obdh_subsystem["data_bus"])
     return p_obdh_subsystem
