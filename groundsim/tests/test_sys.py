@@ -121,8 +121,19 @@ class OBDHTestCases(TestBaseClass):
                     "OUT":[]
                 },
                 "INST_ADCS":{},
-                "INST_GNSS":{},
-                "INST_IMGR":{},
+                "INST_GNSS":{
+                    "LAT":0.0,
+                    "LON":0.0,
+                    "ALT":0.0,
+                    "TME":0
+                },
+                "INST_IMGR":{
+                    "GAIN_RED":0.0,
+                    "GAIN_GRN":0.0,
+                    "GAIN_BLU":0.0,
+                    "EXPOSURE":0.0,
+                    "SNAP_NUM":0
+                },
             },
             "VFLAGS":{
                 "VM_LOG_LEVEL": DEFAULT_VM_LOG_LEVEL,

@@ -40,6 +40,45 @@ FPU_LT = 0x0A
 TSX_EQ = 0x0D #task result is equal ...
 TSX_NE = 0x0E #task result is not equal to ...
 
+# Instrument Definitions
+INST_ADC = 0x01
+INST_GPS = 0x02
+INST_IMG = 0x03
+INST_FPU = 0x04
+INST_SDR = 0x05 # not supported!
+
+INST_NMF = 0x06
+INST_VXM = 0x07 #set or get internal VM parameter
+
+# NMF parameters definitions
+P_NMF_TIME = 0x01
+
+# VM editable parameters
+P_VXM_TIME = 0x01
+P_VXM_PRSN = 0x02
+P_VXM_TLSC = 0x03
+P_VXM_DBUG = 0x04
+
+# FPU constants
+P_FPU_NIL = 0x00
+P_FPU_ONE = 0x01
+P_FPU_EXP = 0x02
+P_FPU_PIE = 0x03
+
+# GPS Parameter Definitions
+P_GPS_LATT = 0x01
+P_GPS_LONG = 0x02
+P_GPS_ALTT = 0x03
+P_GPS_TIME = 0x04
+
+# Camera Parameters
+P_IMG_GAIN_R = 0x01
+P_IMG_GAIN_G = 0x02
+P_IMG_GAIN_B = 0x03
+P_IMG_EXPOSE = 0x04
+P_IMG_STATUS = 0x05 #not to be used?
+P_IMG_NUMBER = 0x06
+
 # Prefixes - MOV instruction addressing modes
 PRE_MOV_REG = 0x01
 PRE_MOV_RAM = 0x02
@@ -114,10 +153,23 @@ def create_vm():
         },
         "VBUS":
         {
-            "INST_LOGS":{},
+            "INST_LOGS":{
+                "OUT":[]
+            },
             "INST_ADCS":{},
-            "INST_GNSS":{},
-            "INST_IMGR":{},
+            "INST_GNSS":{
+                "LAT":0.0,
+                "LON":0.0,
+                "ALT":0.0,
+                "TME":0
+            },
+            "INST_IMGR":{
+                "GAIN_RED":0.0,
+                "GAIN_GRN":0.0,
+                "GAIN_BLU":0.0,
+                "EXPOSURE":0.0,
+                "SNAP_NUM":0
+            },
         },
         "VFLAGS": {
             "VM_LOG_LEVEL": DEFAULT_VM_LOG_LEVEL,
@@ -134,7 +186,6 @@ def init_vm(p_splice_vm):
         p_splice_vm["VCPU"]["ALU_REGISTERS"].append(0)
     for i in range(0, FPU_REG_COUNT):
         p_splice_vm["VCPU"]["FPU_REGISTERS"].append(0.0)
-    p_splice_vm["VBUS"]["INST_LOGS"]["OUT"] = []
     return p_splice_vm
 
 def start_vm(p_splice_vm):
@@ -165,13 +216,19 @@ def set_adc_register(p_reg, p_value):
     r_value = 0
     return [p_reg, r_value]
 
-def set_fpu_register(p_reg, p_value):
-    r_value = 0
-    return [p_reg, r_value]
+def set_fpu_register(p_splice_vm, p_reg_id, p_value):
+    if p_reg_id>0x0F and p_reg_id<0x20:
+        p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_id] = p_value
+        return p_splice_vm, EX_OPCODE_FINE
+    else:
+        return p_splice_vm, EX_BAD_OPERAND
 
-def set_alu_register(p_reg, p_value):
-    r_value = 0
-    return [p_reg, r_value]
+def set_alu_register(p_splice_vm, p_reg_id, p_value):
+    if p_reg_id<0x10:
+        p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_id] = value
+        return p_splice_vm, EX_OPCODE_FINE
+    else:
+        return p_splice_vm, EX_BAD_OPERAND
 
 def opcode_mov(p_splice_vm, p_prefix, p_reg_id, p_addr, p_group_id, p_task_id, p_offset):
     if p_prefix == PRE_MOV_REG:
@@ -298,8 +355,56 @@ def opcode_cmp(p_splice_vm, p_oper, p_reg_a, p_reg_b, p_group_id):
             return EX_CHECK_FALSE
     return EX_BAD_OPERAND
 
-def opcode_get(p_splice_vm):
-    return p_splice_vm
+def opcode_get(p_splice_vm, p_inst_id, p_param_id, p_reg_id):
+    # external system time
+    if p_inst_id == INST_NMF:
+        if p_param_id == P_NMF_TIME:
+            return set_alu_register(p_splice_vm, p_reg_id, get_system_time())
+    # Constants
+    if p_inst_id == INST_FPU:
+        if p_param_id == P_FPU_NIL:
+            return set_fpu_register(p_splice_vm, p_reg_id, 0.0)
+        if p_param_id == P_FPU_ONE:
+            return set_fpu_register(p_splice_vm, p_reg_id, 1.0)
+        if p_param_id == P_FPU_EXP:
+            return set_fpu_register(p_splice_vm, p_reg_id, 2.71828)
+        if p_param_id == P_FPU_PIE:
+            return set_fpu_register(p_splice_vm, p_reg_id, 3.14159)
+    # internal VM settings
+    if p_inst_id == INST_VXM:
+        if p_param_id == P_VXM_TIME:
+            return set_alu_register(p_splice_vm, p_reg_id, get_vm_time())
+        if p_param_id == P_VXM_PRSN:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VFLAGS"]["FP_PRECISION"])
+        if p_param_id == P_VXM_TLSC:
+            return set_alu_register(p_splice_vm, p_reg_id, p_splice_vm["VFLAGS"]["VM_TIMESLICE"])
+        if p_param_id == P_VXM_TLSC:
+            return set_alu_register(p_splice_vm, p_reg_id, p_splice_vm["VFLAGS"]["VM_LOG_LEVEL"])
+    # imager
+    if p_inst_id == INST_IMG:
+        if p_param_id == P_IMG_GAIN_R:
+            return set_fpu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_RED"])
+        if p_param_id == P_IMG_GAIN_G:
+            return set_fpu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_GRN"])
+        if p_param_id == P_IMG_GAIN_B:
+            return set_fpu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_BLU"])
+        if p_param_id == P_IMG_EXPOSE:
+            return set_fpu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_IMGR"]["EXPOSURE"])
+        if p_param_id == P_IMG_NUMBER:
+            return set_alu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_IMGR"]["SNAP_NUM"])
+    # GPS
+    if p_inst_id == INST_GPS:
+        if p_param_id == P_GPS_LATT:
+            return set_fpu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_GNSS"]["LAT"])
+        if p_param_id == P_GPS_LONG:
+            return set_fpu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_GNSS"]["LON"])
+        if p_param_id == P_GPS_ALTT:
+            return set_fpu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_GNSS"]["ALT"])
+        if p_param_id == P_GPS_TIME:
+            return set_fpu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_GNSS"]["TME"])
+
+    return p_splice_vm, EX_BAD_OPERAND
+
 
 def opcode_set(p_splice_vm):
     return p_splice_vm
@@ -444,6 +549,9 @@ def check_frequency(p_splice_vm, p_header):
 def get_vm_time(p_splice_vm):
     return p_splice_vm["VCPU"]["VXM_CLOCK"]/1000
 
+def get_system_time():
+    millis = int(round(time.time() * 1000))
+    return millis
 ################################################################################
 ######################## SPLICE VM - EXECUTION CONTROL #########################
 ################################################################################
@@ -475,6 +583,8 @@ def vm_execute(p_splice_vm, p_task):
             p_splice_vm, opcode_result = opcode_lea(p_splice_vm, op_a, op_b, op_c, group_id, task_id, offset)
         if next_opcode == OP_STR:
             p_splice_vm, opcode_result = opcode_str(p_splice_vm, op_a, op_c, task_info)
+        if next_opcode == OP_GET:
+            p_splice_vm, opcode_result = opcode_get(p_splice_vm, op_a, op_b, op_c)
         if next_opcode == OP_FMA:
             p_splice_vm, opcode_result = opcode_fma(p_splice_vm, op_a, op_b, op_c)
         if next_opcode == OP_FSD:
