@@ -539,13 +539,13 @@ def opcode_act(p_splice_vm, p_inst_id, p_param_id, p_reg_id):
     if p_inst_id == INST_ADC:
         if p_param_id == A_ADC_NADIR:
             duration = p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_id]
-            p_splice_vm["VBUS"]["INST_ADCS"]["COMMAND_Q"].append(["SET_MODE", ["NADIR", duration])
+            p_splice_vm["VBUS"]["INST_ADCS"]["COMMAND_Q"].append(["SET_MODE", ["NADIR", duration]])
             return p_splice_vm, EX_OPCODE_FINE
         if p_param_id == A_ADC_TOSUN:
-            p_splice_vm["VBUS"]["INST_ADCS"]["COMMAND_Q"].append(["SET_MODE", ["SUN_POINT", duration])
+            p_splice_vm["VBUS"]["INST_ADCS"]["COMMAND_Q"].append(["SET_MODE", ["SUN_POINT", duration]])
             return p_splice_vm, EX_OPCODE_FINE
         if p_param_id == A_ADC_UNSET:
-            p_splice_vm["VBUS"]["INST_ADCS"]["COMMAND_Q"].append(["SET_MODE", ["NULL", 0])
+            p_splice_vm["VBUS"]["INST_ADCS"]["COMMAND_Q"].append(["SET_MODE", ["NULL", 0]])
             return p_splice_vm, EX_OPCODE_FINE
         if p_param_id == A_ADC_BDOTT:
             return p_splice_vm, EX_OPCODE_FINE # not supported in VM
