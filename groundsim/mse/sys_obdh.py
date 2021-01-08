@@ -24,6 +24,21 @@ OP_TAN = 0x0D # OPCODE|  PREFIX|  REG_A|  REG_B| tan/atan: REG_B = tan(REG_A)
 OP_POW = 0x0E # OPCODE|  PREFIX|  REG_A|  REG_B| power: log and roots can be done as well
 OP_NOR = 0x0F # OPCODE|   REG_A|  REG_B|  REG_C| REG_C = REG_A NOR NEG_B
 
+# ADCS vectors - stored in read-only FPU registers
+ADC_SX = 0x00
+ADC_SY = 0x01
+ADC_SZ = 0x02
+ADC_AX = 0x03
+ADC_AY = 0x04
+ADC_AZ = 0x05
+ADC_QA = 0x06
+ADC_QB = 0x07
+ADC_QC = 0x08
+ADC_QD = 0x09
+ADC_MX = 0x0A
+ADC_MY = 0x0B
+ADC_MZ = 0x0C
+
 # Comparison - integer values
 ALU_EQ = 0x01 # equal
 ALU_NE = 0x02 # not equal
@@ -49,6 +64,25 @@ INST_SDR = 0x05 # not supported!
 
 INST_NMF = 0x06
 INST_VXM = 0x07 #set or get internal VM parameter
+
+# ADCS parameter definitions
+P_ADC_MODE = 0x01
+P_ADC_MAGX = 0x02
+P_ADC_MAGY = 0x03
+P_ADC_MAGZ = 0x04
+P_ADC_SUNX = 0x05
+P_ADC_SUNY = 0x06
+P_ADC_SUNZ = 0x07
+P_ADC_ANGX = 0x08
+P_ADC_ANGY = 0x09
+P_ADC_ANGZ = 0x0A
+P_ADC_QTNA = 0x0B
+P_ADC_QTNB = 0x0C
+P_ADC_QTNC = 0x0D
+P_ADC_QTND = 0x0E
+P_ADC_MTQX = 0x0F
+P_ADC_MTQY = 0x10
+P_ADC_MTQZ = 0x11
 
 # NMF parameters definitions
 P_NMF_TIME = 0x01
@@ -78,6 +112,19 @@ P_IMG_GAIN_B = 0x03
 P_IMG_EXPOSE = 0x04
 P_IMG_STATUS = 0x05 #not to be used?
 P_IMG_NUMBER = 0x06
+
+# Camera Actions commands
+A_IMG_DO_JPG = 0x07
+A_IMG_DO_RAW = 0x08
+A_IMG_DO_BMP = 0x09
+A_IMG_DO_PNG = 0x0A
+
+# ADCS Action definitions
+A_ADC_NADIR = 0x05
+A_ADC_TOSUN = 0x06
+A_ADC_BDOTT = 0x07
+A_ADC_TRACK = 0x08
+A_ADC_UNSET = 0x09
 
 # Prefixes - MOV instruction addressing modes
 PRE_MOV_REG = 0x01
@@ -144,7 +191,6 @@ def create_vm():
             "FPU_REGISTERS":[],
             "VXM_CLOCK":0, # INTERNAL CLOCK
             "NMF_CLOCK":0, # EXTERNAL CLOCK
-            "ADCS_MODE":0
         },
         "VRAM": {
             "TASK_CONTEXT_STATUS":{},
@@ -156,7 +202,13 @@ def create_vm():
             "INST_LOGS":{
                 "OUT":[]
             },
-            "INST_ADCS":{},
+            "INST_ADCS":{
+                "ADCS_MODE":0,
+                "MAG_VAL_X":0,
+                "MAG_VAL_Y":0,
+                "MAG_VAL_Z":0,
+                "COMMAND_Q":[]
+            },
             "INST_GNSS":{
                 "LAT":0.0,
                 "LON":0.0,
@@ -168,7 +220,8 @@ def create_vm():
                 "GAIN_GRN":0.0,
                 "GAIN_BLU":0.0,
                 "EXPOSURE":0.0,
-                "SNAP_NUM":0
+                "SNAP_NUM":0,
+                "COMMAND_Q":[]
             },
         },
         "VFLAGS": {
@@ -378,39 +431,127 @@ def opcode_get(p_splice_vm, p_inst_id, p_param_id, p_reg_id):
             return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VFLAGS"]["FP_PRECISION"])
         if p_param_id == P_VXM_TLSC:
             return set_alu_register(p_splice_vm, p_reg_id, p_splice_vm["VFLAGS"]["VM_TIMESLICE"])
-        if p_param_id == P_VXM_TLSC:
+        if p_param_id == P_VXM_DBUG:
             return set_alu_register(p_splice_vm, p_reg_id, p_splice_vm["VFLAGS"]["VM_LOG_LEVEL"])
-    # imager
+    # Imager
     if p_inst_id == INST_IMG:
         if p_param_id == P_IMG_GAIN_R:
-            return set_fpu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_RED"])
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_RED"])
         if p_param_id == P_IMG_GAIN_G:
-            return set_fpu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_GRN"])
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_GRN"])
         if p_param_id == P_IMG_GAIN_B:
-            return set_fpu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_BLU"])
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_BLU"])
         if p_param_id == P_IMG_EXPOSE:
-            return set_fpu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_IMGR"]["EXPOSURE"])
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VBUS"]["INST_IMGR"]["EXPOSURE"])
         if p_param_id == P_IMG_NUMBER:
-            return set_alu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_IMGR"]["SNAP_NUM"])
+            return set_alu_register(p_splice_vm, p_reg_id, p_splice_vm["VBUS"]["INST_IMGR"]["SNAP_NUM"])
     # GPS
     if p_inst_id == INST_GPS:
+        # call GPS async update reques?
         if p_param_id == P_GPS_LATT:
-            return set_fpu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_GNSS"]["LAT"])
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VBUS"]["INST_GNSS"]["LAT"])
         if p_param_id == P_GPS_LONG:
-            return set_fpu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_GNSS"]["LON"])
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VBUS"]["INST_GNSS"]["LON"])
         if p_param_id == P_GPS_ALTT:
-            return set_fpu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_GNSS"]["ALT"])
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VBUS"]["INST_GNSS"]["ALT"])
         if p_param_id == P_GPS_TIME:
-            return set_fpu_register(p_splice_vm, p_reg_id,p_splice_vm["VBUS"]["INST_GNSS"]["TME"])
-
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VBUS"]["INST_GNSS"]["TME"])
+    # ADCS
+    if p_inst_id == INST_ADC:
+        # call ADC async update request?
+        if p_param_id == P_ADC_MODE:
+            return set_alu_register(p_splice_vm, p_reg_id, p_splice_vm["VBUS"]["INST_ADCS"]["ADCS_MODE"])
+        if p_param_id == P_ADC_MAGX:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VBUS"]["INST_ADCS"]["MAG_VAL_X"])
+        if p_param_id == P_ADC_MAGY:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VBUS"]["INST_ADCS"]["MAG_VAL_Y"])
+        if p_param_id == P_ADC_MAGZ:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VBUS"]["INST_ADCS"]["MAG_VAL_Z"])
+        if p_param_id == P_ADC_SUNX:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_SX])
+        if p_param_id == P_ADC_SUNY:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_SY])
+        if p_param_id == P_ADC_SUNZ:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_SZ])
+        if p_param_id == P_ADC_ANGX:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_AX])
+        if p_param_id == P_ADC_ANGY:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_AY])
+        if p_param_id == P_ADC_ANGZ:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_AZ])
+        if p_param_id == P_ADC_QTNA:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_QA])
+        if p_param_id == P_ADC_QTNB:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_QB])
+        if p_param_id == P_ADC_QTNC:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_QC])
+        if p_param_id == P_ADC_QTND:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_QD])
+        if p_param_id == P_ADC_MTQX:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_MX])
+        if p_param_id == P_ADC_MTQY:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_MY])
+        if p_param_id == P_ADC_MTQZ:
+            return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_MZ])
     return p_splice_vm, EX_BAD_OPERAND
 
+def opcode_set(p_splice_vm, p_inst_id, p_param_id, p_reg_id):
+    # Camera settings
+    if p_inst_id == INST_IMG:
+        if p_param_id == P_IMG_GAIN_R:
+            p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_RED"] = p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_id]
+            return p_splice_vm, EX_OPCODE_FINE
+        if p_param_id == P_IMG_GAIN_G:
+            p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_GRN"] = p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_id]
+            return p_splice_vm, EX_OPCODE_FINE
+        if p_param_id == P_IMG_GAIN_B:
+            p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_BLU"] = p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_id]
+            return p_splice_vm, EX_OPCODE_FINE
+        if p_param_id == P_IMG_EXPOSE:
+            p_splice_vm["VBUS"]["INST_IMGR"]["EXPOSURE"] = p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_id]
+            return p_splice_vm, EX_OPCODE_FINE
+    # internal VM settings
+    if p_inst_id == INST_VXM:
+        if p_param_id == P_VXM_PRSN:
+            p_splice_vm["VFLAGS"]["FP_PRECISION"] = p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_id]
+            return p_splice_vm, EX_OPCODE_FINE
+        if p_param_id == P_VXM_TLSC:
+            p_splice_vm["VFLAGS"]["VM_TIMESLICE"] = p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_id]
+            return p_splice_vm, EX_OPCODE_FINE
+        if p_param_id == P_VXM_DBUG:
+            return set_alu_register(p_splice_vm, p_reg_id, p_splice_vm["VFLAGS"]["VM_LOG_LEVEL"])
+    return p_splice_vm, EX_OPCODE_FINE # Should be EX_BAD_OPERAND, but keeping for compatibility sake
 
-def opcode_set(p_splice_vm):
-    return p_splice_vm
+def opcode_act(p_splice_vm, p_inst_id, p_param_id, p_reg_id):
+    # Camera operations
+    if p_inst_id == INST_IMG:
+        if p_param_id == A_IMG_DO_JPG:
+            p_splice_vm["VBUS"]["INST_IMGR"]["COMMAND_Q"].append(["TAKE_PHOTO", "JPG"])
+            return p_splice_vm, EX_OPCODE_FINE
+        if p_param_id == A_IMG_DO_RAW:
+            p_splice_vm["VBUS"]["INST_IMGR"]["COMMAND_Q"].append(["TAKE_PHOTO", "RAW"])
+            return p_splice_vm, EX_OPCODE_FINE
+        if p_param_id == A_IMG_DO_BMP:
+            p_splice_vm["VBUS"]["INST_IMGR"]["COMMAND_Q"].append(["TAKE_PHOTO", "BMP"])
+            return p_splice_vm, EX_OPCODE_FINE
 
-def opcode_act(p_splice_vm):
-    return p_splice_vm
+    # ADCS operations
+    if p_inst_id == INST_ADC:
+        if p_param_id == A_ADC_NADIR:
+            duration = p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_id]
+            p_splice_vm["VBUS"]["INST_ADCS"]["COMMAND_Q"].append(["SET_MODE", ["NADIR", duration])
+            return p_splice_vm, EX_OPCODE_FINE
+        if p_param_id == A_ADC_TOSUN:
+            p_splice_vm["VBUS"]["INST_ADCS"]["COMMAND_Q"].append(["SET_MODE", ["SUN_POINT", duration])
+            return p_splice_vm, EX_OPCODE_FINE
+        if p_param_id == A_ADC_UNSET:
+            p_splice_vm["VBUS"]["INST_ADCS"]["COMMAND_Q"].append(["SET_MODE", ["NULL", 0])
+            return p_splice_vm, EX_OPCODE_FINE
+        if p_param_id == A_ADC_BDOTT:
+            return p_splice_vm, EX_OPCODE_FINE # not supported in VM
+        if p_param_id == A_ADC_TRACK:
+            return p_splice_vm, EX_OPCODE_FINE # not supported in VM
+    return p_splice_vm, EX_BAD_OPERAND
 
 def opcode_fma(p_splice_vm, p_reg_a, p_reg_b, p_reg_c):
     if  (p_reg_a<0x10) and (p_reg_b<0x10) and (p_reg_c<0x10):

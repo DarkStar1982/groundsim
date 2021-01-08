@@ -109,7 +109,6 @@ class OBDHTestCases(TestBaseClass):
                 ],
                 'VXM_CLOCK': 0,
                 'NMF_CLOCK': 0,
-                'ADCS_MODE': 0
             },
             'VRAM': {
                 'TASK_CONTEXT_STATUS': {},
@@ -120,7 +119,13 @@ class OBDHTestCases(TestBaseClass):
                 "INST_LOGS":{
                     "OUT":[]
                 },
-                "INST_ADCS":{},
+                "INST_ADCS":{
+                    "ADCS_MODE":0,
+                    "MAG_VAL_X":0,
+                    "MAG_VAL_Y":0,
+                    "MAG_VAL_Z":0,
+                    "COMMAND_Q":[]
+                },
                 "INST_GNSS":{
                     "LAT":0.0,
                     "LON":0.0,
@@ -132,7 +137,8 @@ class OBDHTestCases(TestBaseClass):
                     "GAIN_GRN":0.0,
                     "GAIN_BLU":0.0,
                     "EXPOSURE":0.0,
-                    "SNAP_NUM":0
+                    "SNAP_NUM":0,
+                    "COMMAND_Q":[]
                 },
             },
             "VFLAGS":{
