@@ -534,7 +534,6 @@ def opcode_act(p_splice_vm, p_inst_id, p_param_id, p_reg_id):
         if p_param_id == A_IMG_DO_BMP:
             p_splice_vm["VBUS"]["INST_IMGR"]["COMMAND_Q"].append(["TAKE_PHOTO", "BMP"])
             return p_splice_vm, EX_OPCODE_FINE
-
     # ADCS operations
     if p_inst_id == INST_ADC:
         if p_param_id == A_ADC_NADIR:
@@ -724,8 +723,13 @@ def vm_execute(p_splice_vm, p_task):
             p_splice_vm, opcode_result = opcode_lea(p_splice_vm, op_a, op_b, op_c, group_id, task_id, offset)
         if next_opcode == OP_STR:
             p_splice_vm, opcode_result = opcode_str(p_splice_vm, op_a, op_c, task_info)
+        # CMP goes here
         if next_opcode == OP_GET:
             p_splice_vm, opcode_result = opcode_get(p_splice_vm, op_a, op_b, op_c)
+        if next_opcode == OP_SET:
+            p_splice_vm, opcode_result = opcode_set(p_splice_vm, op_a, op_b, op_c)
+        if next_opcode == OP_ACT:
+            p_splice_vm, opcode_result = opcode_act(p_splice_vm, op_a, op_b, op_c)
         if next_opcode == OP_FMA:
             p_splice_vm, opcode_result = opcode_fma(p_splice_vm, op_a, op_b, op_c)
         if next_opcode == OP_FSD:
