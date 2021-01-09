@@ -278,7 +278,7 @@ def set_fpu_register(p_splice_vm, p_reg_id, p_value):
 
 def set_alu_register(p_splice_vm, p_reg_id, p_value):
     if p_reg_id<0x10:
-        p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_id] = value
+        p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_id] = p_value
         return p_splice_vm, EX_OPCODE_FINE
     else:
         return p_splice_vm, EX_BAD_OPERAND
@@ -426,7 +426,7 @@ def opcode_get(p_splice_vm, p_inst_id, p_param_id, p_reg_id):
     # internal VM settings
     if p_inst_id == INST_VXM:
         if p_param_id == P_VXM_TIME:
-            return set_alu_register(p_splice_vm, p_reg_id, get_vm_time())
+            return set_alu_register(p_splice_vm, p_reg_id, get_vm_time(p_splice_vm))
         if p_param_id == P_VXM_PRSN:
             return set_fpu_register(p_splice_vm, p_reg_id, p_splice_vm["VFLAGS"]["FP_PRECISION"])
         if p_param_id == P_VXM_TLSC:
@@ -706,7 +706,7 @@ def vm_execute(p_splice_vm, p_task):
     task_info = "%s:%s:" % (group_id, task_id)
     while (next_opcode!=OP_HLT) and (ip<len(p_task)):
         word = unpack32to4x8(p_task[ip])
-        log_message(p_splice_vm, "%s%s" %(task_info, "{:x}".format(p_task[ip])), LOG_LEVEL_DEBUG)
+        p_splice_vm = log_message(p_splice_vm, "%s%s" %(task_info, "{:x}".format(p_task[ip])), LOG_LEVEL_DEBUG)
         next_opcode = word[0]
         op_a = word[1]
         op_b = word[2]
@@ -723,7 +723,8 @@ def vm_execute(p_splice_vm, p_task):
             p_splice_vm, opcode_result = opcode_lea(p_splice_vm, op_a, op_b, op_c, group_id, task_id, offset)
         if next_opcode == OP_STR:
             p_splice_vm, opcode_result = opcode_str(p_splice_vm, op_a, op_c, task_info)
-        # CMP goes here
+        if next_opcode == OP_CMP:
+            opcode_result = opcode_cmp(p_splice_vm, op_a, op_b, op_c, group_id)
         if next_opcode == OP_GET:
             p_splice_vm, opcode_result = opcode_get(p_splice_vm, op_a, op_b, op_c)
         if next_opcode == OP_SET:
@@ -740,6 +741,21 @@ def vm_execute(p_splice_vm, p_task):
             p_splice_vm, opcode_result = opcode_pow(p_splice_vm, op_a, op_b, op_c)
         if next_opcode == OP_NOR:
             p_splice_vm, opcode_result = opcode_nor(p_splice_vm, op_a, op_b, op_c)
+        if opcode_result == EX_BAD_OPERAND:
+            message_string = "%s%s" % (p_task_info, "ERROR - Bad operand in command word!")
+            p_splice_vm = log_message(p_splice_vm, message_string, LOG_LEVEL_ERROR)
+            p_splice_vm = set_vram_content(p_splice_vm, "TASK_CONTEXT_STATUS", p_task[0], TASK_ERROR_OPC)
+            return p_splice_vm
+        if opcode_result == EX_OPC_UNKNOWN:
+            message_string = "%s%s" % (p_task_info, "ERROR - Undecodable opcode!")
+            p_splice_vm = log_message(p_splice_vm, message_string, LOG_LEVEL_ERROR)
+            p_splice_vm = set_vram_content(p_splice_vm, "TASK_CONTEXT_STATUS", p_task[0], TASK_ERROR_OPC)
+            return p_splice_vm
+        if opcode_result == EX_CHECK_FALSE:
+            message_string = "%s%s" % (p_task_info, "Terminating task - execution conditions not met ")
+            p_splice_vm = log_message(p_splice_vm, message_string, LOG_LEVEL_INFO)
+            p_splice_vm = set_vram_content(p_splice_vm, "TASK_CONTEXT_STATUS", p_task[0], TASK_CON_UNMET)
+            return p_splice_vm
         ip = ip + 1
     return p_splice_vm
 
