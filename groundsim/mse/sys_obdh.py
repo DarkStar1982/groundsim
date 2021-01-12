@@ -815,17 +815,16 @@ def push_bus_messages(p_splice_vm, p_satellite):
 ################################################################################
 def initialize_obdh_subsystem(p_obdh_definition):
     p_obdh_subsystem = {
-        "splice_vm":create_vm(),
+        "splice_vm":init_vm(create_vm()),
         "data_bus":create_bus()
     }
-    p_obdh_subsystem["splice_vm"] = init_vm(p_obdh_subsystem["splice_vm"])
     return p_obdh_subsystem
 
 def load_command_script(p_obdh_subsystem, p_script):
     p_obdh_subsystem["splice_vm"] = load_user_task(p_obdh_subsystem["splice_vm"], p_script)
     return p_obdh_subsystem
 
-def obdh_step_forward(p_obdh_subsystem, p_seconds):
+def simulate_obdh_subsystem(p_obdh_subsystem, p_mission, p_seconds):
     # run forward for the number of seconds provided
     for i in range(0, p_seconds):
         p_obdh_subsystem["splice_vm"] = pull_bus_messages(p_obdh_subsystem["splice_vm"], p_obdh_subsystem["data_bus"])

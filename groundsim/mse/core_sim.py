@@ -8,6 +8,8 @@ from groundsim.mse.core_utils import (
     fp_equals
 )
 from groundsim.mse.lib_astro import get_orbital_data, time_since_periapsis
+from groundsim.mse.sys_adcs import initialize_adcs_subsystem, simulate_adcs_subsystem
+from groundsim.mse.sys_obdh import initialize_obdh_subsystem, simulate_obdh_subsystem
 from groundsim.mse.sys_payload import get_imager_frame, take_imager_snapshot, initialize_payload_instruments
 ################################################################################
 ########################## ENVIRONMENT SIMULATION CODE #########################
@@ -99,23 +101,14 @@ class CMSE_Sat():
     # should be loadable from DB data
     def initialize_satellite_subsystems(self):
         sat_components = {
-            "power_subsystem": {
+            "power": {
                 "solar_panels": {},
                 "battery":{},
                 "pdu":{},
                 "power_bus":{}
             },
-            "adcs": {
-                "imu" :{},
-                "gyro_x":{},
-                "gyro_y":{},
-            },
-            "obdh": {
-                "cpu": {},
-                "ram": {},
-                "storage":{},
-                "data_bus":{}
-            },
+            "adcs": initialize_adcs_subsystem(None),
+            "obdh": initialize_obdh_subsystem(None),
             "comm":{
                 "receiver":{},
                 "transmitter":{},
@@ -212,6 +205,11 @@ class CMSE_Sat():
     def evolve_satellite(self, p_mission, p_seconds):
         p_mission["satellite"]["location"] = self.get_satellite_position(p_mission)
         p_mission["satellite"]["formatted_telemetry"] = self.get_satellite_telemetry(p_mission)
+
+        # simulatate subsystems
+        p_mission["satellite"]["subsystems"]["adcs"] = simulate_adcs_subsystem(p_mission["satellite"]["subsystems"]["adcs"], p_mission, p_seconds)
+
+        # simulate instruments
         p_mission["satellite"]["instruments"]["imager"]["frame"] = get_imager_frame(
             p_mission["satellite"]["instruments"]["imager"]["fov"],
             p_mission["environment"]["ground_track"]["alt"],
