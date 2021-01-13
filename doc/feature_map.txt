@@ -17,6 +17,7 @@
 - Add "update TLE" command
 - Implement GPS simulation
 - Implement SDR simulation
+- Implemenent data exchange simulation between subsystems
 
 *** DONE ***
 20/12/2020
@@ -30,3 +31,6 @@
 - Do full mission simulation test
 = Foundd more efficient data structure for SpliceVM program memory
 = Switched execution from continous to step mode
+
+13/01/2021
+- Implemented OBDH subsystem VM

@@ -112,8 +112,8 @@ class CMSE_Sat():
             "comm":{
                 "receiver":{},
                 "transmitter":{},
-                "data_bus":{}
-            }
+            },
+            "dbus":{}
         }
         return sat_components
 
@@ -201,15 +201,16 @@ class CMSE_Sat():
         }
         return telemetry_object
 
-    # at 1 second resolution - input is Environment, output is new satellite
+    # simulate each subsystem at 1 sec resolution
     def evolve_satellite(self, p_mission, p_seconds):
         p_mission["satellite"]["location"] = self.get_satellite_position(p_mission)
         p_mission["satellite"]["formatted_telemetry"] = self.get_satellite_telemetry(p_mission)
 
         # simulatate subsystems
-        p_mission["satellite"]["subsystems"]["adcs"] = simulate_adcs_subsystem(p_mission["satellite"]["subsystems"]["adcs"], p_mission, p_seconds)
+        p_mission["satellite"]["subsystems"]["adcs"], p_mission["satellite"]["subsystems"]["dbus"] =  simulate_adcs_subsystem(p_mission["satellite"]["subsystems"]["adcs"], p_mission["satellite"]["subsystems"]["dbus"], p_seconds)
+        p_mission["satellite"]["subsystems"]["obdh"], p_mission["satellite"]["subsystems"]["dbus"] = simulate_obdh_subsystem(p_mission["satellite"]["subsystems"]["obdh"], p_mission["satellite"]["subsystems"]["dbus"], p_seconds)
 
-        # simulate instruments
+        # simulate instrument operation
         p_mission["satellite"]["instruments"]["imager"]["frame"] = get_imager_frame(
             p_mission["satellite"]["instruments"]["imager"]["fov"],
             p_mission["environment"]["ground_track"]["alt"],

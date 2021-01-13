@@ -10,5 +10,5 @@ def initialize_adcs_subsystem(p_adcs_definition):
     }
     return p_adcs_subsystem
 
-def simulate_adcs_subsystem(p_adcs_subsystem, p_mission, p_seconds):
-    return p_adcs_subsystem
+def simulate_adcs_subsystem(p_adcs_subsystem, p_dbus, p_seconds):
+    return p_adcs_subsystem, p_dbus

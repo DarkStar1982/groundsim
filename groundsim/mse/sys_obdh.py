@@ -790,25 +790,6 @@ def run_sheduled_tasks(p_splice_vm):
                     p_splice_vm = set_vram_content(p_splice_vm, "TASK_CONTEXT_WASRUN", task_header, vm_time)
     return p_splice_vm
 
-################################################################################
-############################# SATELLITE MESSAGE BUS ############################
-################################################################################
-
-def create_bus():
-    bus = {
-        "adcs":[],
-        "comm":[],
-        "inst":[],
-        "gps":[],
-        "log":[]
-    }
-    return bus
-
-def pull_bus_messages(p_splice_vm, p_satellite):
-    return p_data_bus
-
-def push_bus_messages(p_splice_vm, p_satellite):
-    return p_data_bus
 
 ################################################################################
 ########################### OBDH SIMULATION WRAPPERS ###########################
@@ -816,7 +797,6 @@ def push_bus_messages(p_splice_vm, p_satellite):
 def initialize_obdh_subsystem(p_obdh_definition):
     p_obdh_subsystem = {
         "splice_vm":init_vm(create_vm()),
-        "data_bus":create_bus()
     }
     return p_obdh_subsystem
 
@@ -824,10 +804,14 @@ def load_command_script(p_obdh_subsystem, p_script):
     p_obdh_subsystem["splice_vm"] = load_user_task(p_obdh_subsystem["splice_vm"], p_script)
     return p_obdh_subsystem
 
-def simulate_obdh_subsystem(p_obdh_subsystem, p_mission, p_seconds):
+def transfer_bus_data(p_splice_vm, p_satellite_bus):
+    return p_splice_vm, p_satellite_bus
+
+def simulate_obdh_subsystem(p_obdh_subsystem, p_dbus, p_seconds):
     # run forward for the number of seconds provided
     for i in range(0, p_seconds):
-        p_obdh_subsystem["splice_vm"] = pull_bus_messages(p_obdh_subsystem["splice_vm"], p_obdh_subsystem["data_bus"])
+        # p_obdh_subsystem["splice_vm"] = pull_system_data(p_obdh_subsystem["splice_vm"], p_mission["satellite"])
         p_obdh_subsystem["splice_vm"] = run_sheduled_tasks(p_obdh_subsystem["splice_vm"])
-        p_obdh_subsystem["data_bus"] = push_bus_messages(p_obdh_subsystem["splice_vm"], p_obdh_subsystem["data_bus"])
-    return p_obdh_subsystem
+        p_obdh_subsystem["splice_vm"], p_dbus =  transfer_bus_data(p_obdh_subsystem["splice_vm"], p_dbus)
+        #p_obdh_subsystem["data_bus"] = push_bus_data(p_obdh_subsystem["splice_vm"], p_obdh_subsystem["data_bus"])
+    return p_obdh_subsystem, p_dbus

@@ -235,4 +235,4 @@ class OBDHTestCases(TestBaseClass):
         for i in range (0,30):
             self.test_vm = run_sheduled_tasks(self.test_vm)
         #test_result = ['1:5:1', '1:5:0', '1:5:-10', '1:5:-10', '1:5:-10', '1:5:-1', '1:4:2.0', '1:4:10.0', '1:4:100.0', '1:4:4.605170185988092']
-        print(self.test_vm["VBUS"]["INST_LOGS"]["OUT"])
+        #print(self.test_vm["VBUS"]["INST_LOGS"]["OUT"])
