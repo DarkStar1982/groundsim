@@ -792,7 +792,7 @@ def run_sheduled_tasks(p_splice_vm):
 
 
 ################################################################################
-########################### OBDH SIMULATION WRAPPERS ###########################
+############################# OBDH SIMULATION CORE #############################
 ################################################################################
 def initialize_obdh_subsystem(p_obdh_definition):
     p_obdh_subsystem = {
@@ -804,14 +804,17 @@ def load_command_script(p_obdh_subsystem, p_script):
     p_obdh_subsystem["splice_vm"] = load_user_task(p_obdh_subsystem["splice_vm"], p_script)
     return p_obdh_subsystem
 
-def transfer_bus_data(p_splice_vm, p_satellite_bus):
+def read_from_data_bus(p_satellite_bus, p_splice_vm):
     return p_splice_vm, p_satellite_bus
 
-def simulate_obdh_subsystem(p_obdh_subsystem, p_dbus, p_seconds):
-    # run forward for the number of seconds provided
+def write_to_data_bus(p_satellite_bus, p_splice_vm):
+    return p_satellite_bus
+
+# run forward for the number of seconds provided
+def simulate_obdh_subsystem(p_obdh_subsystem, p_mission, p_seconds):
+    data_bus = p_mission["satellite"]["subsystems"]["dbus"]
     for i in range(0, p_seconds):
-        # p_obdh_subsystem["splice_vm"] = pull_system_data(p_obdh_subsystem["splice_vm"], p_mission["satellite"])
+        p_obdh_subsystem["splice_vm"], data_bus = read_from_data_bus(data_bus, p_obdh_subsystem["splice_vm"],)
         p_obdh_subsystem["splice_vm"] = run_sheduled_tasks(p_obdh_subsystem["splice_vm"])
-        p_obdh_subsystem["splice_vm"], p_dbus =  transfer_bus_data(p_obdh_subsystem["splice_vm"], p_dbus)
-        #p_obdh_subsystem["data_bus"] = push_bus_data(p_obdh_subsystem["splice_vm"], p_obdh_subsystem["data_bus"])
-    return p_obdh_subsystem, p_dbus
+        data_bus = write_to_data_bus(data_bus, p_obdh_subsystem["splice_vm"])
+    return p_obdh_subsystem, data_bus

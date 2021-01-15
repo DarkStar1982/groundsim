@@ -10,6 +10,7 @@ from groundsim.mse.core_utils import (
 from groundsim.mse.lib_astro import get_orbital_data, time_since_periapsis
 from groundsim.mse.sys_adcs import initialize_adcs_subsystem, simulate_adcs_subsystem
 from groundsim.mse.sys_obdh import initialize_obdh_subsystem, simulate_obdh_subsystem
+from groundsim.mse.sys_comm import initialize_comm_subsystem, simulate_comm_subsystem
 from groundsim.mse.sys_payload import get_imager_frame, take_imager_snapshot, initialize_payload_instruments
 ################################################################################
 ########################## ENVIRONMENT SIMULATION CODE #########################
@@ -109,13 +110,19 @@ class CMSE_Sat():
             },
             "adcs": initialize_adcs_subsystem(None),
             "obdh": initialize_obdh_subsystem(None),
-            "comm":{
-                "receiver":{},
-                "transmitter":{},
-            },
-            "dbus":{}
+            "comm": initialize_obdh_subsystem(None),
+            "dbus": self.initialize_data_bus()
         }
         return sat_components
+
+    def initialize_data_bus(self):
+        data_bus = {
+            "adcs":{
+                "out":{},
+                "inb":{}
+            },
+        }
+        return data_bus
 
     def initialize_satellite_telemetry(self):
         telemetry = {
@@ -207,8 +214,9 @@ class CMSE_Sat():
         p_mission["satellite"]["formatted_telemetry"] = self.get_satellite_telemetry(p_mission)
 
         # simulatate subsystems
-        p_mission["satellite"]["subsystems"]["adcs"], p_mission["satellite"]["subsystems"]["dbus"] =  simulate_adcs_subsystem(p_mission["satellite"]["subsystems"]["adcs"], p_mission["satellite"]["subsystems"]["dbus"], p_seconds)
-        p_mission["satellite"]["subsystems"]["obdh"], p_mission["satellite"]["subsystems"]["dbus"] = simulate_obdh_subsystem(p_mission["satellite"]["subsystems"]["obdh"], p_mission["satellite"]["subsystems"]["dbus"], p_seconds)
+        for i in range (0, p_seconds):
+            p_mission["satellite"]["subsystems"]["adcs"], p_mission["satellite"]["subsystems"]["dbus"] = simulate_adcs_subsystem(p_mission["satellite"]["subsystems"]["adcs"], p_mission, 1)
+            p_mission["satellite"]["subsystems"]["obdh"], p_mission["satellite"]["subsystems"]["dbus"] = simulate_obdh_subsystem(p_mission["satellite"]["subsystems"]["obdh"], p_mission, 1)
 
         # simulate instrument operation
         p_mission["satellite"]["instruments"]["imager"]["frame"] = get_imager_frame(

@@ -1,7 +1,9 @@
 # should include ground station visibility calculation - TBD
 def initialize_comm_subsystem(p_comm_definition):
+    # Full definition TBD
     p_comm_subsystem = {
-        # TBD
+        "receiver":{},
+        "transmitter":{}
     }
     return p_comm_subsystem
 
