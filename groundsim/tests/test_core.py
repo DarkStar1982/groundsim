@@ -99,3 +99,36 @@ class MissionScenarioTest(TestCase):
                 self.mission = sce_sim.execute_mission_action(self.mission,"take_photo")
             i = i + self.step_time
         assert(self.mission["scenario"]["progress"] == self.mission["scenario"]["points_to_win"])
+
+    def test_obdh_scripts(self):
+        test_filenames_b = [
+            "/data/test_b1.splc",
+            #"/data/test_b2.splc",
+            #"/data/test_b3.splc",
+            #"/data/test_b4a.splc",
+            #"/data/test_b4b.splc",
+            #"/data/test_b5.splc",
+        ]
+        env_sim = CMSE_Env()
+        sat_sim = CMSE_Sat()
+        sce_sim = CMSE_SceEng()
+        # create scenario
+        self.mission = {}
+        self.mission["environment"] = env_sim.create_mission_environment(self.norad_id, self.start_date, self.tle_data)
+        self.mission["satellite"] = sat_sim.create_mission_satellite(self.satellite_config)
+
+        i = 0
+        while i<self.total_time:
+            self.mission["environment"] = env_sim.evolve_environment(self.mission["environment"], self.step_time)
+            self.mission["satellite"] = sat_sim.evolve_satellite(self.mission, self.step_time)
+            i = i + self.step_time
+
+        #for item in self.test_filenames_b:
+        #    f = open (SITE_ROOT + item, "r")
+        #    data = f.read().split("\n")
+        #    line_data = data[:-1]
+        #    self.test_vm = load_user_task(self.test_vm, line_data)
+        #for i in range (0,30):
+        #    self.test_vm = run_sheduled_tasks(self.test_vm)
+        #test_result = ['1:5:1', '1:5:0', '1:5:-10', '1:5:-10', '1:5:-10', '1:5:-1', '1:4:2.0', '1:4:10.0', '1:4:100.0', '1:4:4.605170185988092']
+        #print(self.test_vm["VBUS"]["INST_LOGS"]["OUT"])

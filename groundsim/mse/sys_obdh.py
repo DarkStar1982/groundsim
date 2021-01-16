@@ -804,8 +804,13 @@ def load_command_script(p_obdh_subsystem, p_script):
     p_obdh_subsystem["splice_vm"] = load_user_task(p_obdh_subsystem["splice_vm"], p_script)
     return p_obdh_subsystem
 
-def read_from_data_bus(p_satellite_bus, p_splice_vm):
-    return p_splice_vm, p_satellite_bus
+def read_from_data_bus(p_splice_vm, p_satellite_bus):
+    p_splice_vm["VBUS"]["INST_GNSS"]["LAT"] = p_satellite_bus["gps"]["out"]["lat"]
+    p_splice_vm["VBUS"]["INST_GNSS"]["LON"] = p_satellite_bus["gps"]["out"]["lng"]
+    p_splice_vm["VBUS"]["INST_GNSS"]["ALT"] = p_satellite_bus["gps"]["out"]["alt"]
+    p_splice_vm["VBUS"]["INST_GNSS"]["TME"] = p_satellite_bus["gps"]["out"]["tme"]
+    p_splice_vm["VBUS"]["INST_ADCS"]["ADCS_MODE"] = p_satellite_bus["adc"]["out"]["mode"]
+    return p_splice_vm
 
 def write_to_data_bus(p_satellite_bus, p_splice_vm):
     return p_satellite_bus
@@ -814,7 +819,7 @@ def write_to_data_bus(p_satellite_bus, p_splice_vm):
 def simulate_obdh_subsystem(p_obdh_subsystem, p_mission, p_seconds):
     data_bus = p_mission["satellite"]["subsystems"]["dbus"]
     for i in range(0, p_seconds):
-        p_obdh_subsystem["splice_vm"], data_bus = read_from_data_bus(data_bus, p_obdh_subsystem["splice_vm"],)
+        p_obdh_subsystem["splice_vm"] = read_from_data_bus(p_obdh_subsystem["splice_vm"], data_bus)
         p_obdh_subsystem["splice_vm"] = run_sheduled_tasks(p_obdh_subsystem["splice_vm"])
         data_bus = write_to_data_bus(data_bus, p_obdh_subsystem["splice_vm"])
     return p_obdh_subsystem, data_bus

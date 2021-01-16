@@ -151,14 +151,6 @@ class OBDHTestCases(TestBaseClass):
             "/data/test_a4.splc",
             "/data/test_a5.splc",
         ]
-        self.test_filenames_b = [
-            "/data/test_b1.splc",
-            #"/data/test_b2.splc",
-            #"/data/test_b3.splc",
-            #"/data/test_b4a.splc",
-            #"/data/test_b4b.splc",
-            #"/data/test_b5.splc",
-        ]
 
     def test_init_vm(self):
         self.test_vm = init_vm(self.test_vm)
@@ -223,16 +215,3 @@ class OBDHTestCases(TestBaseClass):
             self.test_vm = run_sheduled_tasks(self.test_vm)
         test_result = ['1:5:1', '1:5:0', '1:5:-10', '1:5:-10', '1:5:-10', '1:5:-1', '1:4:2.0', '1:4:10.0', '1:4:100.0', '1:4:4.605170185988092']
         assert(self.test_vm["VBUS"]["INST_LOGS"]["OUT"] == test_result)
-
-    def test_run_tests_b(self):
-        self.test_vm = init_vm(self.test_vm)
-        self.test_vm = start_vm(self.test_vm)
-        for item in self.test_filenames_b:
-            f = open (SITE_ROOT + item, "r")
-            data = f.read().split("\n")
-            line_data = data[:-1]
-            self.test_vm = load_user_task(self.test_vm, line_data)
-        for i in range (0,30):
-            self.test_vm = run_sheduled_tasks(self.test_vm)
-        #test_result = ['1:5:1', '1:5:0', '1:5:-10', '1:5:-10', '1:5:-10', '1:5:-1', '1:4:2.0', '1:4:10.0', '1:4:100.0', '1:4:4.605170185988092']
-        #print(self.test_vm["VBUS"]["INST_LOGS"]["OUT"])

@@ -117,10 +117,14 @@ class CMSE_Sat():
 
     def initialize_data_bus(self):
         data_bus = {
-            "adcs":{
+            "gps":{
                 "out":{},
                 "inb":{}
             },
+            "adc": {
+                "out":{},
+                "inb":{}
+            }
         }
         return data_bus
 

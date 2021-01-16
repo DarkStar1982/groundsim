@@ -1,11 +1,20 @@
+ADCS_MODES = {
+    "UNSET": 1,
+    "TRACK": 2,
+    "BDOTT": 3,
+    "TOSUN": 4,
+    "NADIR": 5
+}
+
 def initialize_adcs_subsystem(p_adcs_definition):
     p_adcs_subsystem = {
-        "ADCS_MODE": "UNDEFINED",
-        "IMU":{},
+        "ADCS_MODE": ADCS_MODES["UNSET"],
+        "IMU":{}, #<- quaternions
         "GPS":{
             "LAT":0.0,
             "LON":0.0,
-            "ALT":0.0
+            "ALT":0.0,
+            "TME":0
         }
     }
     return p_adcs_subsystem
@@ -19,9 +28,11 @@ def set_location(p_adcs_subsystem, p_location):
     return p_adcs_subsystem
 
 def write_to_data_bus(data_bus, p_adcs_subsystem):
-    data_bus["adcs"]["out"]["gps_lat"] = p_adcs_subsystem["GPS"]["LAT"]
-    data_bus["adcs"]["out"]["gps_lng"] = p_adcs_subsystem["GPS"]["LON"]
-    data_bus["adcs"]["out"]["gps_alt"] = p_adcs_subsystem["GPS"]["ALT"]
+    data_bus["gps"]["out"]["lat"] = p_adcs_subsystem["GPS"]["LAT"]
+    data_bus["gps"]["out"]["lng"] = p_adcs_subsystem["GPS"]["LON"]
+    data_bus["gps"]["out"]["alt"] = p_adcs_subsystem["GPS"]["ALT"]
+    data_bus["gps"]["out"]["tme"] = p_adcs_subsystem["GPS"]["TME"]
+    data_bus["adc"]["out"]["mode"] = p_adcs_subsystem["ADCS_MODE"]
     return data_bus
 
 def simulate_adcs_subsystem(p_adcs_subsystem, p_mission, p_seconds):
