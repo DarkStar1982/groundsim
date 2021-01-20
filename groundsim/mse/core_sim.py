@@ -9,7 +9,7 @@ from groundsim.mse.core_utils import (
 )
 from groundsim.mse.lib_astro import get_orbital_data, time_since_periapsis
 from groundsim.mse.sys_adcs import initialize_adcs_subsystem, simulate_adcs_subsystem
-from groundsim.mse.sys_obdh import initialize_obdh_subsystem, simulate_obdh_subsystem
+from groundsim.mse.sys_obdh import initialize_obdh_subsystem, simulate_obdh_subsystem, load_command_script
 from groundsim.mse.sys_comm import initialize_comm_subsystem, simulate_comm_subsystem
 from groundsim.mse.sys_payload import get_imager_frame, take_imager_snapshot, initialize_payload_instruments
 ################################################################################
@@ -267,4 +267,8 @@ class CMSE_SceEng():
     def execute_mission_action(self, p_mission, p_action):
         if p_action == "take_photo":
             p_mission = take_imager_snapshot(p_mission)
+        return p_mission
+
+    def load_obdh_program(self, p_mission, p_script):
+        p_mission["satellite"]["subsystems"]["obdh"] = load_command_script(p_mission["satellite"]["subsystems"]["obdh"], p_script)
         return p_mission

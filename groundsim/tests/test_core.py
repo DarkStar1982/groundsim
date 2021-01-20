@@ -1,8 +1,11 @@
+import os.path
 from math import radians, isclose
 from django.test import TestCase
 from skyfield.api import EarthSatellite, load
 from groundsim.mse.core_sim import CMSE_Env, CMSE_Sat, CMSE_SceEng
 from groundsim.mse.core_utils import fp_equals
+
+SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 
 class TestBaseClass(TestCase):
     def fp_eq(self, a, b):
@@ -79,6 +82,14 @@ class MissionScenarioTest(TestCase):
         self.win_time = 390
         self.total_time = 400
         self.step_time = 5
+        self.test_filenames_b = [
+            "/data/test_b1.splc",
+            #"/data/test_b2.splc",
+            #"/data/test_b3.splc",
+            #"/data/test_b4a.splc",
+            #"/data/test_b4b.splc",
+            #"/data/test_b5.splc",
+        ]
 
     def test_sample_scenario(self):
         env_sim = CMSE_Env()
@@ -100,15 +111,8 @@ class MissionScenarioTest(TestCase):
             i = i + self.step_time
         assert(self.mission["scenario"]["progress"] == self.mission["scenario"]["points_to_win"])
 
-    def test_obdh_scripts(self):
-        test_filenames_b = [
-            "/data/test_b1.splc",
-            #"/data/test_b2.splc",
-            #"/data/test_b3.splc",
-            #"/data/test_b4a.splc",
-            #"/data/test_b4b.splc",
-            #"/data/test_b5.splc",
-        ]
+    def test_obdh_script(self):
+
         env_sim = CMSE_Env()
         sat_sim = CMSE_Sat()
         sce_sim = CMSE_SceEng()
@@ -117,18 +121,19 @@ class MissionScenarioTest(TestCase):
         self.mission["environment"] = env_sim.create_mission_environment(self.norad_id, self.start_date, self.tle_data)
         self.mission["satellite"] = sat_sim.create_mission_satellite(self.satellite_config)
 
+        # Load OBDH tasks
+        for item in self.test_filenames_b:
+            f = open (SITE_ROOT + item, "r")
+            data = f.read().split("\n")
+            line_data = data[:-1]
+            self.mission = sce_sim.load_obdh_program(self.mission, line_data)
+
         i = 0
         while i<self.total_time:
             self.mission["environment"] = env_sim.evolve_environment(self.mission["environment"], self.step_time)
             self.mission["satellite"] = sat_sim.evolve_satellite(self.mission, self.step_time)
             i = i + self.step_time
-
-        #for item in self.test_filenames_b:
-        #    f = open (SITE_ROOT + item, "r")
-        #    data = f.read().split("\n")
-        #    line_data = data[:-1]
-        #    self.test_vm = load_user_task(self.test_vm, line_data)
-        #for i in range (0,30):
-        #    self.test_vm = run_sheduled_tasks(self.test_vm)
-        #test_result = ['1:5:1', '1:5:0', '1:5:-10', '1:5:-10', '1:5:-10', '1:5:-1', '1:4:2.0', '1:4:10.0', '1:4:100.0', '1:4:4.605170185988092']
-        #print(self.test_vm["VBUS"]["INST_LOGS"]["OUT"])
+        log_result = ['2:1:400.0', '2:1:0.0', '2:1:1', '2:1:510.9632641160709']
+        log_slice = self.mission["satellite"]["subsystems"]["obdh"]["splice_vm"]["VBUS"]["INST_LOGS"]["OUT"][-4:]
+        assert(log_result == log_slice)
+        
