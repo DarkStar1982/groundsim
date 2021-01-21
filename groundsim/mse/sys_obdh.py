@@ -820,6 +820,10 @@ def read_from_data_bus(p_splice_vm, p_satellite_bus):
     p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_SX] = p_satellite_bus["adc"]["out"]["imu"]["sun_x"]
     p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_SY] = p_satellite_bus["adc"]["out"]["imu"]["sun_y"]
     p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_SZ] = p_satellite_bus["adc"]["out"]["imu"]["sun_z"]
+    # angular accelerations
+    p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_AX] = p_satellite_bus["adc"]["out"]["imu"]["sun_x"]
+    p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_AY] = p_satellite_bus["adc"]["out"]["imu"]["sun_y"]
+    p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_AZ] = p_satellite_bus["adc"]["out"]["imu"]["sun_z"]
     # quaternions
     p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_QA] = p_satellite_bus["adc"]["out"]["imu"]["qat_a"]
     p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_QB] = p_satellite_bus["adc"]["out"]["imu"]["qat_b"]
@@ -833,7 +837,10 @@ def read_from_data_bus(p_splice_vm, p_satellite_bus):
     return p_splice_vm
 
 def write_to_data_bus(p_satellite_bus, p_splice_vm):
-    return p_satellite_bus
+    # pop VM command queues
+    # push commands to bus queues
+    
+    return p_splice_vm, p_satellite_bus
 
 # run forward for the number of seconds provided
 def simulate_obdh_subsystem(p_obdh_subsystem, p_mission, p_seconds):
@@ -841,5 +848,5 @@ def simulate_obdh_subsystem(p_obdh_subsystem, p_mission, p_seconds):
     for i in range(0, p_seconds):
         p_obdh_subsystem["splice_vm"] = read_from_data_bus(p_obdh_subsystem["splice_vm"], data_bus)
         p_obdh_subsystem["splice_vm"] = run_sheduled_tasks(p_obdh_subsystem["splice_vm"])
-        data_bus = write_to_data_bus(data_bus, p_obdh_subsystem["splice_vm"])
+        p_obdh_subsystem["splice_vm"], data_bus = write_to_data_bus(data_bus, p_obdh_subsystem["splice_vm"])
     return p_obdh_subsystem, data_bus

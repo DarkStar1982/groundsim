@@ -123,7 +123,7 @@ class CMSE_Sat():
                     "imu":{},
                     "mtq":{}
                 },
-                "inb":{}
+                "inb":[]
             }
         }
         return data_bus

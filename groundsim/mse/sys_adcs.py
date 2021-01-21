@@ -57,6 +57,10 @@ def write_to_data_bus(data_bus, p_adcs_subsystem):
     data_bus["adc"]["out"]["imu"]["sun_y"] = p_adcs_subsystem["IMU"]["SUN_Y"]
     data_bus["adc"]["out"]["imu"]["sun_z"] = p_adcs_subsystem["IMU"]["SUN_Z"]
 
+    data_bus["adc"]["out"]["imu"]["ang_x"] = p_adcs_subsystem["IMU"]["ANG_X"]
+    data_bus["adc"]["out"]["imu"]["ang_y"] = p_adcs_subsystem["IMU"]["ANG_Y"]
+    data_bus["adc"]["out"]["imu"]["ang_z"] = p_adcs_subsystem["IMU"]["ANG_Z"]
+
     data_bus["adc"]["out"]["imu"]["mag_x"] = p_adcs_subsystem["IMU"]["MAG_X"]
     data_bus["adc"]["out"]["imu"]["mag_y"] = p_adcs_subsystem["IMU"]["MAG_Y"]
     data_bus["adc"]["out"]["imu"]["mag_z"] = p_adcs_subsystem["IMU"]["MAG_Z"]
