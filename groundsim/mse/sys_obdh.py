@@ -805,11 +805,31 @@ def load_command_script(p_obdh_subsystem, p_script):
     return p_obdh_subsystem
 
 def read_from_data_bus(p_splice_vm, p_satellite_bus):
-    p_splice_vm["VBUS"]["INST_GNSS"]["LAT"] = p_satellite_bus["gps"]["out"]["lat"]
-    p_splice_vm["VBUS"]["INST_GNSS"]["LON"] = p_satellite_bus["gps"]["out"]["lng"]
-    p_splice_vm["VBUS"]["INST_GNSS"]["ALT"] = p_satellite_bus["gps"]["out"]["alt"]
-    p_splice_vm["VBUS"]["INST_GNSS"]["TME"] = p_satellite_bus["gps"]["out"]["tme"]
+    # Selected ADCS mode
     p_splice_vm["VBUS"]["INST_ADCS"]["ADCS_MODE"] = p_satellite_bus["adc"]["out"]["mode"]
+    # gps vector
+    p_splice_vm["VBUS"]["INST_GNSS"]["LAT"] = p_satellite_bus["adc"]["out"]["gps"]["lat"]
+    p_splice_vm["VBUS"]["INST_GNSS"]["LON"] = p_satellite_bus["adc"]["out"]["gps"]["lng"]
+    p_splice_vm["VBUS"]["INST_GNSS"]["ALT"] = p_satellite_bus["adc"]["out"]["gps"]["alt"]
+    p_splice_vm["VBUS"]["INST_GNSS"]["TME"] = p_satellite_bus["adc"]["out"]["gps"]["tme"]
+    # mag vector - don't ask why
+    p_splice_vm["VBUS"]["INST_ADCS"]["MAG_VAL_X"] = p_satellite_bus["adc"]["out"]["imu"]["mag_x"]
+    p_splice_vm["VBUS"]["INST_ADCS"]["MAG_VAL_Y"] = p_satellite_bus["adc"]["out"]["imu"]["mag_y"]
+    p_splice_vm["VBUS"]["INST_ADCS"]["MAG_VAL_Z"] = p_satellite_bus["adc"]["out"]["imu"]["mag_z"]
+    # sun vector
+    p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_SX] = p_satellite_bus["adc"]["out"]["imu"]["sun_x"]
+    p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_SY] = p_satellite_bus["adc"]["out"]["imu"]["sun_y"]
+    p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_SZ] = p_satellite_bus["adc"]["out"]["imu"]["sun_z"]
+    # quaternions
+    p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_QA] = p_satellite_bus["adc"]["out"]["imu"]["qat_a"]
+    p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_QB] = p_satellite_bus["adc"]["out"]["imu"]["qat_b"]
+    p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_QC] = p_satellite_bus["adc"]["out"]["imu"]["qat_c"]
+    p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_QD] = p_satellite_bus["adc"]["out"]["imu"]["qat_d"]
+    # magnetorquerer
+    p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_MX] = p_satellite_bus["adc"]["out"]["mtq"]["mtq_x"]
+    p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_MY] = p_satellite_bus["adc"]["out"]["mtq"]["mtq_y"]
+    p_splice_vm["VCPU"]["FPU_REGISTERS"][ADC_MZ] = p_satellite_bus["adc"]["out"]["mtq"]["mtq_z"]
+
     return p_splice_vm
 
 def write_to_data_bus(p_satellite_bus, p_splice_vm):

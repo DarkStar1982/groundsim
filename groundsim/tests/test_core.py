@@ -82,15 +82,16 @@ class MissionScenarioTest(TestCase):
         self.win_time = 390
         self.total_time = 400
         self.step_time = 5
-        self.test_filenames_b = [
+        self.test_filenames_b1 = [
             "/data/test_b1.splc",
-            #"/data/test_b2.splc",
-            #"/data/test_b3.splc",
+            "/data/test_b2.splc",
+        ]
+        self.test_filenames_b2 = [
+            "/data/test_b3.splc",
             #"/data/test_b4a.splc",
             #"/data/test_b4b.splc",
             #"/data/test_b5.splc",
         ]
-
     def test_sample_scenario(self):
         env_sim = CMSE_Env()
         sat_sim = CMSE_Sat()
@@ -111,8 +112,7 @@ class MissionScenarioTest(TestCase):
             i = i + self.step_time
         assert(self.mission["scenario"]["progress"] == self.mission["scenario"]["points_to_win"])
 
-    def test_obdh_script(self):
-
+    def test_obdh_scripts_part_b1(self):
         env_sim = CMSE_Env()
         sat_sim = CMSE_Sat()
         sce_sim = CMSE_SceEng()
@@ -122,7 +122,7 @@ class MissionScenarioTest(TestCase):
         self.mission["satellite"] = sat_sim.create_mission_satellite(self.satellite_config)
 
         # Load OBDH tasks
-        for item in self.test_filenames_b:
+        for item in self.test_filenames_b1:
             f = open (SITE_ROOT + item, "r")
             data = f.read().split("\n")
             line_data = data[:-1]
@@ -133,7 +133,31 @@ class MissionScenarioTest(TestCase):
             self.mission["environment"] = env_sim.evolve_environment(self.mission["environment"], self.step_time)
             self.mission["satellite"] = sat_sim.evolve_satellite(self.mission, self.step_time)
             i = i + self.step_time
-        log_result = ['2:1:400.0', '2:1:0.0', '2:1:1', '2:1:510.9632641160709']
-        log_slice = self.mission["satellite"]["subsystems"]["obdh"]["splice_vm"]["VBUS"]["INST_LOGS"]["OUT"][-4:]
-        assert(log_result == log_slice)
-        
+        log_result_b1 = ['2:1:400.0', '2:1:0.0', '2:1:1', '2:1:510.9632641160709']
+        log_result_b2 = ['2:2:0.0', '2:2:0.0', '2:2:0.0', '2:2:0.0', '2:2:0.0']
+        all_logs = self.mission["satellite"]["subsystems"]["obdh"]["splice_vm"]["VBUS"]["INST_LOGS"]["OUT"]
+        assert(log_result_b1==all_logs[-14:-10])
+        assert(log_result_b2==all_logs[-5:])
+
+    def test_obdh_scripts_part_b2(self):
+        env_sim = CMSE_Env()
+        sat_sim = CMSE_Sat()
+        sce_sim = CMSE_SceEng()
+        # create scenario
+        self.mission = {}
+        self.mission["environment"] = env_sim.create_mission_environment(self.norad_id, self.start_date, self.tle_data)
+        self.mission["satellite"] = sat_sim.create_mission_satellite(self.satellite_config)
+        # Load OBDH tasks
+        for item in self.test_filenames_b2:
+            f = open (SITE_ROOT + item, "r")
+            data = f.read().split("\n")
+            line_data = data[:-1]
+            self.mission = sce_sim.load_obdh_program(self.mission, line_data)
+
+        i = 0
+        while i<self.total_time:
+            self.mission["environment"] = env_sim.evolve_environment(self.mission["environment"], self.step_time)
+            self.mission["satellite"] = sat_sim.evolve_satellite(self.mission, self.step_time)
+            i = i + self.step_time
+        all_logs = self.mission["satellite"]["subsystems"]["obdh"]["splice_vm"]["VBUS"]["INST_LOGS"]["OUT"]
+        print(all_logs)
