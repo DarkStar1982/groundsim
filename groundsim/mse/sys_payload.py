@@ -54,9 +54,12 @@ def initialize_payload_instruments(instrument_data):
             "sensor":instrument_data["imager"]["sensor"],
             "pixel":instrument_data["imager"]["pixel"],
             "counter":0,
-            "buffer":[]
+            "buffer":[],
+            "gain_r":1.0,
+            "gain_g":1.0,
+            "gain_b":1.0,
+            "expose":1.0,
         },
         # sdr:{}, TBD
-        # gps:{}, TBD
     }
     return instruments

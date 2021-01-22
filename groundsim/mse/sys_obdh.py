@@ -837,9 +837,20 @@ def read_from_data_bus(p_splice_vm, p_satellite_bus):
     return p_splice_vm
 
 def write_to_data_bus(p_satellite_bus, p_splice_vm):
-    # pop VM command queues
-    # push commands to bus queues
-    
+    # set parameters, if necessary
+    p_satellite_bus["imgr"]["inp"]["gain_r"] = p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_RED"]
+    p_satellite_bus["imgr"]["inp"]["gain_g"] = p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_GRN"]
+    p_satellite_bus["imgr"]["inp"]["gain_b"] = p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_BLU"]
+    p_satellite_bus["imgr"]["inp"]["expose"] = p_splice_vm["VBUS"]["INST_IMGR"]["EXPOSURE"]
+
+    # pop VM command queues, push commands to bus queues
+    while len(p_splice_vm["VBUS"]["INST_ADCS"]["COMMAND_Q"])>0:
+        top = p_splice_vm["VBUS"]["INST_ADCS"]["COMMAND_Q"].pop()
+        p_satellite_bus["adc"]["inq"].append(top)
+    while len(p_splice_vm["VBUS"]["INST_IMGR"]["COMMAND_Q"])>0:
+        top = p_splice_vm["VBUS"]["INST_IMGR"]["COMMAND_Q"].pop()
+        p_satellite_bus["imgr"]["inq"].append(top)
+
     return p_splice_vm, p_satellite_bus
 
 # run forward for the number of seconds provided

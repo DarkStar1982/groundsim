@@ -9,6 +9,8 @@ ADCS_MODES = {
 def initialize_adcs_subsystem(p_adcs_definition):
     p_adcs_subsystem = {
         "ADCS_MODE": ADCS_MODES["UNSET"],
+        "SYS_CLOCK":0.0,
+        "MODE_TIME":0.0,
         "IMU":{
             "SUN_X":0.0,
             "SUN_Y":0.0,
@@ -46,6 +48,10 @@ def set_location(p_adcs_subsystem, p_location):
     p_adcs_subsystem["GPS"]["ALT"]= p_location["alt"]
     return p_adcs_subsystem
 
+def sync_time(p_adcs_subsystem, p_time):
+    p_adcs_subsystem["SYS_CLOCK"] = p_time
+    return p_adcs_subsystem
+
 def write_to_data_bus(data_bus, p_adcs_subsystem):
     data_bus["adc"]["out"]["mode"] = p_adcs_subsystem["ADCS_MODE"]
     data_bus["adc"]["out"]["gps"]["lat"] = p_adcs_subsystem["GPS"]["LAT"]
@@ -75,9 +81,26 @@ def write_to_data_bus(data_bus, p_adcs_subsystem):
     data_bus["adc"]["out"]["mtq"]["mtq_z"] = p_adcs_subsystem["MTQ"]["MTQ_Z"]
     return data_bus
 
+def process_command_queue(p_adcs_subsystem, p_com_queue):
+    if len(p_com_queue)>0:
+        for item in p_com_queue:
+            command = item[0]
+            attributes = item[1]
+            if command == "SET_MODE":
+                p_adcs_subsystem["ADCS_MODE"] = attributes[0]
+                p_adcs_subsystem["MODE_TIME"] = attributes[1]
+    return p_adcs_subsystem
+
+def simulate_process(p_adcs_subsystem):
+    return p_adcs_subsystem
+
 def simulate_adcs_subsystem(p_adcs_subsystem, p_mission, p_seconds):
     data_bus = p_mission["satellite"]["subsystems"]["dbus"]
     location = p_mission["satellite"]["location"]
+    time = p_mission["satellite"]["subsystems"]["obdh"]["splice_vm"]["VCPU"]["VXM_CLOCK"]/1000
     p_adcs_subsystem = set_location(p_adcs_subsystem, location)
+    p_adcs_subsystem = sync_time(p_adcs_subsystem, time)
+    p_adcs_subsystem = process_command_queue(p_adcs_subsystem, data_bus["adc"]["inq"])
+    p_adcs_subsystem = simulate_process(p_adcs_subsystem)
     data_bus = write_to_data_bus(data_bus, p_adcs_subsystem)
     return p_adcs_subsystem, data_bus
