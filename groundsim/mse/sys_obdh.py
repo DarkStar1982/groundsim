@@ -216,10 +216,10 @@ def create_vm():
                 "TME":0
             },
             "INST_IMGR":{
-                "GAIN_RED":0.0,
-                "GAIN_GRN":0.0,
-                "GAIN_BLU":0.0,
-                "EXPOSURE":0.0,
+                "GAIN_RED":1.0,
+                "GAIN_GRN":1.0,
+                "GAIN_BLU":1.0,
+                "EXPOSURE":1.0,
                 "SNAP_NUM":0,
                 "COMMAND_Q":[]
             },
@@ -258,7 +258,7 @@ def halt_vm(p_splice_vm):
 
 def log_message(p_splice_vm, p_str, p_error_level):
     if p_error_level>=p_splice_vm["VFLAGS"]["VM_LOG_LEVEL"]:
-        p_splice_vm["VBUS"]["INST_LOGS"]["OUT"].append(p_str)
+        p_splice_vm["VBUS"]["INST_LOGS"]["OUT"].append("%s" % p_str)
     return p_splice_vm
 
 ################################################################################
@@ -534,6 +534,9 @@ def opcode_act(p_splice_vm, p_inst_id, p_param_id, p_reg_id):
         if p_param_id == A_IMG_DO_BMP:
             p_splice_vm["VBUS"]["INST_IMGR"]["COMMAND_Q"].append(["TAKE_PHOTO", "BMP"])
             return p_splice_vm, EX_OPCODE_FINE
+        if p_param_id == A_IMG_DO_PNG:
+            p_splice_vm["VBUS"]["INST_IMGR"]["COMMAND_Q"].append(["TAKE_PHOTO", "PNG"])
+            return p_splice_vm, EX_OPCODE_FINE
     # ADCS operations
     if p_inst_id == INST_ADC:
         if p_param_id == A_ADC_NADIR:
@@ -742,17 +745,17 @@ def vm_execute(p_splice_vm, p_task):
         if next_opcode == OP_NOR:
             p_splice_vm, opcode_result = opcode_nor(p_splice_vm, op_a, op_b, op_c)
         if opcode_result == EX_BAD_OPERAND:
-            message_string = "%s%s" % (p_task_info, "ERROR - Bad operand in command word!")
+            message_string = "%s%s" % (task_info, "ERROR - Bad operand in command word!")
             p_splice_vm = log_message(p_splice_vm, message_string, LOG_LEVEL_ERROR)
             p_splice_vm = set_vram_content(p_splice_vm, "TASK_CONTEXT_STATUS", p_task[0], TASK_ERROR_OPC)
             return p_splice_vm
         if opcode_result == EX_OPC_UNKNOWN:
-            message_string = "%s%s" % (p_task_info, "ERROR - Undecodable opcode!")
+            message_string = "%s%s" % (task_info, "ERROR - Undecodable opcode!")
             p_splice_vm = log_message(p_splice_vm, message_string, LOG_LEVEL_ERROR)
             p_splice_vm = set_vram_content(p_splice_vm, "TASK_CONTEXT_STATUS", p_task[0], TASK_ERROR_OPC)
             return p_splice_vm
         if opcode_result == EX_CHECK_FALSE:
-            message_string = "%s%s" % (p_task_info, "Terminating task - execution conditions not met ")
+            message_string = "%s%s" % (task_info, "Terminating task - execution conditions not met ")
             p_splice_vm = log_message(p_splice_vm, message_string, LOG_LEVEL_INFO)
             p_splice_vm = set_vram_content(p_splice_vm, "TASK_CONTEXT_STATUS", p_task[0], TASK_CON_UNMET)
             return p_splice_vm
@@ -805,6 +808,12 @@ def load_command_script(p_obdh_subsystem, p_script):
     return p_obdh_subsystem
 
 def read_from_data_bus(p_splice_vm, p_satellite_bus):
+    # read imager parameters
+    p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_RED"] = p_satellite_bus["imgr"]["out"]["gain_r"]
+    p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_GRN"] = p_satellite_bus["imgr"]["out"]["gain_g"]
+    p_splice_vm["VBUS"]["INST_IMGR"]["GAIN_BLU"] = p_satellite_bus["imgr"]["out"]["gain_b"]
+    p_splice_vm["VBUS"]["INST_IMGR"]["EXPOSURE"] = p_satellite_bus["imgr"]["out"]["expose"]
+    p_splice_vm["VBUS"]["INST_IMGR"]["SNAP_NUM"] = p_satellite_bus["imgr"]["out"]["counter"]
     # Selected ADCS mode
     p_splice_vm["VBUS"]["INST_ADCS"]["ADCS_MODE"] = p_satellite_bus["adc"]["out"]["mode"]
     # gps vector

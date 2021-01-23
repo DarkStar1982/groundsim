@@ -63,3 +63,42 @@ def initialize_payload_instruments(instrument_data):
         # sdr:{}, TBD
     }
     return instruments
+
+# push next mode to top of the mode stack
+def process_imager_commands(p_mission, p_com_queue):
+    if len(p_com_queue)>0:
+        for item in p_com_queue:
+            command = item[0]
+            if command == "TAKE_PHOTO":
+                p_mission = take_imager_snapshot(p_mission)
+            p_com_queue.pop()
+    return p_mission, p_com_queue
+
+def read_from_data_bus(p_imager, p_data_bus):
+    p_imager["gain_r"] = p_data_bus["imgr"]["inp"]["gain_r"]
+    p_imager["gain_g"] = p_data_bus["imgr"]["inp"]["gain_g"]
+    p_imager["gain_b"] = p_data_bus["imgr"]["inp"]["gain_b"]
+    p_imager["expose"] = p_data_bus["imgr"]["inp"]["expose"]
+    return p_imager
+
+def write_to_data_bus(p_imager, p_data_bus):
+    p_data_bus["imgr"]["out"]["gain_r"] = p_imager["gain_r"]
+    p_data_bus["imgr"]["out"]["gain_g"] = p_imager["gain_g"]
+    p_data_bus["imgr"]["out"]["gain_b"] = p_imager["gain_b"]
+    p_data_bus["imgr"]["out"]["expose"] = p_imager["expose"]
+    p_data_bus["imgr"]["out"]["counter"] = p_imager["counter"]
+    return p_data_bus
+
+def simulate_payload_instruments(p_mission, p_data_bus, p_seconds):
+    com_queue = p_data_bus["imgr"]["inq"]
+    # simulate instrument operations
+    p_mission["satellite"]["instruments"]["imager"]["frame"] = get_imager_frame(
+        p_mission["satellite"]["instruments"]["imager"]["fov"],
+        p_mission["environment"]["ground_track"]["alt"],
+        p_mission["environment"]["ground_track"]["lat"],
+        p_mission["environment"]["ground_track"]["lng"],
+    )
+    p_mission["satellite"]["instruments"]["imager"] = read_from_data_bus(p_mission["satellite"]["instruments"]["imager"], p_data_bus)
+    p_mission, p_data_bus["imgr"]["inq"] = process_imager_commands(p_mission, p_data_bus["imgr"]["inq"])
+    p_data_bus = write_to_data_bus(p_mission["satellite"]["instruments"]["imager"], p_data_bus)
+    return p_mission, p_data_bus

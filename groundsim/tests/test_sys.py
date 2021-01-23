@@ -133,10 +133,10 @@ class OBDHTestCases(TestBaseClass):
                     "TME":0
                 },
                 "INST_IMGR":{
-                    "GAIN_RED":0.0,
-                    "GAIN_GRN":0.0,
-                    "GAIN_BLU":0.0,
-                    "EXPOSURE":0.0,
+                    "GAIN_RED":1.0,
+                    "GAIN_GRN":1.0,
+                    "GAIN_BLU":1.0,
+                    "EXPOSURE":1.0,
                     "SNAP_NUM":0,
                     "COMMAND_Q":[]
                 },
