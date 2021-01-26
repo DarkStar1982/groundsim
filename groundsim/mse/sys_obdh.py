@@ -296,11 +296,21 @@ def opcode_mov(p_splice_vm, p_prefix, p_reg_id, p_addr, p_group_id, p_task_id, p
     if p_prefix == PRE_MOV_RAM:
         if (p_reg_id<0x10):
             data = p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_id]
-            p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"][p_group_id][p_task_id][p_addr+p_offset] = data
+            key = p_addr+p_offset
+            m_len = len(p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"][p_group_id][p_task_id])
+            if key>=m_len:
+                diff = key-m_len+1
+                p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"][p_group_id][p_task_id].extend([None]*diff)
+            p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"][p_group_id][p_task_id][key] = data
             return p_splice_vm, EX_OPCODE_FINE
         elif (p_reg_id>0x0F):
             data = pack_float_to_int(p_splice_vm["VCPU"]["FPU_REGISTERS"][p_reg_id])
-            p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"][p_group_id][p_task_id][p_addr+p_offset] = data
+            key = p_addr+p_offset
+            m_len = len(p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"][p_group_id][p_task_id])
+            if key>=m_len:
+                diff = key-m_len+1
+                p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"][p_group_id][p_task_id].extend([None]*diff)
+            p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"][p_group_id][p_task_id][key] = data
             return p_splice_vm, EX_OPCODE_FINE
         else:
             return p_splice_vm, EX_BAD_OPERAND
@@ -395,13 +405,13 @@ def opcode_cmp(p_splice_vm, p_oper, p_reg_a, p_reg_b, p_group_id):
         else:
             return EX_CHECK_FALSE
     if p_oper == TSX_EQ:
-        task_status = p_splice_vm["VRAM"]["TASK_CONTEXT_STATUS"][group_id][source_id]
+        task_status = p_splice_vm["VRAM"]["TASK_CONTEXT_STATUS"][p_group_id][source_id]
         if task_status == p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_b]:
             return EX_CHECK_TRUTH
         else:
             return EX_CHECK_FALSE
     if p_oper == TSX_NE:
-        task_status = p_splice_vm["VRAM"]["TASK_CONTEXT_STATUS"][group_id][source_id]
+        task_status = p_splice_vm["VRAM"]["TASK_CONTEXT_STATUS"][p_group_id][source_id]
         if task_status != p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_b]:
             return EX_CHECK_TRUTH
         else:
