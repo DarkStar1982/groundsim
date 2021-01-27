@@ -321,8 +321,11 @@ def opcode_lea(p_splice_vm, p_reg_id, p_source_id, p_addr, p_group_id, p_task_id
     if p_source_id == p_task_id:
         target_offset = p_offset
     else:
-        target_header = unpack32to4x8(p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"][p_group_id][p_source_id][0])
-        target_offset = target_header[3]
+        if p_source_id not in p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"][p_group_id]:
+            return p_splice_vm, EX_BAD_OPERAND
+        else:
+            target_header = unpack32to4x8(p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"][p_group_id][p_source_id][0])
+            target_offset = target_header[3]
     # load data
     data = p_splice_vm["VRAM"]["PROGRAM_CODE_MEMORY"][p_group_id][p_source_id][p_addr+target_offset];
     if (p_reg_id<0x10):
@@ -529,7 +532,9 @@ def opcode_set(p_splice_vm, p_inst_id, p_param_id, p_reg_id):
             p_splice_vm["VFLAGS"]["VM_TIMESLICE"] = p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_id]
             return p_splice_vm, EX_OPCODE_FINE
         if p_param_id == P_VXM_DBUG:
-            return set_alu_register(p_splice_vm, p_reg_id, p_splice_vm["VFLAGS"]["VM_LOG_LEVEL"])
+            p_splice_vm["VFLAGS"]["VM_LOG_LEVEL"] = p_splice_vm["VCPU"]["ALU_REGISTERS"][p_reg_id]
+            return p_splice_vm, EX_OPCODE_FINE
+            #return set_alu_register(p_splice_vm, p_reg_id, p_splice_vm["VFLAGS"]["VM_LOG_LEVEL"])
     return p_splice_vm, EX_OPCODE_FINE # Should be EX_BAD_OPERAND, but keeping for compatibility sake
 
 def opcode_act(p_splice_vm, p_inst_id, p_param_id, p_reg_id):
