@@ -11,11 +11,7 @@
   = electrical power subsystem
   = total thermal balance calculation
   = attitude determination and control
-- onboard computer with SPLICE interpreter, note:
-  = Implement all opcodes and correct scheduler behaviour
-  = Implement NMF pass-through functionality equivalent
-- Add "update TLE" command
-- Implement GPS simulation
+
 - Implement SDR simulation
 - Implemenent data exchange simulation between subsystems
 
@@ -34,3 +30,10 @@
 
 13/01/2021
 - Implemented OBDH subsystem VM
+
+26/01/2021
+- onboard computer with SPLICE interpreter, note:
+  = Implement all opcodes and correct scheduler behaviour
+  = Implement NMF pass-through functionality equivalent
+- Add "update TLE" command
+- Implement GPS simulation
