@@ -1,6 +1,9 @@
 def initialize_power_subsystem(p_eps_definition):
     p_eps_subsystem = {
-        # TBD
+        "solar_panels": {},
+        "battery":{},
+        "pdu":{},
+        "power_bus":{}
     }
     return p_eps_subsystem
 

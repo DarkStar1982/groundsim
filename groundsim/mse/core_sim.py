@@ -11,6 +11,7 @@ from groundsim.mse.lib_astro import get_orbital_data, time_since_periapsis
 from groundsim.mse.sys_adcs import initialize_adcs_subsystem, simulate_adcs_subsystem
 from groundsim.mse.sys_obdh import initialize_obdh_subsystem, simulate_obdh_subsystem, load_command_script
 from groundsim.mse.sys_comm import initialize_comm_subsystem, simulate_comm_subsystem
+from groundsim.mse.sys_power import initialize_power_subsystem
 from groundsim.mse.sys_payload import get_imager_frame, take_imager_snapshot, initialize_payload_instruments, simulate_payload_instruments
 ################################################################################
 ########################## ENVIRONMENT SIMULATION CODE #########################
@@ -102,12 +103,7 @@ class CMSE_Sat():
     # should be loadable from DB data
     def initialize_satellite_subsystems(self):
         sat_components = {
-            "power": {
-                "solar_panels": {},
-                "battery":{},
-                "pdu":{},
-                "power_bus":{}
-            },
+            "power": initialize_power_subsystem(None),
             "adcs": initialize_adcs_subsystem(None),
             "obdh": initialize_obdh_subsystem(None),
             "comm": initialize_obdh_subsystem(None),

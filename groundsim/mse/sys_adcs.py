@@ -12,19 +12,19 @@ def initialize_adcs_subsystem(p_adcs_definition):
         "SYS_CLOCK":0.0,
         "MODE_TIME":0.0,
         "IMU":{
-            "SUN_X":0.0,
-            "SUN_Y":0.0,
-            "SUN_Z":0.0,
-            "MAG_X":0.0,
-            "MAG_Y":0.0,
-            "MAG_Z":0.0,
-            "ANG_X":0.0,
-            "ANG_Y":0.0,
-            "ANG_Z":0.0,
-            "QAT_A":0.0,
-            "QAT_B":0.0,
-            "QAT_C":0.0,
-            "QAT_D":0.0
+            "SUN_X":0.0, # from environment
+            "SUN_Y":0.0, # from environment
+            "SUN_Z":0.0, # from environment
+            "MAG_X":0.0, # from environment
+            "MAG_Y":0.0, # from environment
+            "MAG_Z":0.0, # from environment
+            "ANG_X":0.0, # input rad/s
+            "ANG_Y":0.0, # input rad/s
+            "ANG_Z":0.0, # input rad/s
+            "QAT_A":0.0, # calculated, relative to body frame?
+            "QAT_B":0.0, # calculated ...or relative to orbit frame?
+            "QAT_C":0.0, # calculated ...or relative to ECI frame
+            "QAT_D":0.0  # calculated ...or relative to ECEF frame?
         },
         "MTQ":{
             "MTQ_X":0.0,
@@ -40,7 +40,7 @@ def initialize_adcs_subsystem(p_adcs_definition):
     }
     return p_adcs_subsystem
 
-# TBD - hardware support for GPS data
+# TBD - add hardware support for GPS data?
 def set_location(p_adcs_subsystem, p_location):
     # set location
     p_adcs_subsystem["GPS"]["LAT"]= p_location["lat"]
@@ -48,10 +48,17 @@ def set_location(p_adcs_subsystem, p_location):
     p_adcs_subsystem["GPS"]["ALT"]= p_location["alt"]
     return p_adcs_subsystem
 
-def sync_time(p_adcs_subsystem, p_time):
+def set_time(p_adcs_subsystem, p_time):
     p_adcs_subsystem["SYS_CLOCK"] = p_time
     return p_adcs_subsystem
 
+def set_sensors(p_adcs_subsystem):
+    return p_adcs_subsystem
+
+def compute_attitude(p_adcs_subsystem):
+    return p_adcs_subsystem
+
+# run I/O - 
 def write_to_data_bus(data_bus, p_adcs_subsystem):
     data_bus["adc"]["out"]["mode"] = p_adcs_subsystem["ADCS_MODE"][0]
     data_bus["adc"]["out"]["gps"]["lat"] = p_adcs_subsystem["GPS"]["LAT"]
@@ -99,19 +106,30 @@ def simulate_process(p_adcs_subsystem, p_seconds):
         p_adcs_subsystem["MODE_TIME"] = p_adcs_subsystem["MODE_TIME"] - p_seconds
     if p_adcs_subsystem["MODE_TIME"] == 0 and len(p_adcs_subsystem["ADCS_MODE"])>1:
         p_adcs_subsystem["ADCS_MODE"].pop()
+
+    # simulate modes
+    if p_adcs_subsystem["ADCS_MODE"] == ADCS_MODES["UNSET"]:
+        # do nothing (drift)
+        p_adcs_subsystem = compute_attitude(p_adcs_subsystem)
     return p_adcs_subsystem
 
 def simulate_adcs_subsystem(p_adcs_subsystem, p_mission, p_seconds):
+    # load state from external sources
     data_bus = p_mission["satellite"]["subsystems"]["dbus"]
     location = p_mission["satellite"]["location"]
     time = p_mission["satellite"]["subsystems"]["obdh"]["splice_vm"]["VCPU"]["VXM_CLOCK"]/1000
-    # update state from external sources
+
+    # init subsystem from external sources
     p_adcs_subsystem = set_location(p_adcs_subsystem, location)
-    p_adcs_subsystem = sync_time(p_adcs_subsystem, time)
+    p_adcs_subsystem = set_time(p_adcs_subsystem, time)
+    p_adcs_subsystem = set_sensors(p_adcs_subsystem) #<- sensors data goes here
+
     # read any inbound commands
     p_adcs_subsystem, data_bus["adc"]["inq"] = process_command_queue(p_adcs_subsystem, data_bus["adc"]["inq"])
+
     # simulate subsystem behaviour
     p_adcs_subsystem = simulate_process(p_adcs_subsystem, p_seconds)
+
     # write out data
     data_bus = write_to_data_bus(data_bus, p_adcs_subsystem)
     return p_adcs_subsystem, data_bus
