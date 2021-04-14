@@ -48,10 +48,12 @@ def get_orbital_data(tle_data, time_data, label="Satellite"):
     }
     return result
 
-def get_adcs_vectors(time_data):
+def get_adcs_vectors(time_data, tle_data):
     sun = JPL_EPH['sun']
     earth = JPL_EPH['earth']
     ts = load.timescale()
+    label="Satellite"
+    satellite = EarthSatellite(tle_data["line_1"], tle_data["line_2"], label, ts)
     time_instant = ts.utc(
         time_data["year"],
         time_data["month"],
@@ -60,19 +62,13 @@ def get_adcs_vectors(time_data):
         time_data["min"],
         time_data["sec"],
     )
-
-    sun_vector = sun.at(time_instant).position.au
-    earth_vector = earth.at(time_instant).position.au
-
-    norm_e = 0.0
-    norm_s = 0.0
-    for item in earth_vector:
-        norm_e = norm_e + pow(item,2)
-    norm_e = sqrt(norm_e)
-    for item in sun_vector:
-        norm_s = norm_s + pow(item,2)
-    norm_s = sqrt(norm_s)
-    return { "e_v":[x/norm_e for x in earth_vector], "s_v":[y/norm_s for y in sun_vector] }
+    tru_pos = earth + satellite
+    sun_vector1 = tru_pos.at(time_instant).observe(sun).apparent().position.km
+    sun_vector2 = satellite.at(time_instant).position.km
+    # sun_vector = satellite.at(time_instant).observe(earth).apparent()
+    print(tru_pos.at(time_instant).position.km)
+    print(earth.at(time_instant).position.km)
+    return [sun_vector1 - sun_vector2]
 
 ################################################################################
 # output is in seconds

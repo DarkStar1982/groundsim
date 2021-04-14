@@ -24,7 +24,7 @@ def initialize_adcs_subsystem(p_adcs_definition):
             "QAT_A":0.0, # calculated, relative to body frame?
             "QAT_B":0.0, # calculated ...or relative to orbit frame?
             "QAT_C":0.0, # calculated ...or relative to ECI frame
-            "QAT_D":0.0  # calculated ...or relative to ECEF frame?
+            "QAT_D":1.0  # calculated ...or relative to ECEF frame?
         },
         "MTQ":{
             "MTQ_X":0.0,
@@ -58,7 +58,7 @@ def set_sensors(p_adcs_subsystem):
 def compute_attitude(p_adcs_subsystem):
     return p_adcs_subsystem
 
-# run I/O - 
+# run I/O -
 def write_to_data_bus(data_bus, p_adcs_subsystem):
     data_bus["adc"]["out"]["mode"] = p_adcs_subsystem["ADCS_MODE"][0]
     data_bus["adc"]["out"]["gps"]["lat"] = p_adcs_subsystem["GPS"]["LAT"]
@@ -113,6 +113,11 @@ def simulate_process(p_adcs_subsystem, p_seconds):
         p_adcs_subsystem = compute_attitude(p_adcs_subsystem)
     return p_adcs_subsystem
 
+# sensor inputs are in satellite body-reference frame
+# satellite attitude is in orbit-reference frame
+# orbital position is in ECI frame
+# initial attitude is aligned with orbit reference frame axis
+# update attitude
 def simulate_adcs_subsystem(p_adcs_subsystem, p_mission, p_seconds):
     # load state from external sources
     data_bus = p_mission["satellite"]["subsystems"]["dbus"]

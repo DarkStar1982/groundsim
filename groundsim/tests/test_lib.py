@@ -71,7 +71,8 @@ class AstroTestCases(TestBaseClass):
             assert(self.fp_eq(result["length_lon"], item[2]) == True)
 
     def test_get_adcs_vectors(self):
-        result = get_adcs_vectors(self.time_data)
+        sat_pos = get_orbital_data(self.tle_data, self.time_data)
+        result = get_adcs_vectors(self.time_data, self.tle_data)
         print(result)
 
 class SpliceTestCases(TestCase):
