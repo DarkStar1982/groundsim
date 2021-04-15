@@ -33,7 +33,6 @@ urlpatterns = [
     path('mse_reset/', mse_views.ResetController.as_view()),
     path('mse_save/', mse_views.SaveController.as_view()),
     path('mse_action/', mse_views.ActionController.as_view()),
-    # path('mse_log/', views.LogListHandler.as_view()),
 
     # webNOVA (Tier 1) API
     path('nova/instruments/', nova_views.NovaInstrumentListController.as_view()),

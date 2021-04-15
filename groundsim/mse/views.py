@@ -144,23 +144,3 @@ class ActionController(View):
             mission_instance = json.loads(mission_instance_str)
             result_data = execute_mission_action(mission_instance, action_type)
         return HttpResponse(json.dumps(result_data))
-
-class NovaInstrumentListController(View):
-    def get(self, request):
-        result_data = ["INSTRUMENT LIST - OK"]
-        return HttpResponse(json.dumps(result_data))
-
-class NovaSchedulerController(View):
-    def get(self, request):
-        result_data = ["SCHEDULER - OK"]
-        return HttpResponse(json.dumps(result_data))
-
-class NovaImagerController(View):
-    def get(self, request):
-        result_data = ["IMAGER - OK"]
-        return HttpResponse(json.dumps(result_data))
-
-class NovaDownloadController(View):
-    def get(self, request):
-        result_data = ["DOWNLOAD - OK"]
-        return HttpResponse(json.dumps(result_data))
