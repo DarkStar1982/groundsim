@@ -180,7 +180,7 @@ class OBDHScriptTest(MissionScenarioTest):
         # create simulation instance
         self.run_splice_scripts(self.test_filenames_b1)
         # check_results
-        log_result_b1 = ['2:1:400.0', '2:1:0.0', '2:1:1', '2:1:510.9632641160709']
+        log_result_b1 = ['2:1:400.0', '2:1:0.0', '2:1:1', '2:1:510.9632640993081']
         log_result_b2 = ['2:2:0.0', '2:2:0.0', '2:2:0.0', '2:2:0.0', '2:2:0.0']
         all_logs = self.mission["satellite"]["subsystems"]["obdh"]["splice_vm"]["VBUS"]["INST_LOGS"]["OUT"]
         assert(log_result_b1==all_logs[-14:-10])
@@ -206,7 +206,7 @@ class OBDHScriptTest(MissionScenarioTest):
         # run simulation
         self.run_splice_scripts(self.test_filenames_c1)
         # check_results
-        test_result = ['3:1:-0.034843794085361424', '3:1:510.99810791015625', '3:1:510.9632641160709']
+        test_result = ['3:1:-0.034843810848144585', '3:1:510.99810791015625', '3:1:510.9632640993081']
         all_logs = self.mission["satellite"]["subsystems"]["obdh"]["splice_vm"]["VBUS"]["INST_LOGS"]["OUT"] [-3:]
         assert(all_logs==test_result)
 
@@ -230,7 +230,7 @@ class OBDHScriptTest(MissionScenarioTest):
         # run simulation
         self.run_splice_scripts(self.test_filenames_c4)
         # check_results
-        test_result = ['3:5:51.61953205370378', '3:5:-0.007907162709159365']
+        test_result = ['3:5:51.619532019167764', '3:5:-0.007907164385414944']
         logs_1 = self.mission["satellite"]["subsystems"]["obdh"]["splice_vm"]["VBUS"]["INST_LOGS"]["OUT"][2:3]
         logs_2 = self.mission["satellite"]["subsystems"]["obdh"]["splice_vm"]["VBUS"]["INST_LOGS"]["OUT"][-1:]
         all_logs = logs_1+logs_2
@@ -240,14 +240,14 @@ class OBDHScriptTest(MissionScenarioTest):
         # run simulation
         self.run_splice_scripts(self.test_filenames_d1)
         all_logs = self.mission["satellite"]["subsystems"]["obdh"]["splice_vm"]["VBUS"]["INST_LOGS"]["OUT"][:1]
-        test_result = ['4:1:516.2841926036398']
+        test_result = ['4:1:516.2841927406951']
         assert(test_result == all_logs)
 
     def test_obdh_scripts_part_d2(self):
         # run simulation
         self.run_splice_scripts(self.test_filenames_d2)
         # check_results
-        test_result = ['4:2:510.99811734794736', '4:3:0.005145685700184178']
+        test_result = ['4:2:510.9981172378123', '4:3:0.005145685700184178']
         all_logs = self.mission["satellite"]["subsystems"]["obdh"]["splice_vm"]["VBUS"]["INST_LOGS"]["OUT"][-4:-2]
         assert(test_result == all_logs)
 

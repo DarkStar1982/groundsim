@@ -48,27 +48,6 @@ def get_orbital_data(tle_data, time_data, label="Satellite"):
     }
     return result
 
-def get_adcs_vectors(time_data, tle_data):
-    sun = JPL_EPH['sun']
-    earth = JPL_EPH['earth']
-    ts = load.timescale()
-    label="Satellite"
-    satellite = EarthSatellite(tle_data["line_1"], tle_data["line_2"], label, ts)
-    time_instant = ts.utc(
-        time_data["year"],
-        time_data["month"],
-        time_data["day"],
-        time_data["hour"],
-        time_data["min"],
-        time_data["sec"],
-    )
-    tru_pos = earth + satellite
-    sun_vector1 = tru_pos.at(time_instant).observe(sun).apparent().position.km
-    sun_vector2 = satellite.at(time_instant).position.km
-    # sun_vector = satellite.at(time_instant).observe(earth).apparent()
-    print(tru_pos.at(time_instant).position.km)
-    print(earth.at(time_instant).position.km)
-    return [sun_vector1 - sun_vector2]
 
 ################################################################################
 # output is in seconds
@@ -87,3 +66,10 @@ def calculate_degree_length(p_lat):
     length_lat = 111132.954 - 559.822 * cos(2*lat)+1.175 * cos(4*lat)
     length_lon = (pi * R_EARTH * cos (lat))/(180*sqrt(1-E_2*pow(sin(lat),2)))
     return {"length_lon":length_lon/1000.0, "length_lat":length_lat/1000.0}
+
+
+################################################################################
+# get overflight of satellite for given target position, within certain radius
+################################################################################
+def calculate_passes_on_target():
+    return []

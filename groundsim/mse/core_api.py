@@ -115,7 +115,26 @@ def write_user(p_user, p_email):
     return record
 
 ################################################################################
-############################ MISSION SIMULATION API ############################
+######################## TIER 1 API - BASIC ACTIONS API ########################
+################################################################################
+def get_instrument_list():
+    instruments = []
+
+    # read from DB properly instead
+    satellite_records = Satellite.objects.all()
+    for record in satellite_records:
+        instrument_obj ={
+            "instrument":json.loads(record.config_instrument),
+            "id":record.norad_id
+        }
+        instruments.append(instrument_obj)
+    return instruments
+
+def get_target_passes():
+    return []
+
+################################################################################
+###################### TIER 2 API - MISSION SIMULATION API #####################
 ################################################################################
 def create_mission_instance(p_norad_id, p_scenario_id, p_start_date):
     mission = {}

@@ -16,7 +16,8 @@ from groundsim.mse.lib_splice import (
     REGISTERS,
     OPCODES
 )
-from groundsim.mse.lib_astro import get_orbital_data, time_since_periapsis, calculate_degree_length, get_adcs_vectors
+from groundsim.mse.lib_astro import get_orbital_data, time_since_periapsis, calculate_degree_length
+from groundsim.mse.lib_adcs import get_adcs_vectors
 
 class AstroTestCases(TestBaseClass):
     def setUp(self):
@@ -53,7 +54,7 @@ class AstroTestCases(TestBaseClass):
     def test_time_since_periapsis(self):
         data = get_orbital_data(self.tle_data, self.time_data)
         result = time_since_periapsis(data["elements"])
-        assert(isclose(result,648.036,abs_tol=self.fp_epsilon)==True)
+        assert(isclose(result,648.028,abs_tol=self.fp_epsilon)==True)
 
     def test_calculate_degree_length(self):
         test_data = [
@@ -73,7 +74,7 @@ class AstroTestCases(TestBaseClass):
     def test_get_adcs_vectors(self):
         sat_pos = get_orbital_data(self.tle_data, self.time_data)
         result = get_adcs_vectors(self.time_data, self.tle_data)
-        print(result)
+        #print(result)
 
 class SpliceTestCases(TestCase):
     def setUp(self):

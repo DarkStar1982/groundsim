@@ -17,7 +17,9 @@ from groundsim.mse.core_api import (
     save_mission,
     load_mission,
     get_mission_logs,
-    execute_mission_action
+    execute_mission_action,
+    get_instrument_list,
+    get_target_passes
 )
 
 def none_is_zero(obj):
@@ -143,4 +145,25 @@ class ActionController(View):
         else:
             mission_instance = json.loads(mission_instance_str)
             result_data = execute_mission_action(mission_instance, action_type)
+        return HttpResponse(json.dumps(result_data))
+
+#Tier 1 API controllers
+class InstrumentListController(View):
+    def get(self, request):
+        result_data = get_instrument_list()
+        return HttpResponse(json.dumps(result_data))
+
+class SchedulerController(View):
+    def get(self, request):
+        result_data = get_target_passes()
+        return HttpResponse(json.dumps(result_data))
+
+class ImagerActionController(View):
+    def get(self, request):
+        result_data = ["IMAGER - OK"]
+        return HttpResponse(json.dumps(result_data))
+
+class ImagerDownloadController(View):
+    def get(self, request):
+        result_data = ["DOWNLOAD - OK"]
         return HttpResponse(json.dumps(result_data))
