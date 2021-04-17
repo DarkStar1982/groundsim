@@ -72,4 +72,8 @@ def calculate_degree_length(p_lat):
 # get overflight of satellite for given target position, within certain radius
 ################################################################################
 def calculate_passes_on_target():
+    # input time range + min interval
+    # calculate all overpasses
+    # check the minimal one (within given slew angle geometry restrictions)
+    # return times as list
     return []
