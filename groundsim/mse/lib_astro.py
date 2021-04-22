@@ -1,6 +1,9 @@
+import numpy as np
 from math import pi, cos, exp, pow, sin, sqrt, radians
 from skyfield.api import EarthSatellite, load
 from skyfield.elementslib import osculating_elements_of
+from groundsim.mse.core_utils import mission_timer_to_datetime, datetime_to_mission_timer
+from datetime import timedelta
 
 ################################################################################
 ################################# GLOBAL VALUES ################################
@@ -67,13 +70,34 @@ def calculate_degree_length(p_lat):
     length_lon = (pi * R_EARTH * cos (lat))/(180*sqrt(1-E_2*pow(sin(lat),2)))
     return {"length_lon":length_lon/1000.0, "length_lat":length_lat/1000.0}
 
-
 ################################################################################
-# get overflight of satellite for given target position, within certain radius
+# get times of satellite pass over given target position, within certain radius
 ################################################################################
-def calculate_passes_on_target():
-    # input time range + min interval
-    # calculate all overpasses
-    # check the minimal one (within given slew angle geometry restrictions)
-    # return times as list
-    return []
+def compute_orbit_track(tle_data, p_start_date, p_end_date, p_step):
+    # calculate time interval in minutes from inputs
+    date_time_1 = mission_timer_to_datetime(p_start_date)
+    date_time_2 = mission_timer_to_datetime(p_end_date)
+    running_date = date_time_1
+    ts = load.timescale()
+    satellite = EarthSatellite(tle_data["line_1"], tle_data["line_2"], "Satellite", ts)
+    result = []
+    while running_date<date_time_2:
+         running_date = running_date + timedelta(0,p_step)
+         time_data = datetime_to_mission_timer(running_date)
+         time_instant = ts.utc(
+             time_data["year"],
+             time_data["month"],
+             time_data["day"],
+             time_data["hour"],
+             time_data["min"],
+             time_data["sec"],
+         )
+         geocentric = satellite.at(time_instant)
+         subpoint = geocentric.subpoint()
+         data = {
+            "lat":float(subpoint.latitude.degrees),
+            "lng":float(subpoint.longitude.degrees),
+            "alt":float(subpoint.elevation.km),
+         }
+         result.append(data)
+    return result

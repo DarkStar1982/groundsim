@@ -16,7 +16,12 @@ from groundsim.mse.lib_splice import (
     REGISTERS,
     OPCODES
 )
-from groundsim.mse.lib_astro import get_orbital_data, time_since_periapsis, calculate_degree_length
+from groundsim.mse.lib_astro import (
+    get_orbital_data,
+    time_since_periapsis,
+    calculate_degree_length,
+    compute_orbit_track
+)
 from groundsim.mse.lib_adcs import get_adcs_vectors
 
 class AstroTestCases(TestBaseClass):
@@ -24,6 +29,12 @@ class AstroTestCases(TestBaseClass):
         self.tle_data = {
             "line_1":'1 25544U 98067A   14020.93268519  .00009878  00000-0  18200-3 0  5082',
             "line_2":'2 25544  51.6498 109.4756 0003572  55.9686 274.8005 15.49815350868473'
+
+        }
+        self.tle_data_2 = {
+            "line_1":'1 25544U 98067A   21108.03584674  .00000927  00000-0  25054-4 0  9997',
+            "line_2":'2 25544  51.6449 280.2435 0002643 240.0991 206.4652 15.48894052279273'
+
         }
         self.time_data = {
             "year":2014,
@@ -71,6 +82,31 @@ class AstroTestCases(TestBaseClass):
             assert(self.fp_eq(result["length_lat"], item[1]) == True)
             assert(self.fp_eq(result["length_lon"], item[2]) == True)
 
+    def test_compute_orbit_track(self):
+        start_date = {
+            "year":2021,
+            "month":1,
+            "day":1,
+            "hour":0,
+            "min":0,
+            "sec": 0
+        }
+        end_date  = {
+            "year":2021,
+            "month":1,
+            "day":2,
+            "hour":23,
+            "min":59,
+            "sec": 59
+        }
+        step = 5
+        #lat = 46.11
+        #lon = 30.21
+        result = compute_orbit_track(self.tle_data_2, start_date, end_date, step)
+        print(len(result))
+
+# TBD!
+class ADCSTestCases(TestBaseClass):
     def test_get_adcs_vectors(self):
         sat_pos = get_orbital_data(self.tle_data, self.time_data)
         result = get_adcs_vectors(self.time_data, self.tle_data)
