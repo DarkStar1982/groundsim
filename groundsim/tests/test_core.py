@@ -3,7 +3,7 @@ from math import radians, isclose
 from django.test import TestCase
 from skyfield.api import EarthSatellite, load
 from groundsim.mse.core_sim import CMSE_Env, CMSE_Sat, CMSE_SceEng
-from groundsim.mse.core_utils import fp_equals
+from groundsim.mse.lib_utils import fp_equals
 
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 

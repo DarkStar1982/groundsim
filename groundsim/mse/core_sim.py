@@ -1,6 +1,6 @@
 import json
 from datetime import datetime, timezone, timedelta
-from groundsim.mse.core_utils import (
+from groundsim.mse.lib_utils import (
     parse_tle_lines,
     mission_timer_to_str,
     mission_timer_to_datetime,

@@ -1,7 +1,7 @@
 import json
 from django.core.management.base import BaseCommand, CommandError
 from groundsim.models import Satellite, MissionScenario
-from groundsim.mse.core_utils import mission_timer_to_datetime
+from groundsim.mse.lib_utils import mission_timer_to_datetime
 
 SATELLITE_LIST = [
     {

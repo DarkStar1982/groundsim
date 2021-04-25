@@ -17,6 +17,13 @@ class SatelliteInstance(models.Model):
     subsystems = models.CharField(blank=True, max_length=4096)
     instruments = models.CharField(blank=True, max_length=4096)
 
+class SatelliteOrbitTrack(models.Model):
+    satellite_ref = models.ForeignKey(Satellite, on_delete=models.CASCADE, null=True)
+    timestamp = models.DateTimeField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    altitude = models.FloatField(null=True, blank=True)
+
 class UserInstance(models.Model):
     user = models.CharField(max_length=128, null=True)
     email = models.CharField(max_length=128, null=True, unique=True)
@@ -46,9 +53,11 @@ class MissionEventLog(models.Model):
    message = models.CharField(blank=True, max_length=255)
 
 
+
 admin.site.register(Satellite)
 admin.site.register(MissionInstance)
 admin.site.register(SatelliteInstance)
 admin.site.register(UserInstance)
 admin.site.register(MissionScenario)
 admin.site.register(MissionEventLog)
+admin.site.register(SatelliteOrbitTrack)

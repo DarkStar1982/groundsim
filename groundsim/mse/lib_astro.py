@@ -2,7 +2,7 @@ import numpy as np
 from math import pi, cos, exp, pow, sin, sqrt, radians
 from skyfield.api import EarthSatellite, load
 from skyfield.elementslib import osculating_elements_of
-from groundsim.mse.core_utils import mission_timer_to_datetime, datetime_to_mission_timer
+from groundsim.mse.lib_utils import mission_timer_to_datetime, datetime_to_mission_timer
 from datetime import timedelta
 
 ################################################################################
