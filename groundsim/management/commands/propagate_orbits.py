@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 from groundsim.models import Satellite, SatelliteOrbitTrack
 from datetime import datetime, timedelta
 from groundsim.mse.lib_astro import compute_orbit_track
+from groundsim.mse.lib_utils import mission_timer_to_datetime
 
 #for each satellite in DB
 # select last starting date
@@ -22,7 +23,7 @@ def propagate_orbits(p_days, p_step):
         except SatelliteOrbitTrack.DoesNotExist:
             start_date = datetime.now()
         end_date = start_date + timedelta(days = p_days)
-        track = compute_orbit_track(tle_data,start_date,end_date,p_step)
+        track = compute_orbit_track(tle_data,mission_timer_to_datetime(start_date),mission_timer_to_datetime(end_date,p_step))
         print(track)
         #print(start_date)
         #print(end_date)
