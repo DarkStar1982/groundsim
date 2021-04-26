@@ -1,6 +1,8 @@
 import julian
 import calendar
+import pytz
 from datetime import datetime
+from django.utils import timezone
 from sgp4.earth_gravity import wgs72, wgs84
 from sgp4.io import twoline2rv
 from math import fmod, pi, tan, atan, sqrt, sin, fabs, cos, atan2, trunc, acos
@@ -27,7 +29,8 @@ def mission_timer_to_datetime(p_mission_timer):
         p_mission_timer["day"],
         p_mission_timer["hour"],
         p_mission_timer["min"],
-        p_mission_timer["sec"]
+        p_mission_timer["sec"],
+        tzinfo=pytz.UTC
     )
     return packed_date
 

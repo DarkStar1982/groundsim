@@ -95,6 +95,7 @@ def compute_orbit_track(tle_data, p_start_date, p_end_date, p_step):
          geocentric = satellite.at(time_instant)
          subpoint = geocentric.subpoint()
          data = {
+            "timestamp":running_date,
             "lat":float(subpoint.latitude.degrees),
             "lng":float(subpoint.longitude.degrees),
             "alt":float(subpoint.elevation.km),
